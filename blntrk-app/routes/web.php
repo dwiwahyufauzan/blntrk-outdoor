@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\BerandaController;
+use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\Pemilik;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,16 @@ use Illuminate\Support\Facades\Route;
 
 // Halaman Utama Publik
 Route::get('/', [BerandaController::class, 'index'])->name('beranda');
+
+// Katalog & Cek Ketersediaan Alat
+Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog.index');
+Route::get('/katalog/{alat}', [KatalogController::class, 'show'])->name('katalog.show');
+Route::get('/katalog/{alat}/ketersediaan', [KatalogController::class, 'ketersediaan'])->name('katalog.ketersediaan');
+
+// Alias rute /alat sesuai dokumen skripsi
+Route::get('/alat', [KatalogController::class, 'index'])->name('alat.index');
+Route::get('/alat/{alat}', [KatalogController::class, 'show'])->name('alat.show');
+Route::get('/alat/{alat}/ketersediaan', [KatalogController::class, 'ketersediaan'])->name('alat.ketersediaan');
 
 // Fallback /dashboard sesuai role yang login
 Route::get('/dashboard', function () {

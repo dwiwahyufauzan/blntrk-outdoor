@@ -13,6 +13,14 @@ class AuthRoleTest extends TestCase
 
     protected bool $seed = true;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (!\App\Models\Role::exists()) {
+            $this->seed();
+        }
+    }
+
     public function test_halaman_beranda_bisa_diakses_publik(): void
     {
         $response = $this->get('/');

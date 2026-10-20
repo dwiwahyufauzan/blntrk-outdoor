@@ -7,71 +7,75 @@
 
     <title>{{ $title ?? 'Penyewaan Alat Outdoor Subang' }} - BLNTRK Outdoor</title>
 
-    <!-- Fonts -->
+    <!-- Google Fonts: Bricolage Grotesque & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bl-d { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; }
     </style>
 </head>
-<body class="bg-stone-50 text-stone-800 antialiased flex flex-col min-h-screen">
+<body class="bg-[#fbfbf9] text-[#14201a] antialiased flex flex-col min-h-screen">
 
-    <!-- Top Info Bar -->
-    <div class="bg-emerald-950 text-emerald-200 text-xs py-1.5 px-4">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1">
+    <!-- Top Info Bar (Nuansa Forest & Lantern) -->
+    <div class="bg-[#0e1b15] text-stone-300 text-xs py-2 px-4 border-b border-[#1e3a2c]/60">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1.5">
             <div class="flex items-center gap-2">
-                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Toko Buka 24 Jam • Desa Kumpay, Jalancagak, Subang</span>
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#f6c453] opacity-75"></span>
+                    <span class="relative inline-flex h-2 w-2 rounded-full bg-[#f6c453]"></span>
+                </span>
+                <span class="text-white/90 font-medium">Buka 24 Jam • Desa Kumpay, Jalancagak, Subang</span>
             </div>
-            <div class="flex items-center gap-4">
-                <span>Pembayaran Manual di Toko (Tanpa Biaya Online)</span>
-                <a href="https://wa.me/{{ \App\Models\Pengaturan::ambil('no_wa_toko', '6281234567890') }}" target="_blank" class="hover:text-white font-medium flex items-center gap-1">
-                    <span>WhatsApp Kami</span>
+            <div class="flex items-center gap-4 text-[11px] sm:text-xs">
+                <span class="text-stone-400">Bayar Manual di Toko (Tanpa Biaya Online)</span>
+                <a href="https://wa.me/{{ \App\Models\Pengaturan::ambil('no_wa_toko', '6281234567890') }}" target="_blank" class="text-[#f6c453] hover:text-white font-bold flex items-center gap-1 transition">
+                    <span>WhatsApp Toko 💬</span>
                 </a>
             </div>
         </div>
     </div>
 
     <!-- Main Navigation Bar -->
-    <header class="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-sm">
+    <header class="bg-white/95 backdrop-blur-md border-b border-stone-200 sticky top-0 z-40 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <!-- Brand Logo -->
                 <div class="flex items-center">
-                    <a href="{{ route('beranda') }}" class="flex items-center gap-2">
-                        <div class="w-10 h-10 rounded-lg bg-emerald-700 flex items-center justify-center text-white shadow-sm font-black text-lg">
+                    <a href="{{ route('beranda') }}" class="flex items-center gap-2.5 group">
+                        <div class="w-10 h-10 rounded-xl bg-[#0e1b15] flex items-center justify-center text-[#f6c453] shadow-md font-extrabold text-lg bl-d group-hover:scale-105 transition">
                             B
                         </div>
                         <div>
-                            <span class="text-lg font-black tracking-tight text-stone-900 block leading-tight">BLNTRK</span>
-                            <span class="text-[10px] tracking-widest uppercase font-bold text-emerald-700 block leading-none">Outdoor Rental</span>
+                            <span class="bl-d text-xl font-extrabold tracking-tight text-[#0e1b15] block leading-none">BLNTRK</span>
+                            <span class="text-[10px] tracking-widest uppercase font-extrabold text-[#4e7a5a] block mt-0.5 leading-none">Outdoor Subang</span>
                         </div>
                     </a>
 
                     <!-- Desktop Nav Links -->
-                    <nav class="hidden md:flex ml-8 space-x-6 text-sm font-medium">
-                        <a href="{{ route('beranda') }}" class="{{ request()->routeIs('beranda') ? 'text-emerald-700 font-semibold' : 'text-stone-600 hover:text-emerald-700' }} transition">
+                    <nav class="hidden md:flex ml-10 space-x-7 text-sm font-semibold">
+                        <a href="{{ route('beranda') }}" class="{{ request()->routeIs('beranda') ? 'text-[#1e3a2c] font-bold border-b-2 border-[#1e3a2c] pb-1' : 'text-stone-600 hover:text-[#1e3a2c]' }} transition">
                             Beranda
                         </a>
-                        <a href="{{ url('/alat') }}" class="{{ request()->is('alat*') ? 'text-emerald-700 font-semibold' : 'text-stone-600 hover:text-emerald-700' }} transition">
+                        <a href="{{ route('katalog.index') }}" class="{{ request()->routeIs('katalog.*') || request()->is('alat*') ? 'text-[#1e3a2c] font-bold border-b-2 border-[#1e3a2c] pb-1' : 'text-stone-600 hover:text-[#1e3a2c]' }} transition">
                             Katalog Alat
                         </a>
                         @auth
                             @if(auth()->user()->punyaRole('pelanggan'))
-                                <a href="{{ url('/pesanan') }}" class="{{ request()->is('pesanan*') ? 'text-emerald-700 font-semibold' : 'text-stone-600 hover:text-emerald-700' }} transition">
+                                <a href="{{ url('/pesanan') }}" class="{{ request()->is('pesanan*') ? 'text-[#1e3a2c] font-bold border-b-2 border-[#1e3a2c] pb-1' : 'text-stone-600 hover:text-[#1e3a2c]' }} transition">
                                     Riwayat Sewa Saya
                                 </a>
                             @elseif(auth()->user()->punyaRole('admin'))
-                                <a href="{{ route('admin.dashboard') }}" class="text-amber-700 hover:text-amber-800 font-semibold transition">
-                                    Panel Admin &rarr;
+                                <a href="{{ route('admin.dashboard') }}" class="text-[#e0a526] hover:text-[#b87c18] font-bold transition flex items-center gap-1">
+                                    <span>⚙️ Panel Admin</span>
                                 </a>
                             @elseif(auth()->user()->punyaRole('pemilik'))
-                                <a href="{{ route('pemilik.dashboard') }}" class="text-blue-700 hover:text-blue-800 font-semibold transition">
-                                    Panel Pemilik &rarr;
+                                <a href="{{ route('pemilik.dashboard') }}" class="text-blue-700 hover:text-blue-800 font-bold transition flex items-center gap-1">
+                                    <span>📈 Panel Pemilik</span>
                                 </a>
                             @endif
                         @endauth
@@ -81,23 +85,23 @@
                 <!-- Auth Buttons / User Menu -->
                 <div class="flex items-center gap-3">
                     @auth
-                        <div class="relative flex items-center gap-2 text-sm">
+                        <div class="relative flex items-center gap-2 text-xs sm:text-sm">
                             <span class="hidden sm:inline text-stone-600 font-medium">Halo, <strong>{{ auth()->user()->nama }}</strong></span>
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-stone-100 text-stone-700 border border-stone-300">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-700 border border-stone-200">
                                 {{ auth()->user()->role?->label ?? 'User' }}
                             </span>
                             <form method="POST" action="{{ route('logout') }}" class="inline">
                                 @csrf
-                                <button type="submit" class="ml-2 text-xs text-rose-600 hover:text-rose-800 underline font-medium">
+                                <button type="submit" class="ml-2 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold border border-rose-200 transition">
                                     Keluar
                                 </button>
                             </form>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="text-sm font-semibold text-stone-700 hover:text-emerald-700 px-3 py-2 transition">
+                        <a href="{{ route('login') }}" class="text-xs sm:text-sm font-bold text-stone-700 hover:text-[#1e3a2c] px-3 py-2 transition">
                             Masuk
                         </a>
-                        <a href="{{ route('register') }}" class="text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-4 py-2 rounded-lg shadow-sm transition">
+                        <a href="{{ route('register') }}" class="text-xs sm:text-sm font-bold text-[#14201a] bg-[#f6c453] hover:bg-[#ffd36e] px-4 py-2 rounded-xl shadow-sm transition">
                             Daftar Akun
                         </a>
                     @endauth
@@ -114,39 +118,41 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-stone-900 text-stone-400 text-sm mt-12 border-t border-stone-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Footer Konsisten Deep Forest -->
+    <footer class="bg-[#0e1b15] text-stone-400 text-sm mt-16 border-t border-[#1e3a2c]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center text-white font-black text-sm">B</div>
-                        <span class="text-white font-bold text-base">BLNTRK OUTDOOR</span>
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-[#f6c453] text-[#0e1b15] flex items-center justify-center font-extrabold text-sm bl-d">
+                            B
+                        </div>
+                        <span class="text-white font-extrabold text-base bl-d">BLNTRK OUTDOOR</span>
                     </div>
                     <p class="text-xs text-stone-400 leading-relaxed">
-                        Jasa penyewaan perlengkapan hiking, camping, dan kegiatan outdoor di Jalancagak, Subang. Buka 24 jam dengan stok lengkap dan terawat.
+                        Pusat persewaan perlengkapan camping, hiking, dan aktivitas outdoor di Desa Kumpay, Jalancagak, Subang. Buka 24 jam dengan unit selalu bersih, lengkap, dan terawat.
                     </p>
                 </div>
                 <div>
-                    <h4 class="text-white font-semibold text-sm mb-3">Ketentuan Sewa</h4>
+                    <h4 class="text-white font-bold text-sm mb-3 bl-d">Ketentuan Sewa</h4>
                     <ul class="text-xs space-y-2 text-stone-400">
                         <li>• Satuan sewa dihitung per hari (24 jam)</li>
-                        <li>• Jam pengembalian default pukul 12:00 siang</li>
+                        <li>• Batas jam pengembalian default pukul 12:00 siang</li>
                         <li>• Jaminan kartu identitas asli (KTP/SIM) saat ambil barang</li>
-                        <li>• Pembayaran manual di toko saat serah terima alat</li>
+                        <li>• Pembayaran manual di toko (Tunai / QRIS) saat serah terima</li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-white font-semibold text-sm mb-3">Lokasi & Kontak</h4>
+                    <h4 class="text-white font-bold text-sm mb-3 bl-d">Lokasi & Kontak</h4>
                     <p class="text-xs text-stone-400 leading-relaxed mb-2">
-                        Desa Kumpay, Kec. Jalancagak, Kab. Subang, Jawa Barat
+                        📍 Desa Kumpay, Kec. Jalancagak, Kab. Subang, Jawa Barat
                     </p>
-                    <p class="text-xs text-stone-300 font-medium">
-                        WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '6281234567890') }}
+                    <p class="text-xs text-stone-300 font-semibold">
+                        WhatsApp: <span class="text-[#f6c453] font-mono">{{ \App\Models\Pengaturan::ambil('no_wa_toko', '6281234567890') }}</span>
                     </p>
                 </div>
             </div>
-            <div class="mt-8 pt-6 border-t border-stone-800 text-center text-xs text-stone-500">
+            <div class="mt-10 pt-6 border-t border-white/10 text-center text-xs text-stone-500">
                 &copy; {{ date('Y') }} BLNTRK Outdoor. Sistem Informasi Penyewaan Alat Outdoor Berbasis Web.
             </div>
         </div>

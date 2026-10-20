@@ -17,6 +17,14 @@ class DatabaseSeedTest extends TestCase
 
     protected bool $seed = true;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (!Role::exists()) {
+            $this->seed();
+        }
+    }
+
     public function test_roles_terbentuk_dan_sesuai(): void
     {
         $this->assertEquals(3, Role::count());

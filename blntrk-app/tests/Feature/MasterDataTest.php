@@ -25,6 +25,9 @@ class MasterDataTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        if (!User::where('email', 'admin@blntrk.test')->exists()) {
+            $this->seed();
+        }
         $this->admin = User::where('email', 'admin@blntrk.test')->firstOrFail();
     }
 

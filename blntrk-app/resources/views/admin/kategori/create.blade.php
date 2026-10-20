@@ -2,49 +2,51 @@
     <x-slot:title>Tambah Kategori Alat</x-slot:title>
 
     <div class="mb-6">
-        <a href="{{ route('admin.kategori.index') }}" class="text-xs font-semibold text-stone-500 hover:text-emerald-700 transition flex items-center gap-1 mb-2">
-            &larr; Kembali ke Daftar Kategori
+        <a href="{{ route('admin.kategori.index') }}" class="text-xs font-bold text-[#4e7a5a] hover:text-[#1e3a2c] transition flex items-center gap-1.5 mb-2">
+            <span>&larr;</span>
+            <span>Kembali ke Daftar Kategori</span>
         </a>
-        <h1 class="text-2xl font-black text-stone-900 tracking-tight">Tambah Kategori Baru</h1>
-        <p class="text-xs text-stone-500">Kelompokkan jenis perlengkapan outdoor untuk memudahkan pencarian pelanggan</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight bl-d">Tambah Kategori Baru</h1>
+        <p class="text-xs text-stone-500 mt-0.5">Kelompokkan jenis perlengkapan outdoor untuk memudahkan pencarian pelanggan</p>
     </div>
 
-    <div class="max-w-xl bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+    <div class="max-w-xl bg-white p-6 sm:p-7 rounded-2xl border border-stone-200/90 shadow-xs">
         <form method="POST" action="{{ route('admin.kategori.store') }}" class="space-y-4">
             @csrf
 
             <div>
-                <label for="nama" class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                <label for="nama" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5">
                     Nama Kategori <span class="text-rose-500">*</span>
                 </label>
                 <input type="text" id="nama" name="nama" value="{{ old('nama') }}" required autofocus
                     placeholder="Contoh: Tenda Camping, Tas Carrier, dll."
-                    class="w-full text-xs rounded-lg border-stone-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
                 @error('nama')
-                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
             </div>
 
             <div>
-                <label for="deskripsi" class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                <label for="deskripsi" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5">
                     Deskripsi Ringkas (Opsional)
                 </label>
                 <textarea id="deskripsi" name="deskripsi" rows="3"
                     placeholder="Penjelasan singkat mengenai kategori perlengkapan ini..."
-                    class="w-full text-xs rounded-lg border-stone-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm">{{ old('deskripsi') }}</textarea>
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">{{ old('deskripsi') }}</textarea>
                 @error('deskripsi')
-                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
-                <a href="{{ route('admin.kategori.index') }}" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
+                <a href="{{ route('admin.kategori.index') }}" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm transition">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold shadow-sm transition cursor-pointer">
                     Simpan Kategori
                 </button>
             </div>
         </form>
     </div>
 </x-layouts.admin>
+
