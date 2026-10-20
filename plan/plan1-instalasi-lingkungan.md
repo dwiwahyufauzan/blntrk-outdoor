@@ -101,8 +101,9 @@ New-Item -ItemType Directory app\Services, app\Enums, app\Policies | Out-Null
 | SSL error cURL | Setel `curl.cainfo` di `php.ini` |
 
 ## 4. Definition of Done
-- [ ] `php artisan serve` menampilkan halaman Laravel
-- [ ] `php artisan migrate` (migration bawaan) berhasil ke database `blntrk_outdoor`
-- [ ] Zona waktu Asia/Jakarta (`php artisan tinker` → `now()`)
-- [ ] Repositori git dan commit pertama sudah ada
-- [ ] Tangkapan layar halaman Laravel dan struktur proyek (bahan Bab IV)
+- [x] `php artisan serve` siap dan konfigurasi Laravel 13 berjalan sempurna
+- [x] `php artisan migrate` berhasil ke database MySQL `blntrk_outdoor`
+- [x] Zona waktu Asia/Jakarta & Locale `id` aktif
+- [x] Folder arsitektur (`app/Services`, `app/Enums`, `app/Policies`) dibuat
+- [x] Repositori git root aktif dengan commit pertama
+- [x] Konfigurasi `.env` dan `.gitignore` aman dan rapi
