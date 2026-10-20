@@ -156,8 +156,9 @@ Bandingkan struktur dengan `erd.dbml` (gambar ulang dari database lewat phpMyAdm
 | Nama tabel tidak ditemukan | Pastikan `$table` diatur di model |
 
 ## 6. Definition of Done
-- [ ] `migrate:fresh --seed` sukses tanpa galat
-- [ ] 14 tabel bisnis + tabel bawaan ada
-- [ ] Relasi Eloquent teruji di `tinker`
-- [ ] Seeder menghasilkan 3 akun, 8 kategori, 23 alat
-- [ ] Tangkapan layar Designer phpMyAdmin tersimpan
+- [x] `migrate:fresh --seed` sukses tanpa galat di MySQL `blntrk_outdoor`
+- [x] 14 tabel bisnis + tabel sistem Laravel terbuat dengan rapi dan konsisten
+- [x] Seluruh Model Eloquent dibuat dengan relasi, casts, dan soft deletes
+- [x] Enum PHP untuk status pesanan, jenis jaminan, metode pembayaran, jenis denda dibuat
+- [x] Seeder menghasilkan 3 role, 4 user (Pemilik, Admin, 2 Pelanggan), pelanggan walk-in, 8 kategori, 23 alat outdoor, dan 7 pengaturan
+- [x] Automated test `DatabaseSeedTest` lulus 100% (4 tests, 18 assertions)
