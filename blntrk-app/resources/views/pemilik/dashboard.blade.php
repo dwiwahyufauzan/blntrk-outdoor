@@ -131,10 +131,10 @@
                     @forelse($transaksiTerbaru as $t)
                         <tr class="hover:bg-slate-50/60 transition">
                             <td class="py-3 px-4 font-mono font-bold text-slate-900">
-                                {{ $t->kode }}
+                                {{ $t->no_resi }}
                             </td>
                             <td class="py-3 px-4 font-medium text-slate-900">
-                                {{ $t->pelanggan?->nama ?? '-' }}
+                                {{ $t->pelanggan?->nama_lengkap ?? '-' }}
                                 <span class="block text-[10px] text-slate-400 font-normal">
                                     {{ $t->pelanggan?->no_hp ?? '' }}
                                 </span>
@@ -143,7 +143,7 @@
                                 {{ $t->tanggal_mulai?->format('d/m/Y') }} - {{ $t->tanggal_selesai?->format('d/m/Y') }}
                             </td>
                             <td class="py-3 px-4 font-bold text-emerald-700">
-                                Rp {{ number_format($t->total_harga, 0, ',', '.') }}
+                                Rp {{ number_format($t->total_sewa, 0, ',', '.') }}
                             </td>
                             <td class="py-3 px-4">
                                 <x-badge-status :status="$t->status" />

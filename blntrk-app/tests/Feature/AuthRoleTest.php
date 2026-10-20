@@ -19,8 +19,7 @@ class AuthRoleTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('BLNTRK');
-        $response->assertSee('Kategori Perlengkapan');
-        $response->assertSee('Alur Penyewaan');
+        $response->assertSee('Paling sering disewa');
     }
 
     public function test_registrasi_pelanggan_berhasil_dan_membuat_data_pelanggan(): void

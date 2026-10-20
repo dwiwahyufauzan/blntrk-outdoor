@@ -134,13 +134,13 @@
                     @forelse($pesananTerbaru as $p)
                         <tr class="hover:bg-stone-50/60 transition">
                             <td class="py-3 px-4 font-mono font-bold text-stone-900">
-                                {{ $p->kode }}
-                                @if($p->tipe === 'walk_in')
+                                {{ $p->no_resi }}
+                                @if($p->pelanggan?->is_walk_in)
                                     <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800">Walk-in</span>
                                 @endif
                             </td>
                             <td class="py-3 px-4 font-medium text-stone-900">
-                                {{ $p->pelanggan?->nama ?? '-' }}
+                                {{ $p->pelanggan?->nama_lengkap ?? '-' }}
                                 <span class="block text-[10px] text-stone-400 font-normal">
                                     {{ $p->pelanggan?->no_hp ?? '' }}
                                 </span>
@@ -148,11 +148,11 @@
                             <td class="py-3 px-4">
                                 <div>{{ $p->tanggal_mulai?->format('d/m/Y') }} s/d {{ $p->tanggal_selesai?->format('d/m/Y') }}</div>
                                 <span class="text-[10px] text-stone-400">
-                                    {{ $p->tanggal_mulai && $p->tanggal_selesai ? $p->tanggal_mulai->diffInDays($p->tanggal_selesai) : 0 }} hari sewa
+                                    {{ $p->durasi_hari ?? ($p->tanggal_mulai && $p->tanggal_selesai ? $p->tanggal_mulai->diffInDays($p->tanggal_selesai) : 0) }} hari sewa
                                 </span>
                             </td>
                             <td class="py-3 px-4 font-bold text-stone-900">
-                                Rp {{ number_format($p->total_harga, 0, ',', '.') }}
+                                Rp {{ number_format($p->total_sewa, 0, ',', '.') }}
                             </td>
                             <td class="py-3 px-4">
                                 <x-badge-status :status="$p->status" />

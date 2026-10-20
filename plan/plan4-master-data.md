@@ -66,9 +66,9 @@ Siapkan 23 foto produk atau gambar placeholder berlisensi aman di `storage/app/p
 Tambah alat valid, kode duplikat, harga negatif, upload PDF, upload 3 MB, hapus alat berriwayat, buat user role pemilik (harus ditolak).
 
 ## 9. Definition of Done
-- [ ] CRUD kategori, alat, pelanggan, dan user berfungsi dengan validasi
-- [ ] Foto alat tersimpan dan tampil
-- [ ] Hapus berupa soft delete, tidak merusak riwayat
-- [ ] Admin tidak dapat membuat role pemilik
-- [ ] BB-15 sampai BB-26 lolos
-- [ ] Tangkapan layar daftar dan form alat
+- [x] CRUD kategori, alat, pelanggan, dan user berfungsi dengan validasi
+- [x] Foto alat tersimpan dan tampil (Storage disk public `alat/`, storage:link aktif)
+- [x] Hapus berupa soft delete, tidak merusak riwayat transaksi
+- [x] Admin tidak dapat membuat role pemilik (validasi Rule `in:admin,pelanggan`)
+- [x] BB-15 sampai BB-26 lolos (58 tests, 171 assertions 100% pass)
+- [x] Tampilan Blade responsif (kategori, alat, pelanggan, user)

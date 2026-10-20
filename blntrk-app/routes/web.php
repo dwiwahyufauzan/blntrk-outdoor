@@ -35,6 +35,21 @@ Route::middleware('auth')->group(function () {
 // Area Khusus Admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    // Master Data Kategori
+    Route::resource('kategori', Admin\KategoriController::class)->except('show');
+
+    // Master Data Alat
+    Route::patch('alat/{alat}/toggle', [Admin\AlatController::class, 'toggle'])->name('alat.toggle');
+    Route::resource('alat', Admin\AlatController::class);
+
+    // Master Data Pelanggan
+    Route::resource('pelanggan', Admin\PelangganController::class);
+
+    // Master Data Pengguna
+    Route::patch('user/{user}/toggle', [Admin\UserController::class, 'toggle'])->name('user.toggle');
+    Route::post('user/{user}/reset-password', [Admin\UserController::class, 'resetPassword'])->name('user.reset-password');
+    Route::resource('user', Admin\UserController::class)->except('show');
 });
 
 // Area Khusus Pemilik
