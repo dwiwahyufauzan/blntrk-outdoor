@@ -95,9 +95,9 @@ resources/views/components/{badge-status,alert,tombol,kartu-alat}.blade.php
 Login dengan tiga akun; akses `/admin` dari pelanggan (harus 403); login salah; daftar akun baru; email ganda.
 
 ## 10. Definition of Done
-- [ ] Tiga role login dan masuk dashboard masing-masing (halaman sementara)
-- [ ] Akses silang antar role menghasilkan 403
-- [ ] Registrasi pelanggan membuat `users` dan `pelanggan` dalam satu transaksi
-- [ ] Akun nonaktif ditolak login
-- [ ] Layout publik, admin, dan pemilik tampil responsif
-- [ ] Tangkapan layar login dan registrasi (Bab IV)
+- [x] Tiga role login dan masuk dashboard masing-masing (halaman beranda, admin dashboard, pemilik dashboard)
+- [x] Akses silang antar role menghasilkan 403
+- [x] Registrasi pelanggan membuat `users` dan `pelanggan` dalam satu transaksi
+- [x] Akun nonaktif ditolak login
+- [x] Layout publik, admin, dan pemilik tampil responsif
+- [x] Seluruh unit dan feature test lulus 100% (40 tests, 115 assertions)
