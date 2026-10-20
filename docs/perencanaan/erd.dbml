@@ -1,0 +1,188 @@
+// ERD BLNTRK Outdoor - tempel di https://dbdiagram.io
+Project blntrk_outdoor {
+  database_type: 'MySQL'
+}
+
+Table roles {
+  id tinyint [pk, increment]
+  nama varchar(20) [unique, not null, note: 'pemilik | admin | pelanggan']
+  label varchar(30) [not null]
+}
+
+Table users {
+  id bigint [pk, increment]
+  role_id tinyint [not null, ref: > roles.id]
+  nama varchar(100) [not null]
+  email varchar(100) [unique, not null]
+  email_verified_at datetime
+  password varchar(255) [not null]
+  is_aktif boolean [not null, default: true]
+  remember_token varchar(100)
+  created_at datetime
+  updated_at datetime
+  deleted_at datetime [note: 'soft delete']
+}
+
+Table pelanggan {
+  id bigint [pk, increment]
+  user_id bigint [unique, ref: - users.id, note: 'NULL = pelanggan walk-in']
+  nama_lengkap varchar(100) [not null]
+  no_hp varchar(20) [not null]
+  alamat text
+  created_at datetime
+  updated_at datetime
+  deleted_at datetime
+}
+
+Table kategori_alat {
+  id smallint [pk, increment]
+  nama varchar(50) [unique, not null]
+  slug varchar(60) [unique, not null]
+  deskripsi text
+  created_at datetime
+  updated_at datetime
+}
+
+Table alat {
+  id bigint [pk, increment]
+  kategori_id smallint [not null, ref: > kategori_alat.id]
+  kode_alat varchar(20) [unique, not null]
+  nama varchar(100) [not null]
+  varian varchar(50) [note: 'mis. No. 42, 60 L, Kap. 4']
+  deskripsi text
+  foto varchar(255)
+  harga_per_hari decimal(10,2) [not null]
+  stok_total int [not null, default: 0]
+  stok_perawatan int [not null, default: 0]
+  is_aktif boolean [not null, default: true]
+  created_at datetime
+  updated_at datetime
+  deleted_at datetime
+}
+
+Table pesanan {
+  id bigint [pk, increment]
+  no_resi varchar(20) [unique, not null]
+  pelanggan_id bigint [not null, ref: > pelanggan.id]
+  dibuat_oleh bigint [not null, ref: > users.id]
+  diproses_oleh bigint [ref: > users.id]
+  tanggal_mulai date [not null]
+  tanggal_selesai date [not null]
+  durasi_hari smallint [not null]
+  jatuh_tempo datetime [not null]
+  batas_ambil datetime [not null]
+  status enum('menunggu','dibayar','disewa','terlambat','dikembalikan','dibatalkan') [not null, default: 'menunggu']
+  total_sewa decimal(12,2) [not null]
+  diambil_pada datetime
+  dibatalkan_pada datetime
+  alasan_batal varchar(255)
+  catatan varchar(255)
+  created_at datetime
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    (status, tanggal_mulai, tanggal_selesai)
+    pelanggan_id
+  }
+}
+
+Table pesanan_detail {
+  id bigint [pk, increment]
+  pesanan_id bigint [not null, ref: > pesanan.id]
+  alat_id bigint [not null, ref: > alat.id]
+  jumlah smallint [not null]
+  harga_per_hari decimal(10,2) [not null, note: 'snapshot']
+  subtotal decimal(12,2) [not null]
+
+  indexes {
+    (pesanan_id, alat_id) [unique]
+    alat_id
+  }
+}
+
+Table pembayaran {
+  id bigint [pk, increment]
+  pesanan_id bigint [not null, ref: > pesanan.id]
+  jumlah decimal(12,2) [not null]
+  metode enum('tunai','transfer') [not null, default: 'tunai']
+  dibayar_pada datetime [not null]
+  dicatat_oleh bigint [not null, ref: > users.id]
+  catatan varchar(255)
+  created_at datetime
+  updated_at datetime
+}
+
+Table jaminan {
+  id bigint [pk, increment]
+  pesanan_id bigint [unique, not null, ref: - pesanan.id]
+  jenis enum('ktp','sim','kartu_pelajar','lainnya') [not null]
+  nomor_identitas_samar varchar(30) [not null, note: '4 digit terakhir']
+  keterangan varchar(255)
+  status enum('dititipkan','dikembalikan') [not null, default: 'dititipkan']
+  diterima_pada datetime [not null]
+  diterima_oleh bigint [not null, ref: > users.id]
+  dikembalikan_pada datetime
+  dikembalikan_oleh bigint [ref: > users.id]
+  created_at datetime
+  updated_at datetime
+}
+
+Table pengembalian {
+  id bigint [pk, increment]
+  pesanan_id bigint [unique, not null, ref: - pesanan.id]
+  dikembalikan_pada datetime [not null]
+  hari_terlambat smallint [not null, default: 0]
+  diterima_oleh bigint [not null, ref: > users.id]
+  catatan text
+  created_at datetime
+  updated_at datetime
+}
+
+Table pengembalian_detail {
+  id bigint [pk, increment]
+  pengembalian_id bigint [not null, ref: > pengembalian.id]
+  pesanan_detail_id bigint [unique, not null, ref: - pesanan_detail.id]
+  jml_baik smallint [not null, default: 0]
+  jml_rusak_ringan smallint [not null, default: 0]
+  jml_rusak_berat smallint [not null, default: 0]
+  jml_hilang smallint [not null, default: 0]
+  catatan varchar(255)
+}
+
+Table denda {
+  id bigint [pk, increment]
+  pesanan_id bigint [not null, ref: > pesanan.id]
+  pengembalian_id bigint [not null, ref: > pengembalian.id]
+  pengembalian_detail_id bigint [ref: > pengembalian_detail.id, note: 'diisi untuk jenis kerusakan']
+  jenis enum('keterlambatan','kerusakan') [not null]
+  keterangan varchar(255)
+  jumlah decimal(12,2) [not null]
+  status_bayar enum('belum_lunas','lunas') [not null, default: 'belum_lunas']
+  dilunasi_pada datetime
+  dilunasi_oleh bigint [ref: > users.id]
+  created_at datetime
+  updated_at datetime
+}
+
+Table pengaturan {
+  kunci varchar(50) [pk]
+  nilai varchar(255) [not null]
+  keterangan varchar(255)
+}
+
+Table log_aktivitas {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  aksi varchar(50) [not null]
+  modul varchar(50) [not null]
+  ref_id bigint
+  deskripsi varchar(255)
+  ip_address varchar(45)
+  created_at datetime [not null]
+
+  indexes {
+    (modul, ref_id)
+    created_at
+  }
+}

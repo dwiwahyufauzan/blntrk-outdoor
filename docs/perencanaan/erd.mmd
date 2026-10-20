@@ -1,0 +1,149 @@
+erDiagram
+    roles ||--o{ users : "memiliki"
+    users |o--o| pelanggan : "profil"
+    kategori_alat ||--o{ alat : "mengelompokkan"
+    pelanggan ||--o{ pesanan : "membuat"
+    users ||--o{ pesanan : "dibuat_oleh"
+    users |o--o{ pesanan : "diproses_oleh"
+    pesanan ||--|{ pesanan_detail : "terdiri_dari"
+    alat ||--o{ pesanan_detail : "disewa_dalam"
+    pesanan ||--o{ pembayaran : "dibayar_melalui"
+    users ||--o{ pembayaran : "dicatat_oleh"
+    pesanan ||--o| jaminan : "dijamin_dengan"
+    pesanan ||--o| pengembalian : "diakhiri_dengan"
+    pengembalian ||--|{ pengembalian_detail : "memuat"
+    pesanan_detail ||--o| pengembalian_detail : "diperiksa_pada"
+    pesanan ||--o{ denda : "menimbulkan"
+    pengembalian ||--o{ denda : "menghasilkan"
+    pengembalian_detail |o--o{ denda : "sumber_kerusakan"
+    users ||--o{ log_aktivitas : "melakukan"
+
+    roles {
+        tinyint id PK
+        varchar nama UK
+        varchar label
+    }
+    users {
+        bigint id PK
+        tinyint role_id FK
+        varchar nama
+        varchar email UK
+        varchar password
+        boolean is_aktif
+        datetime deleted_at
+    }
+    pelanggan {
+        bigint id PK
+        bigint user_id FK "nullable, unique"
+        varchar nama_lengkap
+        varchar no_hp
+        text alamat
+        datetime deleted_at
+    }
+    kategori_alat {
+        smallint id PK
+        varchar nama UK
+        varchar slug UK
+        text deskripsi
+    }
+    alat {
+        bigint id PK
+        smallint kategori_id FK
+        varchar kode_alat UK
+        varchar nama
+        varchar varian
+        decimal harga_per_hari
+        int stok_total
+        int stok_perawatan
+        varchar foto
+        boolean is_aktif
+        datetime deleted_at
+    }
+    pesanan {
+        bigint id PK
+        varchar no_resi UK
+        bigint pelanggan_id FK
+        bigint dibuat_oleh FK
+        bigint diproses_oleh FK
+        date tanggal_mulai
+        date tanggal_selesai
+        smallint durasi_hari
+        datetime jatuh_tempo
+        datetime batas_ambil
+        enum status
+        decimal total_sewa
+        datetime diambil_pada
+        datetime dibatalkan_pada
+        varchar alasan_batal
+        datetime deleted_at
+    }
+    pesanan_detail {
+        bigint id PK
+        bigint pesanan_id FK
+        bigint alat_id FK
+        smallint jumlah
+        decimal harga_per_hari
+        decimal subtotal
+    }
+    pembayaran {
+        bigint id PK
+        bigint pesanan_id FK
+        decimal jumlah
+        enum metode
+        datetime dibayar_pada
+        bigint dicatat_oleh FK
+    }
+    jaminan {
+        bigint id PK
+        bigint pesanan_id FK "unique"
+        enum jenis
+        varchar nomor_identitas_samar
+        enum status
+        datetime diterima_pada
+        bigint diterima_oleh FK
+        datetime dikembalikan_pada
+        bigint dikembalikan_oleh FK
+    }
+    pengembalian {
+        bigint id PK
+        bigint pesanan_id FK "unique"
+        datetime dikembalikan_pada
+        smallint hari_terlambat
+        bigint diterima_oleh FK
+        text catatan
+    }
+    pengembalian_detail {
+        bigint id PK
+        bigint pengembalian_id FK
+        bigint pesanan_detail_id FK "unique"
+        smallint jml_baik
+        smallint jml_rusak_ringan
+        smallint jml_rusak_berat
+        smallint jml_hilang
+    }
+    denda {
+        bigint id PK
+        bigint pesanan_id FK
+        bigint pengembalian_id FK
+        bigint pengembalian_detail_id FK "nullable"
+        enum jenis
+        decimal jumlah
+        enum status_bayar
+        datetime dilunasi_pada
+        bigint dilunasi_oleh FK
+    }
+    pengaturan {
+        varchar kunci PK
+        varchar nilai
+        varchar keterangan
+    }
+    log_aktivitas {
+        bigint id PK
+        bigint user_id FK
+        varchar aksi
+        varchar modul
+        bigint ref_id
+        varchar deskripsi
+        varchar ip_address
+        datetime created_at
+    }

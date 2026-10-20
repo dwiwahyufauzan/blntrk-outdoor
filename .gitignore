@@ -1,0 +1,21 @@
+# Root Git Ignore for BLNTRK Outdoor Repository
+blntrk-app/node_modules/
+blntrk-app/public/build/
+blntrk-app/public/hot
+blntrk-app/public/storage
+blntrk-app/storage/*.key
+blntrk-app/storage/pail
+blntrk-app/storage/framework/cache/*
+blntrk-app/storage/framework/sessions/*
+blntrk-app/storage/framework/views/*
+blntrk-app/storage/logs/*
+!blntrk-app/storage/framework/cache/.gitignore
+!blntrk-app/storage/framework/sessions/.gitignore
+!blntrk-app/storage/framework/views/.gitignore
+!blntrk-app/storage/logs/.gitignore
+blntrk-app/vendor/
+blntrk-app/.env
+blntrk-app/.env.backup
+blntrk-app/.env.production
+.DS_Store
+Thumbs.db
