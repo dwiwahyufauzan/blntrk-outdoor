@@ -171,6 +171,22 @@
                         </template>
                     </div>
 
+                    @unless($pelanggan)
+                        <!-- Kontak Pelanggan (profil belum lengkap) -->
+                        <div class="mt-6 pt-5 border-t border-stone-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="no_hp" class="block text-xs font-extrabold uppercase tracking-wider text-stone-700 mb-1.5">No. WhatsApp / HP</label>
+                                <input type="text" id="no_hp" name="no_hp" value="{{ old('no_hp') }}" required placeholder="08xxxxxxxxxx"
+                                       class="w-full text-xs rounded-2xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#0e1b15] p-3.5">
+                            </div>
+                            <div>
+                                <label for="alamat" class="block text-xs font-extrabold uppercase tracking-wider text-stone-700 mb-1.5">Alamat</label>
+                                <input type="text" id="alamat" name="alamat" value="{{ old('alamat') }}" required
+                                       class="w-full text-xs rounded-2xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#0e1b15] p-3.5">
+                            </div>
+                        </div>
+                    @endunless
+
                     <!-- Catatan Tambahan -->
                     <div class="mt-6 pt-5 border-t border-stone-100">
                         <label for="catatan" class="block text-xs font-extrabold uppercase tracking-wider text-stone-700 mb-1.5">

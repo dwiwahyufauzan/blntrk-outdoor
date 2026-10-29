@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatusPesanan;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,6 +49,19 @@ class Pesanan extends Model
             'diambil_pada' => 'datetime',
             'dibatalkan_pada' => 'datetime',
         ];
+    }
+
+    /**
+     * Batasi pesanan yang dapat dijangkau: staf (admin/pemilik) semua, pelanggan hanya miliknya.
+     * Pesanan milik orang lain diperlakukan seperti tidak ada (404) agar nomor resi tidak dapat ditebak.
+     */
+    public function scopeTampilkanUntuk(Builder $query, ?User $user): Builder
+    {
+        if ($user && $user->punyaRole('admin', 'pemilik')) {
+            return $query;
+        }
+
+        return $query->whereHas('pelanggan', fn ($q) => $q->where('user_id', $user?->id ?? 0));
     }
 
     public function pelanggan(): BelongsTo

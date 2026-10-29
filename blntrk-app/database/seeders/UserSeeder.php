@@ -12,6 +12,12 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        // Di produksi wajib menetapkan SEED_DEFAULT_PASSWORD; kata sandi bawaan 'password' hanya untuk lokal/testing.
+        $sandi = env('SEED_DEFAULT_PASSWORD');
+        if (app()->environment('production') && blank($sandi)) {
+            throw new \RuntimeException('Set SEED_DEFAULT_PASSWORD pada .env sebelum menjalankan UserSeeder di production.');
+        }
+        $sandi = $sandi ?: 'password';
         $rolePemilik = Role::where('nama', 'pemilik')->firstOrFail();
         $roleAdmin = Role::where('nama', 'admin')->firstOrFail();
         $rolePelanggan = Role::where('nama', 'pelanggan')->firstOrFail();
@@ -22,7 +28,7 @@ class UserSeeder extends Seeder
             [
                 'role_id' => $rolePemilik->id,
                 'nama' => 'Haji Dadan (Pemilik)',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($sandi),
                 'is_aktif' => true,
             ]
         );
@@ -33,7 +39,7 @@ class UserSeeder extends Seeder
             [
                 'role_id' => $roleAdmin->id,
                 'nama' => 'Dwi Wahyu (Admin Toko)',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($sandi),
                 'is_aktif' => true,
             ]
         );
@@ -44,7 +50,7 @@ class UserSeeder extends Seeder
             [
                 'role_id' => $rolePelanggan->id,
                 'nama' => 'Budi Setiawan',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($sandi),
                 'is_aktif' => true,
             ]
         );
@@ -64,7 +70,7 @@ class UserSeeder extends Seeder
             [
                 'role_id' => $rolePelanggan->id,
                 'nama' => 'Siti Rahmawati',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($sandi),
                 'is_aktif' => true,
             ]
         );

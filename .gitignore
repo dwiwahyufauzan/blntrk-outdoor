@@ -17,5 +17,10 @@ blntrk-app/vendor/
 blntrk-app/.env
 blntrk-app/.env.backup
 blntrk-app/.env.production
+blntrk-app/.phpunit.result.cache
+blntrk-app/AGENTS.md
+blntrk-app/CLAUDE.md
+# Dump database dapat memuat hash kata sandi & data pelanggan: jangan di-commit
+backup/*.sql
 .DS_Store
 Thumbs.db

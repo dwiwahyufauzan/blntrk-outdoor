@@ -23,7 +23,7 @@ class PesananRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'tanggal_mulai' => ['required', 'date', 'after_or_equal:today'],
             'tanggal_selesai' => ['required', 'date', 'after:tanggal_mulai'],
             'items' => ['required', 'array', 'min:1'],
@@ -31,6 +31,14 @@ class PesananRequest extends FormRequest
             'items.*.jumlah' => ['required', 'integer', 'min:1', 'max:50'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ];
+
+        // Pengguna tanpa profil pelanggan wajib melengkapi kontak (dipakai untuk pengingat WhatsApp)
+        if (! $this->user()?->pelanggan) {
+            $rules['no_hp'] = ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]{8,20}$/'];
+            $rules['alamat'] = ['required', 'string', 'max:500'];
+        }
+
+        return $rules;
     }
 
     /**
@@ -76,6 +84,9 @@ class PesananRequest extends FormRequest
             'items.*.jumlah.min' => 'Jumlah unit sewa minimal 1 unit.',
             'items.*.jumlah.max' => 'Jumlah unit sewa maksimal 50 unit per baris.',
             'catatan.max' => 'Catatan pesanan maksimal 500 karakter.',
+            'no_hp.required' => 'Nomor WhatsApp / HP wajib diisi untuk melengkapi profil pelanggan.',
+            'no_hp.regex' => 'Format nomor HP tidak valid.',
+            'alamat.required' => 'Alamat wajib diisi untuk melengkapi profil pelanggan.',
         ];
     }
 }

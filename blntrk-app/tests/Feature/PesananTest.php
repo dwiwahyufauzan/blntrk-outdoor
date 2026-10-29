@@ -291,6 +291,6 @@ class PesananTest extends TestCase
 
         // UserPelanggan mencoba melihat resi milik userLain -> 403 Forbidden
         $response = $this->actingAs($this->userPelanggan)->get(route('pesanan.show', $prefix));
-        $response->assertForbidden();
+        $response->assertNotFound();
     }
 }

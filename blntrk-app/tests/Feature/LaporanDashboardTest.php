@@ -423,10 +423,10 @@ class LaporanDashboardTest extends TestCase
         $responsePelanggan->assertStatus(200);
         $responsePelanggan->assertHeader('content-type', 'application/pdf');
 
-        // 2. Pelanggan 1 mencoba mengunduh resi milik Pelanggan 2 -> 403 Forbidden
+        // 2. Pelanggan 1 mencoba mengunduh resi milik Pelanggan 2 -> 404 (resi orang lain tidak terlihat)
         $responseIlegal = $this->actingAs($this->userPelanggan1)
             ->get(route('pesanan.pdf', $pesanan2->no_resi));
-        $responseIlegal->assertStatus(403);
+        $responseIlegal->assertStatus(404);
 
         // 3. Admin dapat mengunduh resi pesanan mana pun melalui admin route
         $responseAdmin = $this->actingAs($this->admin)

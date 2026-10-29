@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
 use Illuminate\View\View;
 
 class PesananController extends Controller
@@ -78,12 +79,12 @@ class PesananController extends Controller
             $pelanggan = Pelanggan::create([
                 'user_id' => $user->id,
                 'nama_lengkap' => $user->nama,
-                'no_hp' => $request->input('no_hp', '-'),
-                'alamat' => $request->input('alamat', '-'),
+                'no_hp' => $request->validated('no_hp'),
+                'alamat' => $request->validated('alamat'),
             ]);
         }
 
-        $pesanan = $service->buat($pelanggan, $user, $request->validated());
+        $pesanan = $service->buat($pelanggan, $user, Arr::except($request->validated(), ['no_hp', 'alamat']));
 
         return redirect()->route('pesanan.show', $pesanan->no_resi)
             ->with('status', 'Pesanan berhasil dibuat! Silakan simpan nomor resi Anda.');
@@ -106,6 +107,7 @@ class PesananController extends Controller
             'denda',
         ])
             ->where('no_resi', $resi)
+            ->tampilkanUntuk(auth()->user())
             ->firstOrFail();
 
         $this->authorize('view', $pesanan);
@@ -129,6 +131,7 @@ class PesananController extends Controller
             'denda',
         ])
             ->where('no_resi', $resi)
+            ->tampilkanUntuk(auth()->user())
             ->firstOrFail();
 
         $this->authorize('view', $pesanan);
@@ -149,7 +152,7 @@ class PesananController extends Controller
      */
     public function batal(BatalRequest $request, string $resi, PesananService $service): RedirectResponse
     {
-        $pesanan = Pesanan::where('no_resi', $resi)->firstOrFail();
+        $pesanan = Pesanan::where('no_resi', $resi)->tampilkanUntuk(auth()->user())->firstOrFail();
 
         $this->authorize('batal', $pesanan);
 

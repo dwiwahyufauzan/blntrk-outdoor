@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
     // Alur Pemesanan & Resi Pelanggan
     Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
     Route::get('/pesanan/buat', [PesananController::class, 'create'])->name('pesanan.create');
-    Route::post('/pesanan', [PesananController::class, 'store'])->name('pesanan.store');
+    Route::post('/pesanan', [PesananController::class, 'store'])->middleware('throttle:10,1')->name('pesanan.store');
     Route::get('/pesanan/{resi}', [PesananController::class, 'show'])->name('pesanan.show');
     Route::get('/pesanan/{resi}/pdf', [PesananController::class, 'cetakPdf'])->name('pesanan.pdf');
     Route::patch('/pesanan/{resi}/batal', [PesananController::class, 'batal'])->name('pesanan.batal');

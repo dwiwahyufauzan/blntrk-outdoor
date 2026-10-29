@@ -10,6 +10,7 @@ use App\Models\Pengaturan;
 use App\Models\Pesanan;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -79,8 +80,7 @@ class PesananService
             $jatuhTempo = $selesai->copy()->setTimeFromTimeString($jamKembali);
             $batasAmbil = $mulai->copy()->setTime(23, 59, 59);
 
-            $pesanan = Pesanan::create([
-                'no_resi' => $this->buatResi(),
+            $pesanan = $this->simpanDenganResi([
                 'pelanggan_id' => $pelanggan->id,
                 'dibuat_oleh' => $pembuat->id,
                 'tanggal_mulai' => $mulai,
@@ -106,15 +106,37 @@ class PesananService
     }
 
     /**
+     * Menyimpan pesanan dengan nomor resi unik. Kolom no_resi bersifat UNIQUE sehingga jika dua
+     * permintaan pertama di hari yang sama (tidak ada baris yang bisa dikunci) menghasilkan resi
+     * identik, salah satunya diulang di dalam savepoint dengan resi berikutnya.
+     */
+    private function simpanDenganResi(array $atribut): Pesanan
+    {
+        $maksPercobaan = 5;
+
+        for ($percobaan = 1; ; $percobaan++) {
+            try {
+                return DB::transaction(
+                    fn () => Pesanan::create($atribut + ['no_resi' => $this->buatResi()])
+                );
+            } catch (UniqueConstraintViolationException $e) {
+                if ($percobaan >= $maksPercobaan) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
      * Menghasilkan nomor resi unik harian dengan format BLN-YYMMDD-####.
      */
     public function buatResi(): string
     {
         $prefix = 'BLN-'.now()->format('ymd').'-';
 
-        // Cari pesanan terakhir hari ini dengan penguncian baris
+        // Resi terakhir hari ini (urut leksikografis aman karena nomor di-pad 4 digit)
         $lastResi = Pesanan::where('no_resi', 'like', "{$prefix}%")
-            ->orderByDesc('id')
+            ->orderByDesc('no_resi')
             ->lockForUpdate()
             ->value('no_resi');
 
@@ -296,49 +318,65 @@ class PesananService
      */
     public function batalkanKadaluarsa(): int
     {
-        $pesananKadaluarsa = Pesanan::where('status', StatusPesanan::Menunggu)
-            ->where('batas_ambil', '<', now())
-            ->get();
-
-        $count = 0;
-        foreach ($pesananKadaluarsa as $p) {
-            DB::transaction(function () use ($p) {
-                $p = Pesanan::lockForUpdate()->find($p->id);
-                if ($p && $p->status === StatusPesanan::Menunggu) {
-                    $p->update([
-                        'status' => StatusPesanan::Dibatalkan,
-                        'dibatalkan_pada' => now(),
-                        'alasan_batal' => 'Dibatalkan otomatis oleh sistem: melewati batas waktu pengambilan',
-                    ]);
-                }
-            });
-            $count++;
-        }
-
-        return $count;
+        return $this->batalkanMenungguKadaluarsa(now());
     }
 
     /**
      * Memperbarui status pesanan secara reaktif:
      * - Pesanan disewa yang melewati jatuh_tempo + toleransi -> terlambat
      * - Pesanan menunggu yang melewati batas_ambil -> dibatalkan
+     * Setiap perubahan dicatat pada log aktivitas (audit trail, pelaku: sistem).
      */
     public function sinkronStatus(): int
     {
+        $now = now();
         $toleransi = (int) Pengaturan::ambil('toleransi_menit', 60);
+        $batasTerlambat = $now->copy()->subMinutes($toleransi);
 
-        $terlambatCount = Pesanan::where('status', StatusPesanan::Disewa)
-            ->where('jatuh_tempo', '<', now()->subMinutes($toleransi))
-            ->update(['status' => StatusPesanan::Terlambat]);
+        $terlambatCount = 0;
+        $kandidat = Pesanan::where('status', StatusPesanan::Disewa)
+            ->where('jatuh_tempo', '<', $batasTerlambat)
+            ->pluck('id');
 
-        $batalCount = Pesanan::where('status', StatusPesanan::Menunggu)
-            ->where('batas_ambil', '<', now())
-            ->update([
-                'status' => StatusPesanan::Dibatalkan,
-                'dibatalkan_pada' => now(),
-                'alasan_batal' => 'Dibatalkan otomatis oleh sistem: melewati batas waktu pengambilan',
-            ]);
+        foreach ($kandidat as $id) {
+            DB::transaction(function () use ($id, $batasTerlambat, &$terlambatCount) {
+                $p = Pesanan::lockForUpdate()->find($id);
+                if ($p && $p->status === StatusPesanan::Disewa && $p->jatuh_tempo < $batasTerlambat) {
+                    $p->update(['status' => StatusPesanan::Terlambat]);
+                    LogAktivitas::catat(null, 'pesanan.terlambat', "Pesanan [{$p->no_resi}] ditandai terlambat otomatis oleh sistem", 'pesanan', $p->id);
+                    $terlambatCount++;
+                }
+            });
+        }
 
-        return $terlambatCount + $batalCount;
+        return $terlambatCount + $this->batalkanMenungguKadaluarsa($now);
+    }
+
+    /**
+     * Membatalkan pesanan berstatus menunggu yang melewati batas_ambil, per baris dengan lock + log.
+     */
+    private function batalkanMenungguKadaluarsa(Carbon $now): int
+    {
+        $count = 0;
+        $kandidat = Pesanan::where('status', StatusPesanan::Menunggu)
+            ->where('batas_ambil', '<', $now)
+            ->pluck('id');
+
+        foreach ($kandidat as $id) {
+            DB::transaction(function () use ($id, $now, &$count) {
+                $p = Pesanan::lockForUpdate()->find($id);
+                if ($p && $p->status === StatusPesanan::Menunggu && $p->batas_ambil < $now) {
+                    $p->update([
+                        'status' => StatusPesanan::Dibatalkan,
+                        'dibatalkan_pada' => $now,
+                        'alasan_batal' => 'Dibatalkan otomatis oleh sistem: melewati batas waktu pengambilan',
+                    ]);
+                    LogAktivitas::catat(null, 'pesanan.batal', "Pesanan [{$p->no_resi}] dibatalkan otomatis oleh sistem (melewati batas pengambilan)", 'pesanan', $p->id);
+                    $count++;
+                }
+            });
+        }
+
+        return $count;
     }
 }
