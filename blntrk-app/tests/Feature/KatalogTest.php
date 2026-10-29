@@ -4,9 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Alat;
 use App\Models\KategoriAlat;
-use App\Models\Pelanggan;
-use App\Models\Pesanan;
-use App\Models\PesananDetail;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -18,7 +15,9 @@ class KatalogTest extends TestCase
     use RefreshDatabase;
 
     protected KategoriAlat $kategori;
+
     protected Alat $alat;
+
     protected User $user;
 
     protected function setUp(): void

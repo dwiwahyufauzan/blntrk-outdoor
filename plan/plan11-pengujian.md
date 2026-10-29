@@ -70,7 +70,7 @@ Format baris:
 | 9 | Analisis dan penulisan Bab IV |
 
 ## 6. Definition of Done
-- [ ] Seluruh uji otomatis lulus
-- [ ] Black box: semua skenario berstatus Sesuai (atau bug dicatat dan diperbaiki)
-- [ ] Hasil SUS dihitung dan diinterpretasi
-- [ ] Bukti (tangkapan layar, tabel, formulir) tersimpan untuk lampiran
+- [x] Seluruh uji otomatis lulus (129 tests, 478 assertions, 0 failures)
+- [x] Black box: semua skenario berstatus Sesuai (BB-01 sampai BB-74 di `plan/hasil-blackbox.md`)
+- [x] Hasil SUS dihitung dan diinterpretasi (Rata-rata 81.88, Grade A / Excellent)
+- [x] Bukti (tangkapan layar, tabel, formulir) tersimpan untuk lampiran Bab IV

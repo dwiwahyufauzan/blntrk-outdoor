@@ -2,11 +2,11 @@
     <x-slot:title>Tambah Kategori Alat</x-slot:title>
 
     <div class="mb-6">
-        <a href="{{ route('admin.kategori.index') }}" class="text-xs font-bold text-[#4e7a5a] hover:text-[#1e3a2c] transition flex items-center gap-1.5 mb-2">
-            <span>&larr;</span>
+        <a href="{{ route('admin.kategori.index') }}" class="text-xs font-bold text-stone-600 hover:text-black transition flex items-center gap-1.5 mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             <span>Kembali ke Daftar Kategori</span>
         </a>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight bl-d">Tambah Kategori Baru</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight">Tambah Kategori Baru</h1>
         <p class="text-xs text-stone-500 mt-0.5">Kelompokkan jenis perlengkapan outdoor untuk memudahkan pencarian pelanggan</p>
     </div>
 
@@ -20,7 +20,7 @@
                 </label>
                 <input type="text" id="nama" name="nama" value="{{ old('nama') }}" required autofocus
                     placeholder="Contoh: Tenda Camping, Tas Carrier, dll."
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] shadow-xs text-[#14201a]">
                 @error('nama')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -32,7 +32,7 @@
                 </label>
                 <textarea id="deskripsi" name="deskripsi" rows="3"
                     placeholder="Penjelasan singkat mengenai kategori perlengkapan ini..."
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">{{ old('deskripsi') }}</textarea>
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] shadow-xs text-[#14201a]">{{ old('deskripsi') }}</textarea>
                 @error('deskripsi')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -42,7 +42,7 @@
                 <a href="{{ route('admin.kategori.index') }}" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold shadow-sm transition cursor-pointer">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-sm transition cursor-pointer">
                     Simpan Kategori
                 </button>
             </div>

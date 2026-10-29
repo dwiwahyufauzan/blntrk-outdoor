@@ -20,7 +20,7 @@ class DatabaseSeedTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (!Role::exists()) {
+        if (! Role::exists()) {
             $this->seed();
         }
     }

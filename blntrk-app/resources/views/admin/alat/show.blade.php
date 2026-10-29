@@ -3,8 +3,8 @@
 
     <div class="mb-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <a href="{{ route('admin.alat.index') }}" class="text-xs font-bold text-[#4e7a5a] hover:text-[#1e3a2c] transition flex items-center gap-1.5 mb-2">
-                <span>&larr;</span>
+            <a href="{{ route('admin.alat.index') }}" class="text-xs font-bold text-stone-500 hover:text-[#0e1b15] transition inline-flex items-center gap-1.5 mb-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 <span>Kembali ke Daftar Alat</span>
             </a>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight bl-d">{{ $alat->nama }}</h1>
@@ -12,8 +12,9 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.alat.edit', $alat->id) }}" class="px-4 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold transition shadow-sm cursor-pointer">
-                Edit Alat ✏️
+            <a href="{{ route('admin.alat.edit', $alat->id) }}" class="px-4 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold transition shadow-sm cursor-pointer inline-flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <span>Edit Alat</span>
             </a>
         </div>
     </div>
@@ -27,7 +28,7 @@
                     <img src="{{ asset('storage/' . $alat->foto) }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
                 @else
                     <div class="text-center p-6 text-stone-300">
-                        <span class="text-6xl block mb-2">⛺</span>
+                        <svg class="w-16 h-16 mx-auto mb-2 text-stone-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>
                         <span class="text-xs text-stone-400 font-medium">Belum ada foto yang diunggah</span>
                     </div>
                 @endif
@@ -51,7 +52,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/60">
                         <span class="text-[10px] uppercase font-bold text-emerald-800 block">Tarif Sewa Harian</span>
-                        <span class="text-xl font-extrabold text-[#14201a] bl-d block mt-0.5">
+                        <span class="text-xl font-extrabold text-[#14201a] block mt-0.5">
                             Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
                         </span>
                         <span class="text-[10px] text-emerald-700 block font-medium">per 24 jam</span>
@@ -59,7 +60,7 @@
 
                     <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
                         <span class="text-[10px] uppercase font-bold text-stone-600 block">Total Stok Fisik</span>
-                        <span class="text-xl font-extrabold text-stone-900 bl-d block mt-0.5">
+                        <span class="text-xl font-extrabold text-stone-900 block mt-0.5">
                             {{ $alat->stok_total }} unit
                         </span>
                         <span class="text-[10px] text-stone-500 block font-medium">terdaftar di toko</span>
@@ -69,7 +70,7 @@
                         <span class="text-[10px] uppercase font-bold {{ $alat->stok_perawatan > 0 ? 'text-amber-800' : 'text-stone-600' }} block">
                             Dalam Servis
                         </span>
-                        <span class="text-xl font-extrabold {{ $alat->stok_perawatan > 0 ? 'text-amber-900' : 'text-stone-900' }} bl-d block mt-0.5">
+                        <span class="text-xl font-extrabold {{ $alat->stok_perawatan > 0 ? 'text-amber-900' : 'text-stone-900' }} block mt-0.5">
                             {{ $alat->stok_perawatan }} unit
                         </span>
                         <span class="text-[10px] text-stone-500 block font-medium">sedang perbaikan</span>
@@ -94,7 +95,7 @@
     <!-- Riwayat Penyewaan Alat Ini -->
     <div class="bg-white rounded-2xl border border-stone-200/90 shadow-xs overflow-hidden">
         <div class="p-5 border-b border-stone-200/80 bg-stone-50/50">
-            <h2 class="text-sm font-extrabold text-[#14201a] bl-d">Histori Penggunaan & Penyewaan Alat</h2>
+            <h2 class="text-sm font-extrabold text-[#14201a]">Histori Penggunaan & Penyewaan Alat</h2>
             <p class="text-xs text-stone-500">Catatan transaksi rental yang melibatkan unit perlengkapan ini</p>
         </div>
 
@@ -125,7 +126,7 @@
                             <td class="py-3.5 px-4 text-stone-600">
                                 Rp {{ number_format($detail->harga_per_hari, 0, ',', '.') }}
                             </td>
-                            <td class="py-3.5 px-4 font-extrabold text-[#14201a] bl-d">
+                            <td class="py-3.5 px-4 font-extrabold text-[#14201a]">
                                 Rp {{ number_format($detail->subtotal, 0, ',', '.') }}
                             </td>
                             <td class="py-3.5 px-5">
@@ -135,7 +136,9 @@
                     @empty
                         <tr>
                             <td colspan="6" class="py-10 text-center text-stone-400">
-                                <span class="text-2xl block mb-1">📋</span>
+                                <div class="w-10 h-10 rounded-2xl bg-stone-100 text-stone-400 mx-auto flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </div>
                                 Belum ada riwayat penyewaan untuk alat ini.
                             </td>
                         </tr>

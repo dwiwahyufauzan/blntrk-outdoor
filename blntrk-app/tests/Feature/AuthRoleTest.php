@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Pelanggan;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,7 +16,7 @@ class AuthRoleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (!\App\Models\Role::exists()) {
+        if (! Role::exists()) {
             $this->seed();
         }
     }

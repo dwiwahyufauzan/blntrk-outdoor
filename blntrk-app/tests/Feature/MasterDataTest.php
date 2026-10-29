@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -25,14 +26,14 @@ class MasterDataTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (!User::where('email', 'admin@blntrk.test')->exists()) {
+        if (! User::where('email', 'admin@blntrk.test')->exists()) {
             $this->seed();
         }
         $this->admin = User::where('email', 'admin@blntrk.test')->firstOrFail();
     }
 
     /* -------------------------------------------------------------------------- */
-    /* UJI CRUD KATEGORI ALAT                                                     */
+    /* UJI CRUD KATEGORI ALAT */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_bisa_menambah_kategori_baru(): void
@@ -102,7 +103,7 @@ class MasterDataTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* UJI CRUD ALAT OUTDOOR                                                      */
+    /* UJI CRUD ALAT OUTDOOR */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_bisa_menambah_alat_baru_dengan_upload_foto(): void
@@ -224,7 +225,7 @@ class MasterDataTest extends TestCase
         $response = $this->actingAs($this->admin)->put(route('admin.alat.update', $alat->id), [
             'kategori_id' => $alat->kategori_id,
             'kode_alat' => $alat->kode_alat,
-            'nama' => $alat->nama . ' Updated',
+            'nama' => $alat->nama.' Updated',
             'harga_per_hari' => 45000,
             'stok_total' => 10,
             'stok_perawatan' => 2,
@@ -234,7 +235,7 @@ class MasterDataTest extends TestCase
         $response->assertRedirect(route('admin.alat.index'));
         $this->assertDatabaseHas('alat', [
             'id' => $alat->id,
-            'nama' => $alat->nama . ' Updated',
+            'nama' => $alat->nama.' Updated',
             'harga_per_hari' => 45000,
         ]);
 
@@ -255,7 +256,7 @@ class MasterDataTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* UJI CRUD PELANGGAN                                                         */
+    /* UJI CRUD PELANGGAN */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_bisa_menambah_pelanggan_walk_in(): void
@@ -298,7 +299,7 @@ class MasterDataTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* UJI CRUD PENGGUNA (USER) & KEAMANAN ROLE                                  */
+    /* UJI CRUD PENGGUNA (USER) & KEAMANAN ROLE */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_bisa_membuat_user_admin_dan_pelanggan(): void
@@ -365,6 +366,6 @@ class MasterDataTest extends TestCase
         $this->assertNotEmpty($passwordBaru);
 
         // Verifikasi password baru dapat digunakan untuk login
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check($passwordBaru, $budi->fresh()->password));
+        $this->assertTrue(Hash::check($passwordBaru, $budi->fresh()->password));
     }
 }

@@ -143,7 +143,7 @@ class UserController extends Controller
             return back()->with('error', 'Password Pemilik Toko tidak dapat direset dari panel admin.');
         }
 
-        $passwordSementara = 'Bln' . Str::random(6) . '!';
+        $passwordSementara = 'Bln'.Str::random(6).'!';
         $user->update(['password' => Hash::make($passwordSementara)]);
 
         return back()->with('password_baru', [

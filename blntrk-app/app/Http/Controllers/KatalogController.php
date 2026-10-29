@@ -39,12 +39,12 @@ class KatalogController extends Controller
 
         // Pencarian kata kunci nama/varian/deskripsi/kode
         if ($request->filled('q')) {
-            $search = '%' . trim($request->input('q')) . '%';
+            $search = '%'.trim($request->input('q')).'%';
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', $search)
-                  ->orWhere('varian', 'like', $search)
-                  ->orWhere('deskripsi', 'like', $search)
-                  ->orWhere('kode_alat', 'like', $search);
+                    ->orWhere('varian', 'like', $search)
+                    ->orWhere('deskripsi', 'like', $search)
+                    ->orWhere('kode_alat', 'like', $search);
             });
         }
 
@@ -54,7 +54,7 @@ class KatalogController extends Controller
             'termurah' => $query->orderBy('harga_per_hari', 'asc'),
             'termahal' => $query->orderBy('harga_per_hari', 'desc'),
             'nama_asc' => $query->orderBy('nama', 'asc'),
-            default    => $query->latest(),
+            default => $query->latest(),
         };
 
         $alatList = $query->paginate(12)->withQueryString();
@@ -174,7 +174,7 @@ class KatalogController extends Controller
             'estimasi_per_unit' => $estimasiPerUnit,
             'pesan' => $tersedia > 0
                 ? "Tersedia {$tersedia} unit untuk periode tanggal tersebut."
-                : "Maaf, seluruh stok unit sudah terpesan pada rentang tanggal tersebut.",
+                : 'Maaf, seluruh stok unit sudah terpesan pada rentang tanggal tersebut.',
         ]);
     }
 }

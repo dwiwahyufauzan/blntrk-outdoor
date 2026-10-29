@@ -2,8 +2,8 @@
     <x-slot:title>Edit Pelanggan - {{ $pelanggan->nama_lengkap }}</x-slot:title>
 
     <div class="mb-6">
-        <a href="{{ route('admin.pelanggan.index') }}" class="text-xs font-bold text-[#4e7a5a] hover:text-[#1e3a2c] transition flex items-center gap-1.5 mb-2">
-            <span>&larr;</span>
+        <a href="{{ route('admin.pelanggan.index') }}" class="text-xs font-bold text-stone-500 hover:text-[#0e1b15] transition inline-flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             <span>Kembali ke Daftar Pelanggan</span>
         </a>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight bl-d">Edit Data Pelanggan</h1>
@@ -20,7 +20,7 @@
                     Nama Lengkap Pelanggan <span class="text-rose-500">*</span>
                 </label>
                 <input type="text" id="nama_lengkap" name="nama_lengkap" value="{{ old('nama_lengkap', $pelanggan->nama_lengkap) }}" required autofocus
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">
                 @error('nama_lengkap')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -31,7 +31,7 @@
                     Nomor WhatsApp / HP Aktif <span class="text-rose-500">*</span>
                 </label>
                 <input type="text" id="no_hp" name="no_hp" value="{{ old('no_hp', $pelanggan->no_hp) }}" required
-                    class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                    class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">
                 @error('no_hp')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -42,7 +42,7 @@
                     Alamat Domisili <span class="text-rose-500">*</span>
                 </label>
                 <textarea id="alamat" name="alamat" rows="3" required
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">{{ old('alamat', $pelanggan->alamat) }}</textarea>
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">{{ old('alamat', $pelanggan->alamat) }}</textarea>
                 @error('alamat')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -52,7 +52,7 @@
                 <a href="{{ route('admin.pelanggan.index') }}" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold shadow-sm transition cursor-pointer">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-sm transition cursor-pointer">
                     Perbarui Data Pelanggan
                 </button>
             </div>

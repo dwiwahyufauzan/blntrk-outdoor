@@ -2,8 +2,8 @@
     <x-slot:title>Tambah Alat Outdoor Baru</x-slot:title>
 
     <div class="mb-6">
-        <a href="{{ route('admin.alat.index') }}" class="text-xs font-bold text-[#4e7a5a] hover:text-[#1e3a2c] transition flex items-center gap-1.5 mb-2">
-            <span>&larr;</span>
+        <a href="{{ route('admin.alat.index') }}" class="text-xs font-bold text-stone-500 hover:text-[#0e1b15] transition inline-flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             <span>Kembali ke Daftar Alat</span>
         </a>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight bl-d">Tambah Alat Outdoor</h1>
@@ -107,12 +107,14 @@
                 <div class="flex items-start gap-4">
                     <div class="w-24 h-24 rounded-2xl bg-stone-100 border border-stone-200 overflow-hidden flex items-center justify-center shrink-0">
                         <img id="preview-img" src="" alt="Pratinjau Foto" class="w-full h-full object-cover hidden">
-                        <span id="preview-placeholder" class="text-3xl text-stone-300">⛺</span>
+                        <span id="preview-placeholder" class="text-stone-300">
+                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>
+                        </span>
                     </div>
                     <div class="flex-1">
                         <input type="file" id="foto" name="foto" accept="image/jpeg,image/png,image/webp"
                             onchange="previewFoto(this)"
-                            class="block w-full text-xs text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#0e1b15] file:text-[#f6c453] hover:file:bg-[#1e3a2c] cursor-pointer">
+                            class="block w-full text-xs text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#5edd5b] file:text-black hover:file:bg-[#4ed04b] cursor-pointer">
                         <p class="text-[11px] text-stone-400 mt-1.5">Disarankan foto dengan rasio 1:1 atau 4:3 latar bersih agar katalog terlihat profesional.</p>
                         @error('foto')
                             <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
@@ -128,7 +130,7 @@
                 </label>
                 <textarea id="deskripsi" name="deskripsi" rows="3"
                     placeholder="Tuliskan spesifikasi bahan, ukuran, kapasitas, atau kelengkapan alat outdoor..."
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">{{ old('deskripsi') }}</textarea>
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] shadow-xs text-[#14201a]">{{ old('deskripsi') }}</textarea>
                 @error('deskripsi')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -137,7 +139,7 @@
             <!-- Status Aktif -->
             <div class="flex items-center gap-2.5 p-3 rounded-xl bg-stone-50 border border-stone-200/80">
                 <input type="checkbox" id="is_aktif" name="is_aktif" value="1" {{ old('is_aktif', true) ? 'checked' : '' }}
-                    class="rounded-lg border-stone-300 text-[#0e1b15] focus:ring-[#f6c453]">
+                    class="rounded-lg border-stone-300 text-[#0e1b15] focus:ring-[#5edd5b]">
                 <label for="is_aktif" class="text-xs font-semibold text-stone-700 cursor-pointer">
                     Aktifkan alat ini agar dapat langsung dilihat dan disewa oleh pelanggan di katalog publik
                 </label>
@@ -147,7 +149,7 @@
                 <a href="{{ route('admin.alat.index') }}" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold shadow-sm transition cursor-pointer">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-sm transition cursor-pointer">
                     Simpan Alat Outdoor
                 </button>
             </div>

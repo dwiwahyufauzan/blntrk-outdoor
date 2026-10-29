@@ -3,13 +3,13 @@
 
     <div class="mb-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <span class="text-[10px] font-bold uppercase tracking-widest text-[#4e7a5a] block mb-1">Katalog & Inventaris</span>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight bl-d">Kategori Alat Outdoor</h1>
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#0e1b15] block mb-1">Katalog & Inventaris</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight">Kategori Alat Outdoor</h1>
             <p class="text-xs text-stone-500 mt-0.5">Klasifikasi kelompok perlengkapan camping & hiking di toko fisik BLNTRK Outdoor</p>
         </div>
 
-        <a href="{{ route('admin.kategori.create') }}" class="px-4 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold shadow-sm transition inline-flex items-center gap-2 w-fit cursor-pointer">
-            <span>➕</span>
+        <a href="{{ route('admin.kategori.create') }}" class="px-4 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-sm transition inline-flex items-center gap-2 w-fit cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
             <span>Tambah Kategori</span>
         </a>
     </div>
@@ -33,7 +33,7 @@
                             <td class="py-3.5 px-5 text-center font-bold text-stone-400">
                                 {{ $kategoriList->firstItem() + $index }}
                             </td>
-                            <td class="py-3.5 px-4 font-bold text-[#14201a] text-sm bl-d">
+                            <td class="py-3.5 px-4 font-bold text-[#14201a] text-sm">
                                 {{ $kat->nama }}
                             </td>
                             <td class="py-3.5 px-4 font-mono text-stone-500 text-[11px]">
@@ -43,13 +43,13 @@
                                 {{ $kat->deskripsi ?? '-' }}
                             </td>
                             <td class="py-3.5 px-4 text-center">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {{ $kat->alat_count > 0 ? 'bg-[#1e3a2c]/10 text-[#1e3a2c] border border-[#1e3a2c]/20' : 'bg-stone-100 text-stone-500' }}">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold {{ $kat->alat_count > 0 ? 'bg-[#5edd5b]/20 text-emerald-900 border border-[#5edd5b]/40' : 'bg-stone-100 text-stone-500' }}">
                                     {{ $kat->alat_count }} unit jenis
                                 </span>
                             </td>
                             <td class="py-3.5 px-5 text-right">
                                 <div class="inline-flex items-center gap-2">
-                                    <a href="{{ route('admin.kategori.edit', $kat->id) }}" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-[#0e1b15] hover:text-[#f6c453] text-stone-700 font-bold text-[11px] transition">
+                                    <a href="{{ route('admin.kategori.edit', $kat->id) }}" class="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-[#5edd5b] hover:text-black text-stone-700 font-bold text-[11px] transition">
                                         Edit
                                     </a>
 
@@ -66,7 +66,9 @@
                     @empty
                         <tr>
                             <td colspan="6" class="py-10 text-center text-stone-400">
-                                <span class="text-2xl block mb-1">📂</span>
+                                <div class="w-10 h-10 rounded-2xl bg-stone-100 text-stone-400 mx-auto flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                </div>
                                 Belum ada data kategori alat outdoor.
                             </td>
                         </tr>

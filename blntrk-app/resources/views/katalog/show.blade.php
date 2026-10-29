@@ -21,33 +21,48 @@
             <!-- Kolom Kiri: Foto & Deskripsi Alat (7 Kolom) -->
             <div class="lg:col-span-7 space-y-6">
                 <!-- Foto Utama -->
-                <div class="bg-white rounded-3xl border border-stone-200/90 shadow-xs overflow-hidden relative group">
-                    <div class="aspect-4/3 bg-stone-100 flex items-center justify-center">
+                <div class="bg-white rounded-3xl border border-stone-200/90 shadow-sm overflow-hidden relative group">
+                    <div class="aspect-4/3 bg-stone-50 flex items-center justify-center p-6">
                         @if($alat->foto)
                             <img src="{{ asset('storage/' . $alat->foto) }}" alt="{{ $alat->nama }}"
-                                class="w-full h-full object-cover">
+                                class="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition duration-300">
                         @else
-                            <div class="flex flex-col items-center justify-center text-stone-300 py-24">
-                                <span class="text-7xl">⛺</span>
-                                <span class="text-xs font-bold text-stone-400 mt-2 tracking-widest uppercase">BLNTRK Outdoor Subang</span>
+                            @php
+                                $kategoriNama = strtolower($alat->kategori?->nama ?? '');
+                                $dummyImg = 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1000&q=80';
+                                if (str_contains($kategoriNama, 'tenda')) {
+                                    $dummyImg = 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=1000&q=80';
+                                } elseif (str_contains($kategoriNama, 'carrier') || str_contains($kategoriNama, 'tas')) {
+                                    $dummyImg = 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=1000&q=80';
+                                } elseif (str_contains($kategoriNama, 'tidur') || str_contains($kategoriNama, 'matras')) {
+                                    $dummyImg = 'https://images.unsplash.com/photo-1520095972714-909e91b038e5?auto=format&fit=crop&w=1000&q=80';
+                                } elseif (str_contains($kategoriNama, 'masak')) {
+                                    $dummyImg = 'https://images.unsplash.com/photo-1470246973918-29a93221c455?auto=format&fit=crop&w=1000&q=80';
+                                }
+                            @endphp
+                            <div class="w-full h-full relative overflow-hidden rounded-2xl">
+                                <img src="{{ $dummyImg }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
+                                    <span class="text-xs font-bold text-white tracking-wider uppercase">BLNTRK Outdoor Gear</span>
+                                </div>
                             </div>
                         @endif
                     </div>
 
                     <!-- Badge Kategori & Kode -->
                     <div class="absolute top-4 left-4 flex items-center gap-2">
-                        <span class="px-3 py-1 rounded-full bg-[#0e1b15]/85 backdrop-blur-xs text-[#f6c453] text-[11px] font-bold uppercase tracking-wider shadow-xs">
+                        <span class="px-3 py-1 rounded-full bg-[#0e1b15]/90 backdrop-blur-xs text-[#5edd5b] text-[11px] font-extrabold uppercase tracking-wider shadow-xs">
                             {{ $alat->kategori?->nama ?? 'Perlengkapan' }}
                         </span>
-                        <span class="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-xs text-[#14201a] text-[11px] font-mono font-bold shadow-xs">
+                        <span class="px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[#14201a] text-[11px] font-mono font-bold shadow-xs border border-stone-200">
                             {{ $alat->kode_alat }}
                         </span>
                     </div>
                 </div>
 
                 <!-- Tab Informasi & Spesifikasi -->
-                <div class="bg-white rounded-2xl border border-stone-200/90 shadow-xs p-6 sm:p-8">
-                    <h2 class="text-lg font-black text-[#14201a] bl-d mb-3">Deskripsi & Kelengkapan</h2>
+                <div class="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 sm:p-8">
+                    <h2 class="text-lg font-black text-[#14201a] tracking-tight mb-3">Deskripsi & Kelengkapan</h2>
                     <div class="prose prose-stone text-xs sm:text-sm text-stone-600 leading-relaxed">
                         @if($alat->deskripsi)
                             <p class="whitespace-pre-line">{{ $alat->deskripsi }}</p>
@@ -56,24 +71,30 @@
                         @endif
                     </div>
 
-                    <!-- Poin Keunggulan -->
+                    <!-- Poin Keunggulan dengan SVG Icons -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-stone-100">
                         <div class="flex items-start gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0">✓</span>
+                            <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </span>
                             <div>
                                 <h4 class="text-xs font-bold text-[#14201a]">Higienis & Bersih</h4>
                                 <p class="text-[11px] text-stone-500 mt-0.5">Dicuci bersih dan disinfeksi setelah setiap trip.</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-sm font-bold shrink-0">★</span>
+                            <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                                <svg class="w-5 h-5 fill-amber-400 stroke-amber-500" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                            </span>
                             <div>
                                 <h4 class="text-xs font-bold text-[#14201a]">Kondisi Siap Pakai</h4>
                                 <p class="text-[11px] text-stone-500 mt-0.5">Frame, resleting, dan pasak dicek lengkap.</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <span class="w-8 h-8 rounded-xl bg-[#1e3a2c]/10 text-[#1e3a2c] flex items-center justify-center text-sm font-bold shrink-0">24</span>
+                            <span class="w-9 h-9 rounded-xl bg-[#0e1b15]/10 text-[#0e1b15] flex items-center justify-center text-xs font-black shrink-0 border border-[#0e1b15]/15">
+                                24H
+                            </span>
                             <div>
                                 <h4 class="text-xs font-bold text-[#14201a]">Buka 24 Jam</h4>
                                 <p class="text-[11px] text-stone-500 mt-0.5">Ambil atau kembalikan kapan saja di toko.</p>
@@ -85,26 +106,26 @@
 
             <!-- Kolom Kanan: Card Cek Ketersediaan & Estimasi Harga (5 Kolom) -->
             <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
-                <div class="bg-white rounded-3xl border border-stone-200/90 shadow-md p-6 sm:p-7 relative overflow-hidden">
-                    <!-- Amber Glow Accent -->
-                    <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#f6c453]/15 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="bg-white rounded-3xl border border-stone-200/90 shadow-lg p-6 sm:p-7 relative overflow-hidden">
+                    <!-- Accent Green Glow -->
+                    <div class="absolute -top-12 -right-12 w-40 h-40 bg-[#5edd5b]/20 rounded-full blur-2xl pointer-events-none"></div>
 
                     <!-- Header Harga -->
                     <div class="mb-6 pb-5 border-b border-stone-100">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block mb-1">Tarif Sewa Reguler</span>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block mb-1">Tarif Sewa Harian</span>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl sm:text-4xl font-black text-[#0e1b15] bl-d">
+                            <span class="text-3xl sm:text-4xl font-extrabold text-[#0e1b15]">
                                 Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
                             </span>
-                            <span class="text-xs font-semibold text-stone-500">/ 24 Jam (1 Hari)</span>
+                            <span class="text-xs font-semibold text-stone-500">/ 24 Jam</span>
                         </div>
                         <div class="flex items-center gap-3 mt-3 text-xs text-stone-500">
-                            <span class="inline-flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span class="inline-flex items-center gap-1.5 font-medium">
+                                <span class="w-2 h-2 rounded-full bg-[#5edd5b]"></span>
                                 Total Stok Fisik: <strong class="text-[#14201a]">{{ $alat->stok_total }} unit</strong>
                             </span>
                             @if($alat->stok_perawatan > 0)
-                                <span class="text-amber-600">({{ $alat->stok_perawatan }} servis)</span>
+                                <span class="text-amber-600 font-semibold">({{ $alat->stok_perawatan }} servis)</span>
                             @endif
                         </div>
                     </div>
@@ -112,44 +133,44 @@
                     <!-- Form Pengecekan Ketersediaan -->
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-xs font-black uppercase tracking-wider text-[#14201a] bl-d flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#f6c453]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#14201a] flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#0e1b15]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 Cek Jadwal Ketersediaan
                             </h3>
-                            <span class="text-[10px] font-semibold text-[#4e7a5a]">Real-Time Sync</span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Real-Time Sync</span>
                         </div>
 
                         <!-- Input Tanggal Mulai & Selesai -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label for="tanggal_mulai" class="block text-[11px] font-bold text-[#14201a] uppercase tracking-wider mb-1">
-                                    Mulai Sewa
+                                <label for="tanggal_mulai" class="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                                    Tgl Ambil
                                 </label>
                                 <input type="date" id="tanggal_mulai" min="{{ date('Y-m-d') }}" value="{{ $tMulaiDef }}"
-                                    class="w-full text-xs font-medium rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-2xs">
+                                    class="w-full text-xs font-semibold rounded-xl border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] shadow-2xs">
                             </div>
 
                             <div>
-                                <label for="tanggal_selesai" class="block text-[11px] font-bold text-[#14201a] uppercase tracking-wider mb-1">
-                                    Selesai Sewa
+                                <label for="tanggal_selesai" class="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                                    Maks. Kembali
                                 </label>
                                 <input type="date" id="tanggal_selesai" min="{{ date('Y-m-d', strtotime('+1 day')) }}" value="{{ $tSelesaiDef }}"
-                                    class="w-full text-xs font-medium rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-2xs">
+                                    class="w-full text-xs font-semibold rounded-xl border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] shadow-2xs">
                             </div>
                         </div>
 
                         <!-- Jumlah Unit -->
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <label for="jumlah_unit" class="block text-[11px] font-bold text-[#14201a] uppercase tracking-wider">
-                                    Jumlah Unit Yang Dibutuhkan
+                                <label for="jumlah_unit" class="block text-[11px] font-bold text-stone-700 uppercase tracking-wider">
+                                    Jumlah Unit
                                 </label>
                                 <span id="label-tersedia" class="text-[11px] font-bold text-stone-500">Maks: {{ $alat->stok_total }}</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <button type="button" onclick="ubahJumlah(-1)" class="w-10 h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-[#14201a] font-bold text-base flex items-center justify-center transition cursor-pointer">−</button>
                                 <input type="number" id="jumlah_unit" min="1" max="{{ $alat->stok_total }}" value="1"
-                                    class="w-full text-center text-sm font-bold rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-2xs">
+                                    class="w-full text-center text-sm font-bold rounded-xl border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] shadow-2xs">
                                 <button type="button" onclick="ubahJumlah(1)" class="w-10 h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-[#14201a] font-bold text-base flex items-center justify-center transition cursor-pointer">+</button>
                             </div>
                         </div>
@@ -157,14 +178,14 @@
                         <!-- Status Ketersediaan Live Box -->
                         <div id="status-box" class="p-4 rounded-2xl border transition-all duration-300 bg-stone-50 border-stone-200">
                             <div id="status-loading" class="hidden flex items-center gap-2 text-xs font-semibold text-stone-600">
-                                <svg class="animate-spin h-4 w-4 text-[#f6c453]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <svg class="animate-spin h-4 w-4 text-[#0e1b15]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 <span>Menghubungi kalender toko...</span>
                             </div>
 
                             <div id="status-content">
                                 <div class="flex items-center gap-2">
                                     <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                    <span id="status-judul" class="text-xs font-black text-[#14201a] bl-d">Siap Dicek</span>
+                                    <span id="status-judul" class="text-xs font-black text-[#14201a]">Siap Dicek</span>
                                 </div>
                                 <p id="status-pesan" class="text-xs text-stone-500 mt-1">
                                     Pilih rentang tanggal penyewaan untuk melihat sisa ketersediaan unit.
@@ -183,31 +204,32 @@
                                 <span id="estimasi-subtotal" class="font-bold text-[#14201a]">Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}</span>
                             </div>
                             <div class="pt-2 border-t border-stone-100 flex items-center justify-between">
-                                <span class="text-xs font-black uppercase tracking-wider text-[#14201a] bl-d">Total Estimasi:</span>
-                                <span id="estimasi-total" class="text-xl font-black text-[#0e1b15] bl-d">
+                                <span class="text-xs font-black uppercase tracking-wider text-[#14201a]">Total Estimasi:</span>
+                                <span id="estimasi-total" class="text-xl font-extrabold text-[#0e1b15]">
                                     Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Tombol Aksi Sewa -->
+                        <!-- Tombol Aksi Sewa (Foresta Neon Lime) -->
                         <div class="pt-2">
                             @auth
-                                <a id="btn-sewa" href="{{ route('katalog.index') }}"
-                                    class="w-full py-3.5 px-4 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] font-black text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer bl-d">
+                                <a id="btn-sewa" href="{{ route('pesanan.create', ['alat_id' => $alat->id]) }}"
+                                    class="w-full py-3.5 px-4 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-extrabold text-xs uppercase tracking-wider transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer font-urbanist">
                                     <span>Lanjut Pesan Sekarang</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                 </a>
                             @else
                                 <a id="btn-sewa" href="{{ route('login') }}"
-                                    class="w-full py-3.5 px-4 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] font-black text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer bl-d">
+                                    class="w-full py-3.5 px-4 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-extrabold text-xs uppercase tracking-wider transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer font-urbanist">
                                     <span>Masuk untuk Menyewa</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                 </a>
                             @endauth
 
-                            <p class="text-[11px] text-center text-stone-400 mt-2">
-                                🔒 Jaminan KTP/SIM asli diserahkan saat pengambilan alat di toko fisik.
+                            <p class="text-[11px] text-center text-stone-400 mt-2.5 flex items-center justify-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-stone-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span>Jaminan KTP/SIM asli diserahkan saat pengambilan alat di toko fisik.</span>
                             </p>
                         </div>
                     </div>
@@ -220,37 +242,50 @@
             <div class="mt-16 pt-10 border-t border-stone-200/80">
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h3 class="text-xl font-black text-[#14201a] bl-d">Perlengkapan Terkait</h3>
+                        <h3 class="text-xl font-extrabold text-[#14201a]">Perlengkapan Terkait</h3>
                         <p class="text-xs text-stone-500 mt-0.5">Alat lain dalam kategori {{ $alat->kategori?->nama }}</p>
                     </div>
                     <a href="{{ route('katalog.index', ['kategori' => $alat->kategori?->slug]) }}"
-                        class="text-xs font-bold text-[#1e3a2c] hover:text-[#0e1b15] inline-flex items-center gap-1">
+                        class="text-xs font-bold text-[#0e1b15] hover:text-[#5edd5b] inline-flex items-center gap-1 transition">
                         <span>Lihat Semua</span>
-                        <span>&rarr;</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     @foreach($alatTerkait as $rel)
-                        <div class="bg-white rounded-2xl border border-stone-200/90 shadow-xs hover:shadow-md transition p-4 flex flex-col justify-between">
+                        @php
+                            $relKategori = strtolower($rel->kategori?->nama ?? '');
+                            $relDummy = 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80';
+                            if (str_contains($relKategori, 'tenda')) {
+                                $relDummy = 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=600&q=80';
+                            } elseif (str_contains($relKategori, 'carrier') || str_contains($relKategori, 'tas')) {
+                                $relDummy = 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=600&q=80';
+                            } elseif (str_contains($relKategori, 'tidur') || str_contains($relKategori, 'matras')) {
+                                $relDummy = 'https://images.unsplash.com/photo-1520095972714-909e91b038e5?auto=format&fit=crop&w=600&q=80';
+                            } elseif (str_contains($relKategori, 'masak')) {
+                                $relDummy = 'https://images.unsplash.com/photo-1470246973918-29a93221c455?auto=format&fit=crop&w=600&q=80';
+                            }
+                        @endphp
+                        <div class="bg-white rounded-2xl border border-stone-200/90 shadow-xs hover:shadow-md transition p-3 sm:p-4 flex flex-col justify-between group">
                             <div>
-                                <div class="aspect-4/3 bg-stone-100 rounded-xl overflow-hidden mb-3 relative">
+                                <div class="aspect-square bg-stone-50 rounded-xl overflow-hidden mb-3 relative flex items-center justify-center p-2">
                                     @if($rel->foto)
-                                        <img src="{{ asset('storage/' . $rel->foto) }}" alt="{{ $rel->nama }}" class="w-full h-full object-cover">
+                                        <img src="{{ asset('storage/' . $rel->foto) }}" alt="{{ $rel->nama }}" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
                                     @else
-                                        <div class="w-full h-full flex items-center justify-center text-2xl text-stone-300">⛺</div>
+                                        <img src="{{ $relDummy }}" alt="{{ $rel->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 rounded-lg">
                                     @endif
                                 </div>
-                                <h4 class="text-sm font-bold text-[#14201a] bl-d line-clamp-1">
-                                    <a href="{{ route('katalog.show', $rel->id) }}" class="hover:text-[#1e3a2c]">{{ $rel->nama }}</a>
+                                <h4 class="text-xs sm:text-sm font-bold text-stone-900 text-center line-clamp-2 min-h-[36px]">
+                                    <a href="{{ route('katalog.show', $rel->id) }}" class="hover:text-emerald-700">{{ $rel->nama }}</a>
                                 </h4>
-                                <span class="text-xs font-black text-[#0e1b15] bl-d block mt-1">
-                                    Rp {{ number_format($rel->harga_per_hari, 0, ',', '.') }} / hari
+                                <span class="text-xs sm:text-sm font-extrabold text-[#0e1b15] block text-center mt-1">
+                                    Rp {{ number_format($rel->harga_per_hari, 0, ',', '.') }} <span class="text-[11px] font-normal text-stone-500">/hari</span>
                                 </span>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-stone-100">
+                            <div class="mt-3 pt-2 border-t border-stone-100">
                                 <a href="{{ route('katalog.show', $rel->id) }}"
-                                    class="w-full py-2 rounded-xl bg-stone-100 hover:bg-[#0e1b15] hover:text-[#f6c453] text-[#14201a] text-xs font-bold transition flex items-center justify-center">
+                                    class="w-full py-2 rounded-xl bg-stone-100 hover:bg-[#5edd5b] hover:text-black text-[#14201a] text-xs font-bold transition flex items-center justify-center">
                                     Lihat Detail
                                 </a>
                             </div>
@@ -379,6 +414,10 @@
                 estimasiUnitCount.textContent = unit;
                 estimasiSubtotal.textContent = formatRupiah(total);
                 estimasiTotal.textContent = formatRupiah(total);
+
+                if (btnSewa && btnSewa.getAttribute('href').includes('pesanan/buat')) {
+                    btnSewa.href = `{{ route('pesanan.create') }}?alat_id={{ $alat->id }}&jumlah=${unit}&mulai=${inputMulai.value}&selesai=${inputSelesai.value}`;
+                }
             }
         }
 

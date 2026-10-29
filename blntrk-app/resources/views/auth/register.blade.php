@@ -2,10 +2,14 @@
     <x-slot:title>Daftar Akun Pelanggan</x-slot:title>
 
     <div class="mb-6 text-center">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#f6c453] text-xl font-black mb-3 shadow-sm bl-d">
-            🎒
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#5edd5b] mb-3 shadow-md">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                <path d="M6 6h10"></path>
+                <path d="M6 10h10"></path>
+            </svg>
         </div>
-        <h1 class="text-2xl font-extrabold text-[#14201a] tracking-tight bl-d">Daftar Akun Baru</h1>
+        <h1 class="text-2xl font-extrabold text-[#14201a] tracking-tight">Daftar Akun Baru</h1>
         <p class="text-xs text-stone-500 mt-1">Sewa alat outdoor lebih cepat dengan akun terdaftar</p>
     </div>
 
@@ -36,7 +40,7 @@
         <!-- Alamat Domisili -->
         <div>
             <x-input-label for="alamat" value="Alamat Tempat Tinggal" />
-            <textarea id="alamat" name="alamat" rows="2" class="block w-full border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] rounded-xl shadow-xs text-sm text-[#14201a] placeholder:text-stone-400" placeholder="Contoh: Jl. Raya Jalancagak RT 01/02, Subang">{{ old('alamat') }}</textarea>
+            <textarea id="alamat" name="alamat" rows="2" class="block w-full border-stone-300 focus:border-[#5edd5b] focus:ring-[#5edd5b] rounded-xl shadow-xs text-sm text-[#14201a] placeholder:text-stone-400" placeholder="Contoh: Jl. Raya Jalancagak RT 01/02, Subang">{{ old('alamat') }}</textarea>
             <x-input-error :messages="$errors->get('alamat')" class="mt-1.5" />
         </div>
 
@@ -62,11 +66,11 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1.5" />
         </div>
 
-        <!-- Submit Button -->
+        <!-- Submit Button (Foresta Neon Lime) -->
         <div class="pt-2">
-            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] font-bold text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+            <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-extrabold text-xs uppercase tracking-wider transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer">
                 <span>Daftar Akun Sekarang</span>
-                <span>&rarr;</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </button>
         </div>
 
@@ -74,7 +78,7 @@
         <div class="text-center pt-3 border-t border-stone-200/80">
             <p class="text-xs text-stone-600">
                 Sudah memiliki akun?
-                <a class="font-bold text-[#1e3a2c] hover:text-[#0e1b15] hover:underline transition" href="{{ route('login') }}">
+                <a class="font-bold text-[#0e1b15] hover:text-[#5edd5b] hover:underline transition" href="{{ route('login') }}">
                     Masuk ke akun
                 </a>
             </p>

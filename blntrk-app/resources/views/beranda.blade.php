@@ -87,15 +87,21 @@
             <!-- Feature Checkmark Ticks (Foresta Style) -->
             <div class="flex flex-wrap gap-2.5 sm:gap-3 text-xs sm:text-sm font-semibold text-white">
                 <span class="inline-flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xs">
-                    <span class="w-5 h-5 rounded-full bg-[#5edd5b] text-black flex items-center justify-center font-black text-xs">✓</span>
+                    <span class="w-5 h-5 rounded-full bg-[#5edd5b] text-black flex items-center justify-center font-black text-xs">
+                        <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </span>
                     Stok Real-Time & Lengkap
                 </span>
                 <span class="inline-flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xs">
-                    <span class="w-5 h-5 rounded-full bg-[#5edd5b] text-black flex items-center justify-center font-black text-xs">✓</span>
+                    <span class="w-5 h-5 rounded-full bg-[#5edd5b] text-black flex items-center justify-center font-black text-xs">
+                        <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </span>
                     Praktis & Cepat
                 </span>
                 <span class="inline-flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xs">
-                    <span class="w-5 h-5 rounded-full bg-[#5edd5b] text-black flex items-center justify-center font-black text-xs">✓</span>
+                    <span class="w-5 h-5 rounded-full bg-[#5edd5b] text-black flex items-center justify-center font-black text-xs">
+                        <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </span>
                     Buka 24 Jam di Jalancagak Subang
                 </span>
             </div>
@@ -274,7 +280,10 @@
                 <h2 class="font-urbanist text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">Kategori Perlengkapan</h2>
                 <p class="text-xs sm:text-sm text-stone-500 mt-1">Pilih perlengkapan sesuai jenis petualangan dan kebutuhan Anda.</p>
             </div>
-            <a href="{{ route('katalog.index') }}" class="text-xs sm:text-sm font-bold text-[#1e3a2c] hover:underline">Semua Kategori &rarr;</a>
+            <a href="{{ route('katalog.index') }}" class="text-xs sm:text-sm font-bold text-[#0e1b15] hover:text-[#5edd5b] transition inline-flex items-center gap-1.5 group">
+                <span>Semua Kategori</span>
+                <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -335,7 +344,9 @@
                         <!-- 5 Stars with Foresta Green Accents -->
                         <div class="flex items-center gap-1 mb-3">
                             @for($s = 0; $s < 5; $s++)
-                                <span class="w-6 h-6 rounded-md bg-[#5edd5b] text-black flex items-center justify-center text-xs font-bold">★</span>
+                                <span class="w-6 h-6 rounded-md bg-[#5edd5b] text-black flex items-center justify-center shadow-xs">
+                                    <svg class="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                </span>
                             @endfor
                         </div>
                         <h3 class="text-base font-bold text-stone-900 mb-2">{{ $t['judul'] }}</h3>
@@ -364,7 +375,7 @@
             </p>
             <a href="https://wa.me/{{ $toko['wa'] }}" target="_blank" class="inline-flex items-center gap-2 bg-white border border-stone-300 text-stone-800 hover:border-black font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs transition">
                 <span>Tanya via WhatsApp</span>
-                <span class="text-emerald-600">💬</span>
+                <svg class="w-4 h-4 text-[#5edd5b]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
             </a>
         </div>
 
@@ -373,7 +384,7 @@
                 <details class="group bg-white rounded-2xl border border-stone-200/80 p-5 shadow-xs [&_summary::-webkit-details-marker]:hidden">
                     <summary class="flex items-center justify-between cursor-pointer font-bold text-stone-900 text-sm">
                         <span>{{ $f[0] }}</span>
-                        <span class="transition group-open:rotate-180 text-stone-400 font-bold ml-2">▼</span>
+                        <svg class="w-4 h-4 text-stone-400 transition-transform duration-300 group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </summary>
                     <p class="text-xs sm:text-sm text-stone-600 leading-relaxed mt-3 pt-3 border-t border-stone-100">
                         {{ $f[1] }}
@@ -390,7 +401,7 @@
                 <span class="text-[#5edd5b] font-urbanist font-bold text-xs uppercase tracking-wider block mb-1">Lokasi Toko Buka 24 Jam</span>
                 <h3 class="font-urbanist text-xl sm:text-3xl font-black text-white">{{ $toko['nama'] }}</h3>
                 <p class="text-xs sm:text-sm text-stone-300 mt-2 flex items-center gap-2">
-                    <span>📍</span>
+                    <svg class="w-4 h-4 text-[#5edd5b] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>{{ $toko['alamat'] }}</span>
                 </p>
             </div>

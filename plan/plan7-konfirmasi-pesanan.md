@@ -69,8 +69,9 @@ Catatan: nomor identitas penuh **tidak disimpan** (NF09). Hanya empat digit tera
 Bayar sesuai/kurang, ambil tanpa bayar, jaminan kosong, batal oleh pelanggan pada status Dibayar (ditolak), batal Admin, batal pada status Disewa (ditolak). Coba **manipulasi request** (kirim POST langsung ke URL aksi pada status salah) untuk memastikan state machine menolak.
 
 ## 6. Definition of Done
-- [ ] Alur Menunggu → Dibayar → Disewa berjalan
-- [ ] Transisi tidak valid ditolak walau request dimanipulasi
-- [ ] Jaminan tersimpan (empat digit)
-- [ ] Pembatalan dengan alasan dan stok terbebas
-- [ ] BB-42 sampai BB-50 lolos
+- [x] Alur Menunggu → Dibayar → Disewa berjalan
+- [x] Transisi tidak valid ditolak walau request dimanipulasi
+- [x] Jaminan tersimpan (empat digit)
+- [x] Pembatalan dengan alasan dan stok terbebas
+- [x] BB-42 sampai BB-50 lolos
+

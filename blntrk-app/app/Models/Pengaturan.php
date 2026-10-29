@@ -30,6 +30,7 @@ class Pengaturan extends Model
     {
         return Cache::remember("pengaturan.{$kunci}", 300, function () use ($kunci, $default) {
             $item = static::find($kunci);
+
             return $item ? $item->nilai : $default;
         });
     }

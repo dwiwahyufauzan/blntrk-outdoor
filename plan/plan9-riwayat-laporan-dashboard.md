@@ -55,9 +55,9 @@ Query ringkasan memakai `selectRaw` dan `groupBy`; cache 1–5 menit bila lambat
 Hitung manual dari data seeder dan bandingkan dengan laporan dan dashboard. **Siapkan `TransaksiDemoSeeder`** (±30 pesanan dengan berbagai status dan tanggal) agar laporan bermakna.
 
 ## 5. Definition of Done
-- [ ] Riwayat Pelanggan dan Admin benar sesuai hak akses
-- [ ] Empat jenis laporan tampil dengan filter periode
-- [ ] PDF laporan dan resi terunduh, rapi
-- [ ] Angka dashboard dan laporan sesuai hitungan manual
-- [ ] Pemilik hanya melihat, tidak dapat mengubah
-- [ ] Tangkapan layar laporan, PDF, dan dashboard
+- [x] Riwayat Pelanggan dan Admin benar sesuai hak akses
+- [x] Empat jenis laporan tampil dengan filter periode
+- [x] PDF laporan dan resi terunduh, rapi
+- [x] Angka dashboard dan laporan sesuai hitungan manual
+- [x] Pemilik hanya melihat, tidak dapat mengubah
+- [x] Tangkapan layar laporan, PDF, dan dashboard

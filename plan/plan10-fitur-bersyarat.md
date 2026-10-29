@@ -46,8 +46,8 @@ Helper `wa_link($noHp, $pesan)` yang menormalkan `08xxx` menjadi `628xxx`. Templ
 Tombol hanya membuka WhatsApp (tanpa API), sehingga tidak ada biaya dan tidak ada dependensi.
 
 ## 6. Definition of Done (per fitur yang dikerjakan)
-- [ ] Pengaturan mengubah perilaku perhitungan denda pada pesanan baru
-- [ ] Log mencatat semua aksi penting
-- [ ] Alat selesai diperbaiki kembali tersedia
-- [ ] Ekspor Excel berisi data sama dengan layar
-- [ ] Fitur yang dilewati dicatat sebagai saran pengembangan lanjutan di Bab V
+- [x] Pengaturan mengubah perilaku perhitungan denda pada pesanan baru
+- [x] Log mencatat semua aksi penting
+- [x] Alat selesai diperbaiki kembali tersedia
+- [x] Ekspor Excel berisi data sama dengan layar
+- [x] Seluruh fitur bersyarat P3 (Pengaturan, Kelola Admin, Log Aktivitas, Perawatan Alat, WhatsApp Lanjutan, Ekspor Excel) selesai diimplementasikan dan teruji otomatis.

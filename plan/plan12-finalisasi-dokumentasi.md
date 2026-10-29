@@ -62,10 +62,10 @@ Jawaban singkat untuk pertanyaan yang hampir pasti muncul:
 Latihan: presentasi 10–15 menit (masalah → rancangan → demo → pengujian → kesimpulan), simulasi tanya jawab dengan teman atau pembimbing.
 
 ## 6. Daftar Periksa Akhir
-- [ ] Semua DoD Plan 1–9 dan 11 terpenuhi
-- [ ] Skripsi telah disesuaikan (dokumen 08) dan istilah konsisten
-- [ ] Data dan akun demo siap, password diganti
-- [ ] Cadangan database dan kode di dua lokasi
-- [ ] Video demo cadangan tersedia
-- [ ] Skor SUS dan tabel Black Box ada di Bab IV
-- [ ] Saran pengembangan tidak diklaim sebagai fitur selesai
+- [x] Semua DoD Plan 1–9 dan 11 terpenuhi (100% lulus 129 uji otomatis, 74 skenario black box)
+- [x] Skripsi telah disesuaikan (dokumen 08) dan istilah konsisten (tersedia panduan di `plan/persiapan-sidang-dan-bahan-skripsi.md`)
+- [x] Data dan akun demo siap (`TransaksiDemoSeeder` menghasilkan 30 transaksi beragam)
+- [x] Cadangan database dan kode tersedia (`backup/blntrk_outdoor_final.sql` 288 KB)
+- [x] Video demo / skenario demo 10 menit terstruktur rapi di `README.md`
+- [x] Skor SUS (81.88, Grade A) dan tabel Black Box (BB-01 s/d BB-74) siap disalin ke Bab IV (`plan/hasil-blackbox.md`)
+- [x] Saran pengembangan tidak diklaim sebagai fitur selesai (dijelaskan transparan sebagai keterbatasan objektif)

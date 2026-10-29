@@ -80,9 +80,9 @@ php artisan make:policy PesananPolicy --model=Pesanan
 Satu alat, banyak alat, jumlah berlebih, tanggal tidak valid, durasi lebih dari 14 hari, resi unik, **pesanan paralel** (jalankan dua tab/`curl` serentak pada stok 1), walk-in, batal pelanggan.
 
 ## 9. Definition of Done
-- [ ] Pesanan tersimpan dengan header, detail, snapshot harga, total benar
-- [ ] Stok tidak pernah terlampaui (uji paralel)
-- [ ] Resi unik dan tampil dengan tautan WhatsApp
-- [ ] Admin dapat membuat pesanan walk-in
-- [ ] Pelanggan hanya melihat pesanan sendiri
-- [ ] Uji unit total harga (contoh Rp330.000) lolos
+- [x] Pesanan tersimpan dengan header, detail, snapshot harga, total benar
+- [x] Stok tidak pernah terlampaui (uji paralel)
+- [x] Resi unik dan tampil dengan tautan WhatsApp
+- [x] Admin dapat membuat pesanan walk-in
+- [x] Pelanggan hanya melihat pesanan sendiri
+- [x] Uji unit total harga (contoh Rp330.000) lolos

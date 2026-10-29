@@ -19,15 +19,18 @@ class KetersediaanServiceTest extends TestCase
     use RefreshDatabase;
 
     protected KetersediaanService $service;
+
     protected KategoriAlat $kategori;
+
     protected Pelanggan $pelanggan;
+
     protected User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->service = new KetersediaanService();
+        $this->service = new KetersediaanService;
 
         // Siapkan role & user admin
         $roleAdmin = Role::create(['nama' => 'admin', 'label' => 'Administrator']);
@@ -59,7 +62,7 @@ class KetersediaanServiceTest extends TestCase
     {
         return Alat::create([
             'kategori_id' => $this->kategori->id,
-            'kode_alat' => 'TND-' . uniqid(),
+            'kode_alat' => 'TND-'.uniqid(),
             'nama' => 'Tenda Eiger 4P',
             'harga_per_hari' => 45000,
             'stok_total' => $stokTotal,
@@ -71,7 +74,7 @@ class KetersediaanServiceTest extends TestCase
     private function buatPesanan(Carbon $mulai, Carbon $selesai, string $status = 'dibayar'): Pesanan
     {
         return Pesanan::create([
-            'no_resi' => 'BLN-' . uniqid(),
+            'no_resi' => 'BLN-'.uniqid(),
             'pelanggan_id' => $this->pelanggan->id,
             'dibuat_oleh' => $this->user->id,
             'tanggal_mulai' => $mulai->toDateString(),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\LogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,10 +44,18 @@ class AuthenticatedSessionController extends Controller
 
         $role = $user->role?->nama;
 
+        LogService::catat(
+            $user,
+            'login',
+            'autentikasi',
+            $user->id,
+            "Pengguna {$user->nama} ({$role}) berhasil login ke sistem."
+        );
+
         return redirect()->intended(match ($role) {
             'pemilik' => route('pemilik.dashboard'),
-            'admin'   => route('admin.dashboard'),
-            default   => route('beranda'),
+            'admin' => route('admin.dashboard'),
+            default => route('beranda'),
         });
     }
 
@@ -55,6 +64,17 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        if ($user) {
+            LogService::catat(
+                $user,
+                'logout',
+                'autentikasi',
+                $user->id,
+                "Pengguna {$user->nama} keluar dari sistem."
+            );
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

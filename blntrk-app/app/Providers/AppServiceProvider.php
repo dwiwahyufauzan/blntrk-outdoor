@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\View\Components\AdminLayout;
+use App\View\Components\PemilikLayout;
+use App\View\Components\PublikLayout;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,11 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\Blade::component('layouts.publik', \App\View\Components\PublikLayout::class);
-        \Illuminate\Support\Facades\Blade::component('layouts.admin', \App\View\Components\AdminLayout::class);
-        \Illuminate\Support\Facades\Blade::component('layouts.pemilik', \App\View\Components\PemilikLayout::class);
-        \Illuminate\Support\Facades\Blade::component('publik-layout', \App\View\Components\PublikLayout::class);
-        \Illuminate\Support\Facades\Blade::component('admin-layout', \App\View\Components\AdminLayout::class);
-        \Illuminate\Support\Facades\Blade::component('pemilik-layout', \App\View\Components\PemilikLayout::class);
+        Blade::component('layouts.publik', PublikLayout::class);
+        Blade::component('layouts.admin', AdminLayout::class);
+        Blade::component('layouts.pemilik', PemilikLayout::class);
+        Blade::component('publik-layout', PublikLayout::class);
+        Blade::component('admin-layout', AdminLayout::class);
+        Blade::component('pemilik-layout', PemilikLayout::class);
     }
 }

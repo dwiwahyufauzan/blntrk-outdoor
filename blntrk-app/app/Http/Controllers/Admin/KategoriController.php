@@ -57,7 +57,7 @@ class KategoriController extends Controller
     public function destroy(KategoriAlat $kategori): RedirectResponse
     {
         if ($kategori->alat()->exists()) {
-            return back()->with('error', 'Kategori "' . $kategori->nama . '" tidak dapat dihapus karena masih memiliki ' . $kategori->alat()->count() . ' alat terdaftar.');
+            return back()->with('error', 'Kategori "'.$kategori->nama.'" tidak dapat dihapus karena masih memiliki '.$kategori->alat()->count().' alat terdaftar.');
         }
 
         $kategori->delete();

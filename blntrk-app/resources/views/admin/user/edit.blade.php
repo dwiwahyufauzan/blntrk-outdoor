@@ -20,7 +20,7 @@
                     Nama Lengkap <span class="text-rose-500">*</span>
                 </label>
                 <input type="text" id="nama" name="nama" value="{{ old('nama', $user->nama) }}" required autofocus
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">
                 @error('nama')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -31,7 +31,7 @@
                     Alamat Email <span class="text-rose-500">*</span>
                 </label>
                 <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">
                 @error('email')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -42,7 +42,7 @@
                     Peran Pengguna (Role) <span class="text-rose-500">*</span>
                 </label>
                 <select id="role" name="role" required onchange="togglePelangganFields(this.value)"
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs font-semibold text-[#14201a]">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs font-semibold text-[#14201a]">
                     @foreach($roles as $r)
                         <option value="{{ $r->nama }}" {{ old('role', $user->role?->nama) === $r->nama ? 'selected' : '' }}>
                             {{ $r->label }}
@@ -60,7 +60,7 @@
                 </label>
                 <input type="password" id="password" name="password" minlength="8"
                     placeholder="Minimal 8 karakter jika ingin diubah"
-                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">
                 @error('password')
                     <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                 @enderror
@@ -69,15 +69,15 @@
             <!-- Field Tambahan Jika Role Pelanggan -->
             <div id="pelanggan-fields" class="space-y-4 pt-3 border-t border-stone-100 {{ old('role', $user->role?->nama) === 'pelanggan' ? '' : 'hidden' }}">
                 <div class="flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#f6c453]"></span>
-                    <span class="text-[11px] font-bold uppercase text-[#1e3a2c] tracking-wider">Data Pelanggan Terkait</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#5edd5b]"></span>
+                    <span class="text-[11px] font-bold uppercase text-[#14201a] tracking-wider">Data Pelanggan Terkait</span>
                 </div>
                 <div>
                     <label for="no_hp" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5">
                         Nomor HP / WhatsApp
                     </label>
                     <input type="text" id="no_hp" name="no_hp" value="{{ old('no_hp', $user->pelanggan?->no_hp) }}"
-                        class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                        class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">
                 </div>
 
                 <div>
@@ -85,13 +85,13 @@
                         Alamat Domisili
                     </label>
                     <textarea id="alamat" name="alamat" rows="2"
-                        class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">{{ old('alamat', $user->pelanggan?->alamat) }}</textarea>
+                        class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#14201a]">{{ old('alamat', $user->pelanggan?->alamat) }}</textarea>
                 </div>
             </div>
 
             <div class="flex items-center gap-2.5 pt-2">
                 <input type="checkbox" id="is_aktif" name="is_aktif" value="1" {{ old('is_aktif', $user->is_aktif) ? 'checked' : '' }}
-                    class="w-4 h-4 rounded border-stone-300 text-[#1e3a2c] focus:ring-[#1e3a2c]">
+                    class="w-4 h-4 rounded border-stone-300 text-[#0e1b15] focus:ring-[#5edd5b]">
                 <label for="is_aktif" class="text-xs font-bold text-[#14201a] cursor-pointer">
                     Status akun aktif (dapat login ke sistem)
                 </label>
@@ -101,8 +101,8 @@
                 <a href="{{ route('admin.user.index') }}" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] text-xs font-bold shadow-xs transition inline-flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-xs transition inline-flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     Perbarui Pengguna
                 </button>
             </div>

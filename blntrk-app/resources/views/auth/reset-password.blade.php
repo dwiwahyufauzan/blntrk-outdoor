@@ -2,10 +2,13 @@
     <x-slot:title>Atur Ulang Kata Sandi</x-slot:title>
 
     <div class="mb-6 text-center">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#f6c453] text-xl font-black mb-3 shadow-sm bl-d">
-            🔐
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#5edd5b] mb-3 shadow-md">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
         </div>
-        <h1 class="text-2xl font-extrabold text-[#14201a] tracking-tight bl-d">Atur Ulang Sandi</h1>
+        <h1 class="text-2xl font-extrabold text-[#14201a] tracking-tight">Atur Ulang Sandi</h1>
         <p class="text-xs text-stone-500 mt-1">Buat kata sandi baru untuk akun Anda.</p>
     </div>
 
@@ -39,9 +42,9 @@
         </div>
 
         <div class="pt-2">
-            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#f6c453] font-bold text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+            <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-extrabold text-xs uppercase tracking-wider transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer">
                 <span>Simpan Kata Sandi Baru</span>
-                <span>&rarr;</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </button>
         </div>
     </form>

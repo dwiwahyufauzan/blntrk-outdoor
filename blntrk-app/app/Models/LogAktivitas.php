@@ -35,4 +35,24 @@ class LogAktivitas extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Helper static untuk mencatat log aktivitas pengguna.
+     */
+    public static function catat(?User $user, string $aksi, ?string $deskripsi = null, ?string $modul = null, ?int $refId = null): ?static
+    {
+        try {
+            return static::create([
+                'user_id' => $user?->id,
+                'aksi' => $aksi,
+                'modul' => $modul ?? (str_contains($aksi, '.') ? explode('.', $aksi)[0] : 'umum'),
+                'ref_id' => $refId,
+                'deskripsi' => $deskripsi,
+                'ip_address' => request()?->ip(),
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 }

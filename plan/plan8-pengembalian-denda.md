@@ -100,9 +100,9 @@ Schedule::command('pesanan:perbarui-status')->hourly();
 Tepat waktu, dalam toleransi, terlambat 2 hari, rusak ringan (cek `stok_perawatan` dan ketersediaan), hilang (`stok_total`), jumlah kondisi salah, proses ulang (ditolak), denda lunas, jaminan kembali. Uji unit `DendaService`.
 
 ## 8. Definition of Done
-- [ ] Pengembalian memperbarui status, stok, dan jaminan sesuai aturan
-- [ ] Denda keterlambatan dan kerusakan terhitung benar
-- [ ] Scheduler memperbarui status Terlambat dan pembatalan otomatis
-- [ ] Denda dapat dilunasi manual dan tercatat
-- [ ] BB-52 sampai BB-62 lolos
-- [ ] **Alur sewa inti selesai dan siap didemokan ke pembimbing**
+- [x] Pengembalian memperbarui status, stok, dan jaminan sesuai aturan
+- [x] Denda keterlambatan dan kerusakan terhitung benar
+- [x] Scheduler memperbarui status Terlambat dan pembatalan otomatis
+- [x] Denda dapat dilunasi manual dan tercatat
+- [x] BB-52 sampai BB-62 lolos
+- [x] **Alur sewa inti selesai dan siap didemokan ke pembimbing**

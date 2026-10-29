@@ -16,10 +16,6 @@ class KetersediaanService
     /**
      * Menghitung jumlah unit alat yang terpakai per hari dalam rentang [mulai, selesai).
      *
-     * @param int $alatId
-     * @param Carbon $mulai
-     * @param Carbon $selesai
-     * @param int|null $abaikanPesananId
      * @return array<string, int> Format: ['YYYY-MM-DD' => jumlah_terpakai]
      */
     public function terpakaiPerHari(int $alatId, Carbon $mulai, Carbon $selesai, ?int $abaikanPesananId = null): array
@@ -37,13 +33,13 @@ class KetersediaanService
             ->where(function ($q) use ($mulai) {
                 // Terlambat: tetap menahan stok hingga hari ini/besok jika belum kembali
                 $q->where('pesanan.tanggal_selesai', '>', $mulai)
-                  ->orWhere('pesanan.status', 'terlambat');
+                    ->orWhere('pesanan.status', 'terlambat');
             })
             ->get([
                 'pesanan.tanggal_mulai',
                 'pesanan.tanggal_selesai',
                 'pesanan.status',
-                'pesanan_detail.jumlah'
+                'pesanan_detail.jumlah',
             ]);
 
         $hasil = [];
@@ -64,12 +60,6 @@ class KetersediaanService
 
     /**
      * Ketersediaan unit alat minimum sepanjang rentang waktu [mulai, selesai).
-     *
-     * @param Alat $alat
-     * @param Carbon $mulai
-     * @param Carbon $selesai
-     * @param int|null $abaikanPesananId
-     * @return int
      */
     public function tersedia(Alat $alat, Carbon $mulai, Carbon $selesai, ?int $abaikanPesananId = null): int
     {
@@ -84,13 +74,6 @@ class KetersediaanService
 
     /**
      * Memeriksa apakah stok alat mencukupi untuk jumlah yang diminta sepanjang rentang waktu.
-     *
-     * @param Alat $alat
-     * @param int $jumlah
-     * @param Carbon $mulai
-     * @param Carbon $selesai
-     * @param int|null $abaikanPesananId
-     * @return bool
      */
     public function cukup(Alat $alat, int $jumlah, Carbon $mulai, Carbon $selesai, ?int $abaikanPesananId = null): bool
     {

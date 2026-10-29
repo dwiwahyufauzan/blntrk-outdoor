@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Role;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,8 +14,8 @@ class RegistrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (!\App\Models\Role::exists()) {
-            $this->seed(\Database\Seeders\RoleSeeder::class);
+        if (! Role::exists()) {
+            $this->seed(RoleSeeder::class);
         }
     }
 
