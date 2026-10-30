@@ -104,7 +104,12 @@
                                     <a href="{{ route('admin.pelanggan.edit', $pelanggan->id) }}" class="px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-[#5edd5b] hover:text-black text-stone-700 font-bold text-[11px] transition">
                                         Edit
                                     </a>
-                                    <form method="POST" action="{{ route('admin.pelanggan.destroy', $pelanggan->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pelanggan {{ $pelanggan->nama_lengkap }}?');" class="inline">
+                                    <form method="POST" action="{{ route('admin.pelanggan.destroy', $pelanggan->id) }}"
+                                          data-konfirmasi="danger"
+                                          data-judul="Hapus Data Pelanggan"
+                                          data-pesan="Apakah Anda yakin ingin menghapus data pelanggan {{ $pelanggan->nama_lengkap }}?"
+                                          data-tombol="Ya, Hapus Pelanggan"
+                                          class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200/80 transition cursor-pointer">

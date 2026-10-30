@@ -57,7 +57,8 @@ class KatalogController extends Controller
             default => $query->latest(),
         };
 
-        $alatList = $query->paginate(12)->withQueryString();
+        $alatList = $query->get();
+        Alat::muatStokTersedia($alatList);
 
         // Cek apakah ada filter tanggal dari form hero atau filter tanggal
         $tanggalMulai = null;
@@ -77,6 +78,7 @@ class KatalogController extends Controller
                     // Hitung ketersediaan per alat untuk rentang tanggal ini
                     foreach ($alatList as $alat) {
                         $alat->stok_tersedia_rentang = $this->ketersediaanService->tersedia($alat, $tMulai, $tSelesai);
+                        $alat->stok_tersedia = $alat->stok_tersedia_rentang;
                     }
                 }
             } catch (\Exception $e) {
@@ -84,8 +86,14 @@ class KatalogController extends Controller
             }
         }
 
+        // Pisahkan produk yang stoknya tersedia di atas, dan yang out-of-stock di bawah
+        $alatTersedia = $alatList->filter(fn ($alat) => $alat->stok_tersedia > 0)->values();
+        $alatHabis = $alatList->filter(fn ($alat) => $alat->stok_tersedia <= 0)->values();
+
         return view('katalog.index', [
             'alatList' => $alatList,
+            'alatTersedia' => $alatTersedia,
+            'alatHabis' => $alatHabis,
             'kategoriList' => $kategoriList,
             'kategoriAktif' => $request->input('kategori'),
             'keyword' => $request->input('q'),
@@ -115,6 +123,7 @@ class KatalogController extends Controller
             ->where('id', '!=', $alat->id)
             ->take(4)
             ->get();
+        Alat::muatStokTersedia($alatTerkait);
 
         return view('katalog.show', [
             'alat' => $alat,

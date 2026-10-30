@@ -61,7 +61,7 @@
                 @enderror
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Tarif Sewa -->
                 <div>
                     <label for="harga_per_hari" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5">
@@ -70,6 +70,21 @@
                     <input type="number" id="harga_per_hari" name="harga_per_hari" value="{{ old('harga_per_hari', 0) }}" min="0" required
                         class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs font-bold text-[#14201a]">
                     @error('harga_per_hari')
+                        <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Harga Beli / Aset (Acuan Ganti Rugi Kehilangan) -->
+                <div>
+                    <label for="harga_beli" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>Harga Beli Unit / Aset (Rp)</span>
+                        <span class="text-[10px] text-stone-400 font-normal">Acuan ganti rugi hilang</span>
+                    </label>
+                    <input type="number" id="harga_beli" name="harga_beli" value="{{ old('harga_beli', 0) }}" min="0" step="1000"
+                        placeholder="Contoh: 450000"
+                        class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs font-bold text-[#14201a]">
+                    <span class="text-[10px] text-stone-400 mt-1 block">Jika alat hilang saat disewa, denda dihitung dari harga beli ini (tidak flat).</span>
+                    @error('harga_beli')
                         <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
                     @enderror
                 </div>

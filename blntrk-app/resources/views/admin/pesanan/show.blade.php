@@ -5,6 +5,57 @@
         showModalBayar: {{ $errors->has('jumlah') || $errors->has('metode') ? 'true' : 'false' }},
         showModalAmbil: {{ $errors->has('jenis_jaminan') || $errors->has('nomor_identitas') ? 'true' : 'false' }},
         showModalBatal: {{ $errors->has('alasan_batal') ? 'true' : 'false' }},
+        showModalTambahDenda: {{ $errors->has('kategori_denda_id') ? 'true' : 'false' }},
+        kategoriDendaId: '{{ old('kategori_denda_id', '') }}',
+        jumlahDenda: '{{ old('jumlah', '') }}',
+        keteranganDenda: '{{ addslashes(old('keterangan', '')) }}',
+        pilihanAlatId: '',
+        alatList: [
+            @foreach($pesanan->detail as $pd)
+            {
+                id: '{{ $pd->id }}',
+                nama: '{{ addslashes($pd->alat->nama) }}',
+                hargaBeli: {{ (float) ($pd->alat->harga_beli ?? 0) }}
+            },
+            @endforeach
+        ],
+        kategoriList: [
+            @foreach($kategoriDendaList ?? [] as $kd)
+            { id: '{{ $kd->id }}', kode: '{{ $kd->kode }}', nama: '{{ addslashes($kd->nama) }}', tarif: {{ (float) $kd->tarif_standar }} },
+            @endforeach
+        ],
+        onPilihAlat() {
+            if (this.pilihanAlatId) {
+                const a = this.alatList.find(item => item.id == this.pilihanAlatId);
+                if (a) {
+                    if (a.hargaBeli > 0) {
+                        this.jumlahDenda = a.hargaBeli;
+                    }
+                    const katHilang = this.kategoriList.find(k => k.kode === 'HILANG');
+                    if (katHilang && !this.kategoriDendaId) {
+                        this.kategoriDendaId = katHilang.id;
+                    }
+                    if (!this.keteranganDenda) {
+                        this.keteranganDenda = 'Ganti rugi kehilangan 1 unit ' + a.nama + ' (Sesuai harga beli aset toko)';
+                    }
+                }
+            }
+        },
+        onPilihKategori() {
+            const k = this.kategoriList.find(item => item.id == this.kategoriDendaId);
+            if (k) {
+                if (k.kode === 'HILANG' && this.pilihanAlatId) {
+                    const a = this.alatList.find(item => item.id == this.pilihanAlatId);
+                    if (a && a.hargaBeli > 0) {
+                        this.jumlahDenda = a.hargaBeli;
+                        return;
+                    }
+                }
+                if (k.tarif > 0) {
+                    this.jumlahDenda = k.tarif;
+                }
+            }
+        },
         metodeBayar: 'tunai',
         jenisJaminan: 'ktp'
     }">
@@ -43,13 +94,19 @@
                     $dendaBelumLunas = $pesanan->denda->where('status_bayar', 'belum_lunas')->sum('jumlah');
                 @endphp
 
-                @if($dendaBelumLunas > 0)
+                @if($pesanan->status === \App\Enums\StatusPesanan::Terlambat || ($infoKeterlambatan && $infoKeterlambatan['hari'] > 0))
+                    <a href="{{ wa_link($pesanan->pelanggan->no_hp, \App\Services\WhatsAppService::pesanPeringatanTerlambat($pesanan, $infoKeterlambatan['hari'] ?? 1, $infoKeterlambatan['jumlah'] ?? 0)) }}" target="_blank"
+                       class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-300 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs">
+                        <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.159.57 4.184 1.564 5.938l-1.564 5.714 5.861-1.537c1.7 1.006 3.684 1.585 5.807 1.585 6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z"/></svg>
+                        <span>Peringatan Terlambat WA (Rp{{ number_format($infoKeterlambatan['jumlah'] ?? 0, 0, ',', '.') }})</span>
+                    </a>
+                @elseif($dendaBelumLunas > 0)
                     <a href="{{ wa_link($pesanan->pelanggan->no_hp, \App\Services\WhatsAppService::pesanTagihanDenda($pesanan, $dendaBelumLunas)) }}" target="_blank"
                        class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs">
                         <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.159.57 4.184 1.564 5.938l-1.564 5.714 5.861-1.537c1.7 1.006 3.684 1.585 5.807 1.585 6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z"/></svg>
                         <span>Kirim Tagihan Denda WA</span>
                     </a>
-                @elseif(in_array($pesanan->status->value, ['disewa', 'terlambat']))
+                @elseif(in_array($pesanan->status->value, ['disewa']))
                     <a href="{{ wa_link($pesanan->pelanggan->no_hp, \App\Services\WhatsAppService::pesanPengingatJatuhTempo($pesanan)) }}" target="_blank"
                        class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs">
                         <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.159.57 4.184 1.564 5.938l-1.564 5.714 5.861-1.537c1.7 1.006 3.684 1.585 5.807 1.585 6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z"/></svg>
@@ -64,17 +121,26 @@
                 @endif
 
                 <!-- Cetak Resi & Unduh PDF -->
-                <a href="{{ route('admin.pesanan.pdf', $pesanan->id) }}"
-                   class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs">
-                    <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <span>Unduh PDF Resi</span>
+                <a href="{{ route('pesanan.resi', $pesanan->no_resi) }}" target="_blank"
+                   class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs"
+                   title="Buka tampilan lembar dokumen resi siap cetak">
+                    <svg class="w-4 h-4 text-[#0e1b15]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Lihat Resi Dokumen</span>
                 </a>
 
-                <button type="button" onclick="window.print()"
-                        class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <a href="{{ route('admin.pesanan.pdf', $pesanan->id) }}"
+                   class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs"
+                   title="Unduh file dokumen PDF resi resmi">
+                    <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Unduh PDF</span>
+                </a>
+
+                <a href="{{ route('pesanan.resi', $pesanan->no_resi) }}?cetak=1" target="_blank"
+                   class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs"
+                   title="Cetak langsung lembar dokumen resi fisik">
                     <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     <span>Cetak Resi</span>
-                </button>
+                </a>
 
                 <!-- Tombol Aksi Panel Sesuai Status (F05) -->
                 @if($pesanan->status === \App\Enums\StatusPesanan::Menunggu)
@@ -317,7 +383,12 @@
                     </div>
 
                     <!-- Card Jaminan Identitas -->
-                    @php $jaminan = $pesanan->jaminan; @endphp
+                    @php
+                        $jaminan = $pesanan->jaminan;
+                        $estimasiTelat = $infoKeterlambatan ? (float) $infoKeterlambatan['jumlah'] : 0.0;
+                        $adaDendaBelumLunas = $pesanan->denda()->where('status_bayar', 'belum_lunas')->exists() || $estimasiTelat > 0;
+                        $nominalDendaTertunggak = $pesanan->denda()->where('status_bayar', 'belum_lunas')->sum('jumlah') + $estimasiTelat;
+                    @endphp
                     <div class="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-xs">
                         <div class="flex items-center justify-between pb-3 mb-3 border-b border-stone-100">
                             <h3 class="text-xs font-bold text-[#14201a] uppercase tracking-wider flex items-center gap-1.5">
@@ -325,9 +396,21 @@
                                 <span>Jaminan Kartu Identitas</span>
                             </h3>
                             @if($jaminan)
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $jaminan->status === 'dititipkan' ? 'bg-sky-100 text-sky-800' : 'bg-stone-100 text-stone-600' }}">
-                                    {{ strtoupper($jaminan->status) }}
-                                </span>
+                                @if($jaminan->status === 'dititipkan')
+                                    @if($adaDendaBelumLunas)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                                            DITAHAN (DENDA AKTIF)
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800">
+                                            DITITIPKAN DI KASIR
+                                        </span>
+                                    @endif
+                                @else
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        DIKEMBALIKAN
+                                    </span>
+                                @endif
                             @else
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-500">BELUM DITERIMA</span>
                             @endif
@@ -359,16 +442,34 @@
 
                                 @if($jaminan->status === 'dititipkan')
                                     <div class="pt-3 border-t border-stone-100">
-                                        @php $adaDendaBelumLunas = $pesanan->denda()->where('status_bayar', 'belum_lunas')->exists(); @endphp
-                                        <form method="POST" action="{{ route('admin.pesanan.jaminan.kembali', $pesanan->id) }}"
-                                              onsubmit="return confirm('{{ $adaDendaBelumLunas ? 'PERINGATAN: Masih terdapat denda yang belum dilunasi pada pesanan ini! Tetap ingin mengembalikan kartu identitas jaminan kepada penyewa?' : 'Konfirmasi pengembalian kartu identitas jaminan kepada penyewa?' }}');">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="w-full px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 text-[11px] font-bold border border-sky-200 transition cursor-pointer flex items-center justify-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                <span>Kembalikan Kartu Identitas</span>
+                                        @if($adaDendaBelumLunas)
+                                            <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] leading-relaxed mb-2.5">
+                                                <div class="font-extrabold flex items-center gap-1.5 mb-1 text-rose-900">
+                                                    <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                    <span>Jaminan Ditahan (SOP Toko)</span>
+                                                </div>
+                                                <span>Terdapat denda aktif tertunggak sebesar <strong>Rp{{ number_format($nominalDendaTertunggak, 0, ',', '.') }}</strong>. Kartu identitas jaminan ditahan sampai seluruh denda dilunasi pelanggan.</span>
+                                            </div>
+                                            <button type="button" disabled
+                                                    class="w-full px-3 py-2 rounded-xl bg-stone-100 text-stone-400 text-[11px] font-bold border border-stone-200 cursor-not-allowed flex items-center justify-center gap-1.5 opacity-80"
+                                                    title="Lunasi denda terlebih dahulu">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                <span>Jaminan Terkunci (Denda Belum Lunas)</span>
                                             </button>
-                                        </form>
+                                        @else
+                                            <form method="POST" action="{{ route('admin.pesanan.jaminan.kembali', $pesanan->id) }}"
+                                                  data-konfirmasi="primary"
+                                                  data-judul="Kembalikan Kartu Identitas Jaminan"
+                                                  data-pesan="Konfirmasi penyerahan kembali kartu identitas jaminan (KTP/SIM) kepada penyewa? Pastikan seluruh kewajiban telah terpenuhi."
+                                                  data-tombol="Ya, Serahkan Kembali">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="w-full px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 text-[11px] font-bold border border-sky-200 transition cursor-pointer flex items-center justify-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    <span>Kembalikan Kartu Identitas</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 @else
                                     <div class="pt-2 text-[10px] text-emerald-700 font-bold flex items-center gap-1">
@@ -444,56 +545,124 @@
                                 </table>
                             </div>
                         </div>
-
-                        <!-- Daftar Denda (Jika Ada) -->
-                        @if($pesanan->denda->isNotEmpty())
-                            <div class="p-5 border-t border-stone-200 bg-rose-50/20">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h3 class="text-xs font-extrabold text-[#14201a] uppercase tracking-wider flex items-center gap-1.5">
-                                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                        <span>Rincian Tagihan Denda & Ganti Rugi</span>
-                                    </h3>
-                                    <span class="text-xs font-mono font-black text-rose-700">
-                                        Total: Rp{{ number_format($pesanan->denda->sum('jumlah'), 0, ',', '.') }}
-                                    </span>
-                                </div>
-
-                                <div class="space-y-2">
-                                    @foreach($pesanan->denda as $d)
-                                        <div class="p-3 rounded-xl bg-white border border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
-                                            <div>
-                                                <div class="flex items-center gap-2 mb-1">
-                                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold {{ $d->jenis->value === 'keterlambatan' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900' }}">
-                                                        {{ $d->jenis->label() }}
-                                                    </span>
-                                                    <span class="font-bold text-stone-900 font-mono">Rp{{ number_format($d->jumlah, 0, ',', '.') }}</span>
-                                                </div>
-                                                <span class="text-stone-600 text-[11px] block">{{ $d->keterangan }}</span>
-                                            </div>
-
-                                            <div class="flex items-center gap-2 shrink-0">
-                                                @if($d->status_bayar === 'lunas')
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                                        Lunas
-                                                    </span>
-                                                @else
-                                                    <form method="POST" action="{{ route('admin.denda.lunas', $d->id) }}" onsubmit="return confirm('Tandai lunas denda Rp{{ number_format($d->jumlah, 0, ',', '.') }}?');">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-[11px] font-extrabold transition shadow-2xs cursor-pointer inline-flex items-center gap-1">
-                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                                            <span>Tandai Lunas</span>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 @endif
+
+                <!-- Kartu Denda & Ganti Rugi Perlengkapan (Dapat Dikelola Kapan Saja) -->
+                <div class="bg-white rounded-2xl border border-stone-200/90 shadow-xs overflow-hidden">
+                    <div class="p-5 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full {{ $pesanan->denda->where('status_bayar', 'belum_lunas')->isNotEmpty() || ($infoKeterlambatan && $infoKeterlambatan['hari'] > 0) ? 'bg-rose-500 animate-ping' : 'bg-[#5edd5b]' }}"></span>
+                            <div>
+                                <h2 class="text-sm font-extrabold text-[#14201a] bl-d">Tagihan Denda & Ganti Rugi Perlengkapan</h2>
+                                <span class="text-[11px] text-stone-500">Keterlambatan, barang hilang, atau kerusakan fisik perlengkapan</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            @php
+                                $totalDendaTercatat = $pesanan->denda->sum('jumlah');
+                                $totalDendaDenganBerjalan = $totalDendaTercatat + ($infoKeterlambatan && !$pesanan->pengembalian ? (float)$infoKeterlambatan['jumlah'] : 0);
+                            @endphp
+
+                            @if($totalDendaDenganBerjalan > 0)
+                                <span class="text-xs font-mono font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
+                                    Total: Rp{{ number_format($totalDendaDenganBerjalan, 0, ',', '.') }}
+                                </span>
+                            @endif
+
+                            @if($pesanan->status->value !== 'dibatalkan')
+                                <button type="button" @click="showModalTambahDenda = true"
+                                        class="px-3 py-1.5 rounded-xl bg-[#0e1b15] hover:bg-[#1a2e24] text-[#5edd5b] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                    <span>Tambah Denda Manual</span>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Box Peringatan Denda Keterlambatan Berjalan (Otomatis) -->
+                    @if($infoKeterlambatan && $infoKeterlambatan['hari'] > 0 && !$pesanan->pengembalian)
+                        <div class="p-5 border-b border-rose-200 bg-rose-50/70">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-200 text-rose-900 border border-rose-300 animate-pulse font-mono">
+                                            TERLAMBAT {{ $infoKeterlambatan['hari'] }} HARI
+                                        </span>
+                                        <span class="text-xs font-extrabold text-rose-950 font-urbanist">Denda Keterlambatan Sedang Berjalan (Otomatis)</span>
+                                    </div>
+                                    <p class="text-xs text-stone-600">Unit belum diserahkan ke kasir toko. Batas jadwal sewa: {{ $pesanan->tanggal_selesai->format('d/m/Y') }} 12:00 WIB.</p>
+                                </div>
+                                <div class="text-left sm:text-right">
+                                    <span class="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Estimasi Denda Berjalan</span>
+                                    <span class="text-xl font-black font-mono text-rose-600">Rp{{ number_format($infoKeterlambatan['jumlah'], 0, ',', '.') }}</span>
+                                    <span class="text-[10px] text-stone-400 block font-mono">Rp{{ number_format($infoKeterlambatan['tarif_harian'], 0, ',', '.') }}/hari</span>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-rose-200/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+                                <span class="text-stone-600 text-[11px]">*Denda keterlambatan akan dibukukan resmi saat form pengembalian diproses. Denda kerusakan & kelengkapan hilang diinput manual saat cek fisik.</span>
+                                <a href="{{ route('admin.pesanan.pengembalian.create', $pesanan->id) }}"
+                                   class="px-3.5 py-1.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold transition shadow-2xs inline-flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span>Proses Pengembalian Sekarang</span>
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($pesanan->denda->isNotEmpty())
+                        <div class="p-5 space-y-3 bg-stone-50/40">
+                            @foreach($pesanan->denda as $d)
+                                <div class="p-4 rounded-xl bg-white border border-stone-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs shadow-2xs">
+                                    <div class="space-y-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <!-- Badge Kategori Denda -->
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider {{ $d->jenis->value === 'kehilangan' ? 'bg-rose-100 text-rose-900 border border-rose-200' : ($d->jenis->value === 'keterlambatan' ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-orange-100 text-orange-900 border border-orange-200') }}">
+                                                {{ $d->kategoriDenda?->nama ?? $d->jenis->label() }}
+                                            </span>
+                                            <span class="font-bold text-stone-900 font-mono text-sm">Rp{{ number_format($d->jumlah, 0, ',', '.') }}</span>
+                                            <span class="text-[10px] text-stone-400 font-mono">Dicatat: {{ $d->created_at->format('d/m/Y H:i') }}</span>
+                                        </div>
+                                        <div class="text-stone-700 text-xs">
+                                            <strong class="text-stone-900">Informasi Denda:</strong> {{ $d->keterangan }}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        @if($d->status_bayar === 'lunas')
+                                            <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                <span>Lunas ({{ $d->dilunasi_pada?->format('d/m H:i') }})</span>
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-rose-100 text-rose-800 border border-rose-200">
+                                                Belum Lunas
+                                            </span>
+                                            <form method="POST" action="{{ route('admin.denda.lunas', $d->id) }}"
+                                                  data-konfirmasi="primary"
+                                                  data-judul="Konfirmasi Pelunasan Denda"
+                                                  data-pesan="Tandai lunas denda Rp{{ number_format($d->jumlah, 0, ',', '.') }}?"
+                                                  data-tombol="Ya, Tandai Lunas">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="px-3 py-1.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-[11px] font-extrabold transition shadow-2xs cursor-pointer inline-flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                    <span>Tandai Lunas</span>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-6 text-center text-xs text-stone-400">
+                            <svg class="w-8 h-8 mx-auto text-stone-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <p>Tidak ada catatan denda atau ganti rugi pada pesanan ini.</p>
+                        </div>
+                    @endif
+                </div>
 
                 <!-- Kartu Jadwal Sewa -->
                 <div class="bg-white p-6 rounded-2xl border border-stone-200/90 shadow-xs">
@@ -785,6 +954,115 @@
                         <button type="submit"
                                 class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-sm transition">
                             Ya, Batalkan Pesanan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- =================== MODAL: TAMBAH DENDA MANUAL =================== -->
+        <div x-show="showModalTambahDenda"
+             x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div @click.away="showModalTambahDenda = false"
+                 class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-stone-200/90 relative">
+                
+                <div class="flex items-center justify-between pb-4 border-b border-stone-100 mb-5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-[#14201a] bl-d">Tambah Denda / Ganti Rugi</h3>
+                            <span class="text-[11px] text-stone-500">Resi {{ $pesanan->no_resi }} &bull; {{ $pesanan->pelanggan->nama_lengkap }}</span>
+                        </div>
+                    </div>
+                    <button type="button" @click="showModalTambahDenda = false" class="text-stone-400 hover:text-stone-700 p-1 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('admin.pesanan.denda.tambah', $pesanan->id) }}" class="space-y-4">
+                    @csrf
+                    
+                    <!-- Pilihan Alat Terkait Pesanan (Opsional untuk Hitung Cepat Harga Beli) -->
+                    @if($pesanan->detail->isNotEmpty())
+                        <div>
+                            <label for="modal_pilih_alat" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                <span>Pilih Alat yang Disewa (Opsional)</span>
+                                <span class="text-[10px] text-emerald-700 font-bold">Auto-isi harga beli aset</span>
+                            </label>
+                            <select id="modal_pilih_alat" x-model="pilihanAlatId" @change="onPilihAlat()"
+                                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs bg-stone-50/50">
+                                <option value="">-- Bukan spesifik per unit / input bebas --</option>
+                                @foreach($pesanan->detail as $pd)
+                                    <option value="{{ $pd->id }}">
+                                        {{ $pd->alat->nama }} {{ $pd->alat->varian ? '('.$pd->alat->varian.')' : '' }} &bull; Harga Beli: Rp{{ number_format($pd->alat->harga_beli, 0, ',', '.') }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="text-[10px] text-stone-400 mt-1 block">Pilih alat jika ada unit yang hilang agar nominal ganti rugi otomatis terisi sesuai harga beli unit.</span>
+                        </div>
+                    @endif
+
+                    <div>
+                        <label for="modal_kategori_denda" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                            Kategori Denda <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="modal_kategori_denda" name="kategori_denda_id" required
+                                x-model="kategoriDendaId"
+                                @change="onPilihKategori()"
+                                class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                            <option value="">-- Pilih Kategori Denda --</option>
+                            @foreach($kategoriDendaList ?? [] as $k)
+                                <option value="{{ $k->id }}">
+                                    [{{ strtoupper($k->kode) }}] {{ $k->nama }} - {{ $k->kode === 'HILANG' ? 'Sesuai Harga Beli Unit' : ($k->tarif_standar > 0 ? 'Rp'.number_format($k->tarif_standar, 0, ',', '.') : 'Tarif Fleksibel') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="modal_jumlah_denda" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                            Nominal Denda / Ganti Rugi (Rp) <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-mono font-bold text-stone-400">Rp</span>
+                            <input type="number" id="modal_jumlah_denda" name="jumlah" required min="1000" step="1000"
+                                   x-model="jumlahDenda" placeholder="0"
+                                   class="w-full pl-9 text-xs font-mono font-bold rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                        </div>
+                        <span class="text-[10px] text-stone-400 mt-1 block">Untuk kehilangan alat, denda tidak dipatok flat melainkan mengganti rugi penuh sesuai harga beli alat.</span>
+                    </div>
+
+                    <div>
+                        <label for="modal_keterangan_denda" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                            Keterangan & Informasi Tambahan <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea id="modal_keterangan_denda" name="keterangan" rows="3" required
+                                  x-model="keteranganDenda"
+                                  placeholder="Contoh: Ganti rugi kehilangan unit tenda sesuai harga beli aset toko..."
+                                  class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs"></textarea>
+                        <span class="text-[10px] text-stone-400 mt-0.5 block">Keterangan ini akan langsung dapat dibaca oleh pelanggan di detail pesanan mereka.</span>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
+                        <div class="font-bold flex items-center gap-1.5 text-amber-950 mb-0.5">
+                            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span>Dampak pada Jaminan</span>
+                        </div>
+                        <span>Jika denda ini berstatus belum lunas, jaminan identitas (KTP/SIM) penyewa akan ditahan oleh sistem sampai denda ini diselesaikan.</span>
+                    </div>
+
+                    <div class="pt-3 flex items-center justify-end gap-2 border-t border-stone-100">
+                        <button type="button" @click="showModalTambahDenda = false"
+                                class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">
+                            Batal
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span>Tambahkan Denda</span>
                         </button>
                     </div>
                 </form>

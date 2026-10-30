@@ -261,7 +261,12 @@ class AlatSeeder extends Seeder
         ];
 
         foreach ($daftarAlat as $alat) {
-            Alat::firstOrCreate(['kode_alat' => $alat['kode_alat']], $alat);
+            if (! isset($alat['harga_beli'])) {
+                $alat['harga_beli'] = $alat['harga_per_hari'] * 10;
+            }
+            $record = Alat::firstOrNew(['kode_alat' => $alat['kode_alat']]);
+            $record->fill($alat);
+            $record->save();
         }
     }
 }

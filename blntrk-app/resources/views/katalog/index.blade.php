@@ -194,88 +194,167 @@
         @endphp
 
         @if($alatList->count() > 0)
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                @foreach($alatList as $alat)
-                    @php
-                        $stokSiap = max(0, $alat->stok_total - $alat->stok_perawatan);
-                        $targetUrl = route('katalog.show', array_filter([
-                            'alat' => $alat->id,
-                            'mulai' => $tanggalMulai?->format('Y-m-d'),
-                            'selesai' => $tanggalSelesai?->format('Y-m-d')
-                        ]));
-                        $imgSrc = $alat->foto 
-                            ? asset('storage/' . $alat->foto) 
-                            : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
-                    @endphp
-                    <div class="bg-white rounded-2xl border border-stone-200/80 p-4 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-                        <!-- Gambar Alat Rasio 1:1 -->
-                        <a href="{{ $targetUrl }}" class="block relative aspect-square bg-stone-50 rounded-xl overflow-hidden p-2 flex items-center justify-center mb-4">
-                            <img src="{{ $imgSrc }}" alt="{{ $alat->nama }}" loading="lazy"
-                                 class="object-cover w-full h-full rounded-lg group-hover:scale-105 transition-transform duration-300">
+            <!-- Section 1: Alat Siap Sewa (Stok Tersedia) -->
+            <div class="mb-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-[#0e1b15] font-urbanist flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#5edd5b]"></span>
+                        <span>Perlengkapan Siap Sewa</span>
+                    </h2>
+                    <p class="text-[11px] text-stone-500">Unit tersedia dan dapat langsung dipesan untuk petualangan Anda.</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    {{ $alatTersedia->count() }} Alat Tersedia
+                </span>
+            </div>
 
-                            <!-- Badge Kategori -->
-                            <div class="absolute top-2.5 left-2.5">
-                                <span class="px-2 py-0.5 rounded-full bg-[#0e1b15]/85 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider">
-                                    {{ $alat->kategori?->nama ?? 'Outdoor' }}
-                                </span>
+            @if($alatTersedia->isNotEmpty())
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                    @foreach($alatTersedia as $alat)
+                        @php
+                            $targetUrl = route('katalog.show', array_filter([
+                                'alat' => $alat->id,
+                                'mulai' => $tanggalMulai?->format('Y-m-d'),
+                                'selesai' => $tanggalSelesai?->format('Y-m-d')
+                            ]));
+                            $imgSrc = $alat->foto 
+                                ? asset('storage/' . $alat->foto) 
+                                : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
+                        @endphp
+                        <div class="bg-white rounded-2xl border border-stone-200/80 p-4 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                            <!-- Gambar Alat Rasio 1:1 -->
+                            <a href="{{ $targetUrl }}" class="block relative aspect-square bg-stone-50 rounded-xl overflow-hidden p-2 flex items-center justify-center mb-4">
+                                <img src="{{ $imgSrc }}" alt="{{ $alat->nama }}" loading="lazy"
+                                     class="object-cover w-full h-full rounded-lg group-hover:scale-105 transition-transform duration-300">
+
+                                <!-- Badge Kategori -->
+                                <div class="absolute top-2.5 left-2.5">
+                                    <span class="px-2 py-0.5 rounded-full bg-[#0e1b15]/85 backdrop-blur-xs text-white text-[9px] font-bold uppercase tracking-wider">
+                                        {{ $alat->kategori?->nama ?? 'Outdoor' }}
+                                    </span>
+                                </div>
+
+                                <!-- Badge Stok Indikator (Foresta Style) -->
+                                <div class="absolute top-2.5 right-2.5">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#5edd5b] text-black shadow-xs">
+                                        Tersedia {{ $alat->stok_tersedia }}
+                                    </span>
+                                </div>
+                            </a>
+
+                            <!-- Info Alat (Foresta Center Style) -->
+                            <div class="text-center flex-grow flex flex-col justify-between">
+                                <div>
+                                    <h2 class="text-xs sm:text-sm font-bold text-stone-900 group-hover:text-[#1e3a2c] transition line-clamp-2 min-h-[36px] flex items-center justify-center">
+                                        <a href="{{ $targetUrl }}" title="{{ $alat->nama }}">
+                                            {{ $alat->nama }}{{ $alat->varian ? ' - ' . $alat->varian : '' }}
+                                        </a>
+                                    </h2>
+                                </div>
+
+                                <div class="mt-2.5">
+                                    <span class="font-urbanist font-black text-sm sm:text-base text-stone-900 block">
+                                        Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
+                                        <span class="text-[11px] text-stone-500 font-normal">/hari</span>
+                                    </span>
+                                </div>
                             </div>
 
-                            <!-- Badge Stok Indikator (Foresta Style) -->
-                            <div class="absolute top-2.5 right-2.5">
-                                @if(isset($alat->stok_tersedia_rentang))
-                                    @if($alat->stok_tersedia_rentang > 0)
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#5edd5b] text-black shadow-xs">
-                                            Tersedia {{ $alat->stok_tersedia_rentang }}
-                                        </span>
-                                    @else
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs">
-                                            Habis
-                                        </span>
-                                    @endif
-                                @else
-                                    @if($stokSiap > 0)
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#5edd5b] text-black shadow-xs">
-                                            Tersedia {{ $stokSiap }}
-                                        </span>
-                                    @else
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs">
-                                            Habis
-                                        </span>
-                                    @endif
-                                @endif
-                            </div>
-                        </a>
-
-                        <!-- Info Alat (Foresta Center Style) -->
-                        <div class="text-center flex-grow flex flex-col justify-between">
-                            <div>
-                                <h2 class="text-xs sm:text-sm font-bold text-stone-900 group-hover:text-[#1e3a2c] transition line-clamp-2 min-h-[36px] flex items-center justify-center">
-                                    <a href="{{ $targetUrl }}" title="{{ $alat->nama }}">
-                                        {{ $alat->nama }}{{ $alat->varian ? ' - ' . $alat->varian : '' }}
-                                    </a>
-                                </h2>
-                            </div>
-
-                            <div class="mt-2.5">
-                                <span class="font-urbanist font-black text-sm sm:text-base text-stone-900 block">
-                                    Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
-                                    <span class="text-[11px] text-stone-500 font-normal">/hari</span>
-                                </span>
-                            </div>
+                            <!-- Action Button -->
+                            <a href="{{ $targetUrl }}" class="mt-3.5 block w-full py-2.5 rounded-xl bg-stone-100 hover:bg-[#5edd5b] text-stone-800 hover:text-black text-xs font-bold text-center transition">
+                                Pilih &amp; Cek Jadwal
+                            </a>
                         </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="p-8 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-center text-amber-900 mb-8">
+                    <p class="text-xs font-bold">Saat ini seluruh perlengkapan outdoor pada filter ini sedang tersewa penuh.</p>
+                </div>
+            @endif
 
-                        <!-- Action Button -->
-                        <a href="{{ $targetUrl }}" class="mt-3.5 block w-full py-2.5 rounded-xl bg-stone-100 hover:bg-[#5edd5b] text-stone-800 hover:text-black text-xs font-bold text-center transition">
-                            Pilih &amp; Cek Jadwal
-                        </a>
+            <!-- Section 2: Perlengkapan Sedang Disewa / Out of Stock (Dipisahkan di Bagian Bawah) -->
+            @if($alatHabis->isNotEmpty())
+                <div class="mt-12 pt-8 border-t border-stone-200">
+                    <div class="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 block mb-1">
+                                Stok Habis Sementara
+                            </span>
+                            <h3 class="font-urbanist text-lg sm:text-xl font-black text-stone-800 tracking-tight flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                                <span>Perlengkapan Sedang Disewa (Out of Stock)</span>
+                            </h3>
+                            <p class="text-xs text-stone-500 mt-0.5">
+                                Alat di bawah ini sedang berada di tangan petualang lain. Stok akan <strong>otomatis terisi kembali (restock)</strong> segera setelah alat dikembalikan ke toko.
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-stone-100 text-stone-600 border border-stone-200 shrink-0">
+                            {{ $alatHabis->count() }} Alat Sedang Disewa
+                        </span>
                     </div>
-                @endforeach
-            </div>
 
-            <!-- Paginasi -->
-            <div class="mt-10">
-                {{ $alatList->links() }}
-            </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                        @foreach($alatHabis as $alat)
+                            @php
+                                $targetUrl = route('katalog.show', array_filter([
+                                    'alat' => $alat->id,
+                                    'mulai' => $tanggalMulai?->format('Y-m-d'),
+                                    'selesai' => $tanggalSelesai?->format('Y-m-d')
+                                ]));
+                                $imgSrc = $alat->foto 
+                                    ? asset('storage/' . $alat->foto) 
+                                    : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
+                            @endphp
+                            <div class="bg-stone-50/80 rounded-2xl border border-stone-200/70 p-4 sm:p-5 flex flex-col justify-between opacity-80 hover:opacity-100 transition group">
+                                <!-- Gambar Alat Muted / Grayscale -->
+                                <a href="{{ $targetUrl }}" class="block relative aspect-square bg-stone-100 rounded-xl overflow-hidden p-2 flex items-center justify-center mb-4">
+                                    <img src="{{ $imgSrc }}" alt="{{ $alat->nama }}" loading="lazy"
+                                         class="object-cover w-full h-full rounded-lg grayscale opacity-75">
+
+                                    <!-- Badge Kategori -->
+                                    <div class="absolute top-2.5 left-2.5">
+                                        <span class="px-2 py-0.5 rounded-full bg-stone-800/80 text-white text-[9px] font-bold uppercase tracking-wider">
+                                            {{ $alat->kategori?->nama ?? 'Outdoor' }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Badge Stok Habis Merah -->
+                                    <div class="absolute top-2.5 right-2.5">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs">
+                                            Stok Habis
+                                        </span>
+                                    </div>
+                                </a>
+
+                                <!-- Info Alat -->
+                                <div class="text-center flex-grow flex flex-col justify-between">
+                                    <div>
+                                        <h2 class="text-xs sm:text-sm font-bold text-stone-700 line-clamp-2 min-h-[36px] flex items-center justify-center">
+                                            <a href="{{ $targetUrl }}" title="{{ $alat->nama }}">
+                                                {{ $alat->nama }}{{ $alat->varian ? ' - ' . $alat->varian : '' }}
+                                            </a>
+                                        </h2>
+                                    </div>
+
+                                    <div class="mt-2.5">
+                                        <span class="font-urbanist font-black text-sm sm:text-base text-stone-600 block">
+                                            Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
+                                            <span class="text-[11px] text-stone-400 font-normal">/hari</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button Disabled -->
+                                <button type="button" disabled
+                                        class="mt-3.5 block w-full py-2.5 rounded-xl bg-stone-200/80 text-stone-500 text-xs font-bold text-center cursor-not-allowed">
+                                    Stok Habis (Sedang Disewa)
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         @else
             <!-- State Kosong (SVG, No Emoji) -->
             <div class="bg-white rounded-2xl border border-stone-200/90 p-12 text-center max-w-md mx-auto shadow-xs">

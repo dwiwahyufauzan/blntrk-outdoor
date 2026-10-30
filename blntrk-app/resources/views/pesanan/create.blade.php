@@ -47,9 +47,34 @@
                 </div>
             @endif
 
+            @if(!empty($paketNama))
+                <div class="mb-6 p-4 rounded-2xl bg-[#0e1b15] text-white border border-[#1e3a2c] shadow-xs flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-9 h-9 rounded-xl bg-[#5edd5b] text-black font-black flex items-center justify-center text-sm shadow-xs">🎁</span>
+                        <div>
+                            <span class="text-[10px] font-extrabold text-[#5edd5b] uppercase tracking-wider block">Paket Bundling Terpilih</span>
+                            <span class="text-sm font-extrabold font-urbanist">{{ $paketNama }}</span>
+                        </div>
+                    </div>
+                    <span class="text-xs text-stone-300 hidden sm:inline">Daftar item paket telah dimuat otomatis</span>
+                </div>
+            @elseif(request('from_cart'))
+                <div class="mb-6 p-4 rounded-2xl bg-white border border-stone-200 text-stone-800 shadow-2xs flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm">🛒</span>
+                        <div>
+                            <span class="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider block">Checkout Keranjang Belanja</span>
+                            <span class="text-xs text-stone-600">Seluruh item dari keranjang Anda telah dimuat otomatis ke formulir pemesanan.</span>
+                        </div>
+                    </div>
+                    <a href="{{ route('keranjang.index') }}" class="text-xs font-bold text-stone-500 hover:text-stone-900 underline">Ubah Keranjang</a>
+                </div>
+            @endif
+
             <!-- Alpine.js Order Form App -->
             <form method="POST" action="{{ route('pesanan.store') }}"
-                  x-data="pemesananForm({{ json_encode($alatList) }}, {{ $initialAlatId }}, {{ $initialJumlah }}, '{{ $initialMulai }}', '{{ $initialSelesai }}')"
+                  @submit.prevent="submitForm($el)"
+                  x-data="pemesananForm({{ json_encode($alatList) }}, {{ json_encode($initialItems ?? []) }}, {{ $initialAlatId }}, {{ $initialJumlah }}, '{{ $initialMulai }}', '{{ $initialSelesai }}')"
                   class="space-y-6">
                 @csrf
 
@@ -138,7 +163,8 @@
                                         <option value="">-- Pilih Perlengkapan Outdoor --</option>
                                         <template x-for="alat in daftarAlat" :key="alat.id">
                                             <option :value="alat.id" :selected="alat.id == item.alat_id"
-                                                    x-text="alat.nama + ' (' + alat.kode_alat + ') - Rp' + formatRupiah(alat.harga_per_hari) + '/hari [Tersedia: ' + (alat.stok_total - alat.stok_perawatan) + ']'"></option>
+                                                    :disabled="alat.stok_tersedia <= 0"
+                                                    x-text="alat.nama + ' (' + alat.kode_alat + ') - Rp' + formatRupiah(alat.harga_per_hari) + '/hari ' + (alat.stok_tersedia > 0 ? '[Tersedia: ' + alat.stok_tersedia + ' unit]' : '[STOK HABIS - Tidak Dapat Disewa]')"></option>
                                         </template>
                                     </select>
                                 </div>
@@ -147,7 +173,7 @@
                                 <div class="w-full md:w-28">
                                     <label class="block text-[10px] font-extrabold uppercase tracking-wider text-stone-500 mb-1">Jumlah</label>
                                     <div class="flex items-center">
-                                        <input type="number" :name="'items[' + idx + '][jumlah]'" x-model.number="item.jumlah" min="1" max="50" required
+                                        <input type="number" :name="'items[' + idx + '][jumlah]'" x-model.number="item.jumlah" min="1" :max="getMaxStok(item.alat_id)" required
                                                class="w-full text-xs font-mono font-bold text-center rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs text-[#0e1b15] py-2.5">
                                     </div>
                                 </div>
@@ -232,19 +258,31 @@
 
     <!-- Script Alpine Component -->
     <script>
-        function pemesananForm(daftarAlat, initialAlatId, initialJumlah, initialMulai, initialSelesai) {
-            return {
-                daftarAlat: daftarAlat,
-                tanggalMulai: initialMulai,
-                tanggalSelesai: initialSelesai,
-                durasiHari: 1,
-                items: [
+        function pemesananForm(daftarAlat, initialItems, initialAlatId, initialJumlah, initialMulai, initialSelesai) {
+            let startingItems = [];
+
+            if (Array.isArray(initialItems) && initialItems.length > 0) {
+                startingItems = initialItems.map(it => ({
+                    alat_id: it.alat_id,
+                    jumlah: parseInt(it.jumlah) || 1,
+                    harga: 0
+                }));
+            } else {
+                startingItems = [
                     {
                         alat_id: initialAlatId > 0 ? initialAlatId : (daftarAlat.length > 0 ? daftarAlat[0].id : ''),
                         jumlah: initialJumlah > 0 ? initialJumlah : 1,
                         harga: 0
                     }
-                ],
+                ];
+            }
+
+            return {
+                daftarAlat: daftarAlat,
+                tanggalMulai: initialMulai,
+                tanggalSelesai: initialSelesai,
+                durasiHari: 1,
+                items: startingItems,
 
                 init() {
                     this.hitungDurasi();
@@ -295,6 +333,29 @@
 
                 hitungTotalUnit() {
                     return this.items.reduce((acc, curr) => acc + (parseInt(curr.jumlah) || 0), 0);
+                },
+
+                getMaxStok(alatId) {
+                    const alat = this.daftarAlat.find(a => a.id == alatId);
+                    return alat ? Math.max(1, (alat.stok_tersedia !== undefined ? alat.stok_tersedia : 50)) : 50;
+                },
+
+                submitForm(form) {
+                    for (let i = 0; i < this.items.length; i++) {
+                        const it = this.items[i];
+                        const alat = this.daftarAlat.find(a => a.id == it.alat_id);
+                        if (!alat) continue;
+                        const sedia = alat.stok_tersedia !== undefined ? alat.stok_tersedia : 0;
+                        if (sedia <= 0) {
+                            alert('Maaf, perlengkapan ' + alat.nama + ' saat ini sedang habis stoknya dan tidak dapat dipesan.');
+                            return;
+                        }
+                        if (it.jumlah > sedia) {
+                            alert('Jumlah unit untuk ' + alat.nama + ' (' + it.jumlah + ' unit) melebihi stok yang tersedia (' + sedia + ' unit).');
+                            return;
+                        }
+                    }
+                    form.submit();
                 },
 
                 formatRupiah(angka) {

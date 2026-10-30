@@ -289,8 +289,126 @@ class PesananTest extends TestCase
 
         $prefix = 'BLN-'.now()->format('ymd').'-0001';
 
-        // UserPelanggan mencoba melihat resi milik userLain -> 403 Forbidden
-        $response = $this->actingAs($this->userPelanggan)->get(route('pesanan.show', $prefix));
-        $response->assertNotFound();
+        // UserPelanggan mencoba melihat detail & resi milik userLain -> 404 Not Found
+        $responseShow = $this->actingAs($this->userPelanggan)->get(route('pesanan.show', $prefix));
+        $responseShow->assertNotFound();
+
+        $responseResi = $this->actingAs($this->userPelanggan)->get(route('pesanan.resi', $prefix));
+        $responseResi->assertNotFound();
+    }
+
+    public function test_pelanggan_dapat_melihat_detail_pesanan_dan_lembar_resi(): void
+    {
+        $mulai = today()->addDay()->toDateString();
+        $selesai = today()->addDays(2)->toDateString();
+
+        $this->actingAs($this->userPelanggan)->post(route('pesanan.store'), [
+            'tanggal_mulai' => $mulai,
+            'tanggal_selesai' => $selesai,
+            'items' => [['alat_id' => $this->tenda->id, 'jumlah' => 1]],
+        ]);
+
+        $prefix = 'BLN-'.now()->format('ymd').'-0001';
+
+        // 1. Uji Halaman Detail Pesanan (pesanan.show)
+        $responseDetail = $this->actingAs($this->userPelanggan)->get(route('pesanan.show', $prefix));
+        $responseDetail->assertOk();
+        $responseDetail->assertSee($prefix);
+        $responseDetail->assertSee('Detail Reservasi Sewa');
+        $responseDetail->assertSee('Lihat Lembar Resi');
+        $responseDetail->assertSee('Batalkan Pesanan'); // Tersedia tombol batal di halaman detail
+        $responseDetail->assertSee($this->tenda->nama);
+
+        // 2. Uji Halaman Lembar Resi Resmi (pesanan.resi)
+        $responseResi = $this->actingAs($this->userPelanggan)->get(route('pesanan.resi', $prefix));
+        $responseResi->assertOk();
+        $responseResi->assertSee($prefix);
+        $responseResi->assertSee('Bukti Reservasi Sewa');
+        $responseResi->assertSee('Cetak Bukti Resi');
+        $responseResi->assertSee('Kembali ke Detail Pesanan');
+        $responseResi->assertSee($this->tenda->nama);
+    }
+
+    public function test_pelanggan_dapat_melihat_detail_dan_resi_pesanan_yang_sudah_dibayar(): void
+    {
+        $mulai = today()->addDay()->toDateString();
+        $selesai = today()->addDays(2)->toDateString();
+
+        $this->actingAs($this->userPelanggan)->post(route('pesanan.store'), [
+            'tanggal_mulai' => $mulai,
+            'tanggal_selesai' => $selesai,
+            'items' => [['alat_id' => $this->tenda->id, 'jumlah' => 1]],
+        ]);
+
+        $prefix = 'BLN-'.now()->format('ymd').'-0001';
+        $pesanan = \App\Models\Pesanan::where('no_resi', $prefix)->first();
+
+        // Admin bayar pesanan
+        $this->actingAs($this->admin)->post(route('admin.pesanan.bayar', $pesanan), [
+            'jumlah' => $pesanan->total_sewa,
+            'metode' => \App\Enums\MetodePembayaran::Tunai->value,
+            'catatan' => 'Lunas tunai di toko',
+        ]);
+
+        // Detail Pesanan
+        $responseDetail = $this->actingAs($this->userPelanggan)->get(route('pesanan.show', $prefix));
+        $responseDetail->assertOk();
+        $responseDetail->assertSee($prefix);
+        $responseDetail->assertSee('Pembayaran Dikonfirmasi Lunas');
+        $responseDetail->assertSee('Pembayaran Sewa');
+        $responseDetail->assertSee('LUNAS');
+
+        // Lembar Resi
+        $responseResi = $this->actingAs($this->userPelanggan)->get(route('pesanan.resi', $prefix));
+        $responseResi->assertOk();
+        $responseResi->assertSee($prefix);
+        $responseResi->assertSee('LUNAS');
+    }
+
+    public function test_pelanggan_dapat_melihat_daftar_pesanan_aktif_dan_riwayat_terpisah(): void
+    {
+        // 1. Buat pesanan aktif (status Menunggu)
+        $mulai = today()->addDay()->toDateString();
+        $selesai = today()->addDays(2)->toDateString();
+        $this->actingAs($this->userPelanggan)->post(route('pesanan.store'), [
+            'tanggal_mulai' => $mulai,
+            'tanggal_selesai' => $selesai,
+            'items' => [['alat_id' => $this->tenda->id, 'jumlah' => 1]],
+        ]);
+        $resiAktif = 'BLN-'.now()->format('ymd').'-0001';
+
+        // 2. Buat pesanan selesai (status Dikembalikan) secara manual
+        $pesananSelesai = \App\Models\Pesanan::create([
+            'no_resi' => 'BLN-'.now()->format('ymd').'-0099',
+            'pelanggan_id' => $this->pelanggan->id,
+            'dibuat_oleh' => $this->userPelanggan->id,
+            'tanggal_mulai' => today()->subDays(5)->toDateString(),
+            'tanggal_selesai' => today()->subDays(3)->toDateString(),
+            'durasi_hari' => 2,
+            'jatuh_tempo' => today()->subDays(3)->setTime(12, 0, 0),
+            'batas_ambil' => today()->subDays(5)->setTime(23, 59, 59),
+            'total_sewa' => 100000,
+            'status' => StatusPesanan::Dikembalikan,
+        ]);
+
+        // Cek tab aktif -> hanya pesanan aktif yang muncul dengan tombol ke Detail dan Resi
+        $responseAktif = $this->actingAs($this->userPelanggan)->get(route('pesanan.index', ['tab' => 'aktif']));
+        $responseAktif->assertOk();
+        $responseAktif->assertSee('Pesanan Aktif');
+        $responseAktif->assertSee($resiAktif);
+        $responseAktif->assertDontSee($pesananSelesai->no_resi);
+        $responseAktif->assertSee('Detail Pesanan');
+        $responseAktif->assertSee('Lihat Resi');
+
+        // Pastikan tombol batal dapat diakses di halaman detail pesanan aktif tersebut
+        $responseDetailAktif = $this->actingAs($this->userPelanggan)->get(route('pesanan.show', $resiAktif));
+        $responseDetailAktif->assertSee('Batalkan Pesanan');
+
+        // Cek tab riwayat -> hanya pesanan selesai yang muncul
+        $responseRiwayat = $this->actingAs($this->userPelanggan)->get(route('pesanan.index', ['tab' => 'riwayat']));
+        $responseRiwayat->assertOk();
+        $responseRiwayat->assertSee('Riwayat Selesai');
+        $responseRiwayat->assertSee($pesananSelesai->no_resi);
+        $responseRiwayat->assertDontSee($resiAktif);
     }
 }

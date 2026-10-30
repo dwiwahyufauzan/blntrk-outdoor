@@ -53,7 +53,12 @@
                                         Edit
                                     </a>
 
-                                    <form method="POST" action="{{ route('admin.kategori.destroy', $kat->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori {{ $kat->nama }}?');" class="inline">
+                                    <form method="POST" action="{{ route('admin.kategori.destroy', $kat->id) }}"
+                                          data-konfirmasi="danger"
+                                          data-judul="Hapus Kategori Alat"
+                                          data-pesan="Apakah Anda yakin ingin menghapus kategori {{ $kat->nama }}?"
+                                          data-tombol="Ya, Hapus Kategori"
+                                          class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200/80 transition cursor-pointer">

@@ -342,7 +342,7 @@ class PengembalianDendaTest extends TestCase
 
         $this->assertDatabaseHas('denda', [
             'pesanan_id' => $pesanan->id,
-            'jenis' => JenisDenda::Kerusakan->value,
+            'jenis' => JenisDenda::Kehilangan->value,
             'jumlah' => 350000.00,
             'status_bayar' => 'belum_lunas',
         ]);

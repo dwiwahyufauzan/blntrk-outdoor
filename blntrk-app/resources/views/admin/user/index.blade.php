@@ -143,7 +143,12 @@
                                             Edit
                                         </a>
 
-                                        <form method="POST" action="{{ route('admin.user.reset-password', $u->id) }}" onsubmit="return confirm('Reset password akun {{ $u->nama }}?');" class="inline">
+                                        <form method="POST" action="{{ route('admin.user.reset-password', $u->id) }}"
+                                              data-konfirmasi="warning"
+                                              data-judul="Reset Password Akun"
+                                              data-pesan="Reset password akun {{ $u->nama }} menjadi default (password123)?"
+                                              data-tombol="Ya, Reset Password"
+                                              class="inline">
                                             @csrf
                                             <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-[11px] border border-amber-200 transition cursor-pointer">
                                                 Reset
@@ -151,7 +156,12 @@
                                         </form>
 
                                         @if($u->id !== auth()->id())
-                                            <form method="POST" action="{{ route('admin.user.destroy', $u->id) }}" onsubmit="return confirm('Hapus akun {{ $u->nama }}?');" class="inline">
+                                            <form method="POST" action="{{ route('admin.user.destroy', $u->id) }}"
+                                                  data-konfirmasi="danger"
+                                                  data-judul="Hapus Akun Pengguna"
+                                                  data-pesan="Apakah Anda yakin ingin menghapus akun pengguna {{ $u->nama }}?"
+                                                  data-tombol="Ya, Hapus Akun"
+                                                  class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200/80 transition cursor-pointer">

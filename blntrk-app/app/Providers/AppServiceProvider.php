@@ -29,5 +29,22 @@ class AppServiceProvider extends ServiceProvider
         Blade::component('publik-layout', PublikLayout::class);
         Blade::component('admin-layout', AdminLayout::class);
         Blade::component('pemilik-layout', PemilikLayout::class);
+
+        // Macro adapter agar Collection kompatibel jika view pagination lama dipanggil
+        \Illuminate\Support\Collection::macro('firstItem', function () {
+            /** @var \Illuminate\Support\Collection $this */
+            return $this->isEmpty() ? 0 : 1;
+        });
+        \Illuminate\Support\Collection::macro('lastItem', function () {
+            /** @var \Illuminate\Support\Collection $this */
+            return $this->count();
+        });
+        \Illuminate\Support\Collection::macro('total', function () {
+            /** @var \Illuminate\Support\Collection $this */
+            return $this->count();
+        });
+        \Illuminate\Support\Collection::macro('links', function () {
+            return new \Illuminate\Support\HtmlString('');
+        });
     }
 }

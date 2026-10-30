@@ -119,7 +119,11 @@
                                         </form>
 
                                         <!-- RESET PASSWORD -->
-                                        <form method="POST" action="{{ route('pemilik.admin.reset-password', $admin) }}" onsubmit="return confirm('Reset password akun {{ $admin->nama }} menjadi default (password123)?');">
+                                        <form method="POST" action="{{ route('pemilik.admin.reset-password', $admin) }}"
+                                              data-konfirmasi="warning"
+                                              data-judul="Reset Password Akun Admin"
+                                              data-pesan="Reset password akun {{ $admin->nama }} menjadi default (password123)?"
+                                              data-tombol="Ya, Reset Password">
                                             @csrf
                                             <button type="submit"
                                                     class="inline-flex items-center gap-1 py-1 px-2.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
@@ -142,7 +146,11 @@
                                         </a>
 
                                         <!-- HAPUS -->
-                                        <form method="POST" action="{{ route('pemilik.admin.destroy', $admin) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ $admin->nama }}?');">
+                                        <form method="POST" action="{{ route('pemilik.admin.destroy', $admin) }}"
+                                              data-konfirmasi="danger"
+                                              data-judul="Hapus Akun Admin"
+                                              data-pesan="Apakah Anda yakin ingin menghapus akun admin {{ $admin->nama }}?"
+                                              data-tombol="Ya, Hapus Admin">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
