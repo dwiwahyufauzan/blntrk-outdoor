@@ -69,6 +69,19 @@ class WhatsAppService
     }
 
     /**
+     * Template pesan WhatsApp untuk penagihan/peringatan penyewa yang terlambat pengembalian (denda berjalan).
+     */
+    public static function pesanPeringatanTerlambat(Pesanan $pesanan, int $hariTerlambat, float $estimasiDenda): string
+    {
+        $nama = $pesanan->pelanggan?->nama_lengkap ?? 'Pelanggan';
+        $resi = $pesanan->no_resi;
+        $rupiah = number_format($estimasiDenda, 0, ',', '.');
+        $tglSelesai = $pesanan->tanggal_selesai?->translatedFormat('d F Y') ?? '-';
+
+        return "Halo Kak {$nama}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan dengan No Resi {$resi} telah melewati batas pengembalian ({$tglSelesai} pukul 12:00 WIB) dan saat ini terlambat {$hariTerlambat} hari. Estimasi denda keterlambatan berjalan sebesar Rp {$rupiah}. Mohon segera kembalikan perlengkapan ke toko hari ini untuk menghindari penambahan denda harian dan agar kartu identitas jaminan Anda dapat segera diserahkan kembali. Terima kasih!";
+    }
+
+    /**
      * Template konfirmasi reservasi booking sewa.
      */
     public static function pesanKonfirmasiBooking(Pesanan $pesanan): string

@@ -15,6 +15,7 @@ class Denda extends Model
 
     protected $fillable = [
         'pesanan_id',
+        'kategori_denda_id',
         'pengembalian_id',
         'pengembalian_detail_id',
         'jenis',
@@ -37,6 +38,11 @@ class Denda extends Model
     public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class);
+    }
+
+    public function kategoriDenda(): BelongsTo
+    {
+        return $this->belongsTo(KategoriDenda::class, 'kategori_denda_id');
     }
 
     public function pengembalian(): BelongsTo

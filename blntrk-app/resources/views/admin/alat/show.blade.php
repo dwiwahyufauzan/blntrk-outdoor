@@ -49,13 +49,21 @@
                     Spesifikasi & Informasi Tarif
                 </h3>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/60">
                         <span class="text-[10px] uppercase font-bold text-emerald-800 block">Tarif Sewa Harian</span>
                         <span class="text-xl font-extrabold text-[#14201a] block mt-0.5">
                             Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}
                         </span>
                         <span class="text-[10px] text-emerald-700 block font-medium">per 24 jam</span>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-rose-50/70 border border-rose-200/60">
+                        <span class="text-[10px] uppercase font-bold text-rose-800 block">Harga Beli / Aset</span>
+                        <span class="text-xl font-extrabold text-stone-900 block mt-0.5">
+                            Rp {{ number_format($alat->harga_beli, 0, ',', '.') }}
+                        </span>
+                        <span class="text-[10px] text-rose-700 block font-medium">acuan ganti rugi hilang</span>
                     </div>
 
                     <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">

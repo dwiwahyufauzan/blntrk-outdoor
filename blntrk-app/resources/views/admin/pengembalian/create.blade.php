@@ -12,10 +12,12 @@
                 nama: '{{ addslashes($item->alat->nama) }}',
                 jumlah: {{ $item->jumlah }},
                 hargaPerHari: {{ $item->harga_per_hari }},
+                hargaBeli: {{ (float) ($item->alat->harga_beli ?? 0) }},
                 baik: {{ (int) old('baris.'.$item->id.'.baik', $item->jumlah) }},
                 rusakRingan: {{ (int) old('baris.'.$item->id.'.rusak_ringan', 0) }},
                 rusakBerat: {{ (int) old('baris.'.$item->id.'.rusak_berat', 0) }},
                 hilang: {{ (int) old('baris.'.$item->id.'.hilang', 0) }},
+                kategoriDendaId: '{{ old('baris.'.$item->id.'.kategori_denda_id', '') }}',
                 biaya: {{ (float) old('baris.'.$item->id.'.biaya', 0) }},
                 catatan: '{{ addslashes(old('baris.'.$item->id.'.catatan', '')) }}'
             },
@@ -113,12 +115,13 @@
                     <table class="w-full text-left text-xs">
                         <thead class="bg-stone-50/80 text-stone-500 uppercase text-[10px] font-bold border-b border-stone-200 tracking-wider">
                             <tr>
-                                <th class="py-3 px-4 w-44">Nama Alat</th>
-                                <th class="py-3 px-2 text-center w-16">Disewa</th>
-                                <th class="py-3 px-2 text-center w-20">Kondisi Baik</th>
-                                <th class="py-3 px-2 text-center w-20">Rusak Ringan</th>
-                                <th class="py-3 px-2 text-center w-20">Rusak Berat</th>
-                                <th class="py-3 px-2 text-center w-20">Hilang</th>
+                                <th class="py-3 px-4 w-40">Nama Alat</th>
+                                <th class="py-3 px-2 text-center w-14">Disewa</th>
+                                <th class="py-3 px-2 text-center w-16">Baik</th>
+                                <th class="py-3 px-2 text-center w-16">R. Ringan</th>
+                                <th class="py-3 px-2 text-center w-16">R. Berat</th>
+                                <th class="py-3 px-2 text-center w-16">Hilang</th>
+                                <th class="py-3 px-3 w-44">Kategori Denda</th>
                                 <th class="py-3 px-3 w-28 text-right">Biaya Kerusakan</th>
                                 <th class="py-3 px-4 w-36">Catatan Fisik</th>
                             </tr>
@@ -162,15 +165,41 @@
                                     <td class="py-3.5 px-2">
                                         <input type="number" :name="'baris[' + item.id + '][hilang]'" min="0" :max="item.jumlah"
                                                x-model.number="item.hilang"
+                                               @input="onUbahHilang(item)"
                                                class="w-full text-center text-xs py-1.5 px-1 rounded-lg border-stone-300 focus:border-[#0e1b15] font-bold text-rose-800 bg-rose-50/40">
+                                        <template x-if="item.hargaBeli > 0">
+                                            <span class="text-[9px] text-stone-400 font-mono block text-center mt-0.5 truncate" :title="'Harga beli: Rp' + Number(item.hargaBeli).toLocaleString('id-ID')">
+                                                @<span x-text="formatRupiah(item.hargaBeli).replace('Rp', '')"></span>
+                                            </span>
+                                        </template>
                                     </td>
 
-                                    <!-- Biaya Kerusakan -->
+                                    <!-- Kategori Denda -->
+                                    <td class="py-3.5 px-3">
+                                        <select :name="'baris[' + item.id + '][kategori_denda_id]'"
+                                                x-model="item.kategoriDendaId"
+                                                @change="ubahKategori(item)"
+                                                class="w-full text-[11px] py-1.5 px-2 rounded-lg border-stone-300 focus:border-[#0e1b15] bg-white">
+                                            <option value="">-- Pilih Kategori --</option>
+                                            @foreach($kategoriDendaList as $kat)
+                                                <option value="{{ $kat->id }}">
+                                                    {{ $kat->nama }} ({{ $kat->kode === 'HILANG' ? 'Sesuai Harga Beli' : ($kat->tarif_standar > 0 ? 'Rp'.number_format($kat->tarif_standar, 0, ',', '.') : 'Fleksibel') }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+
+                                    <!-- Biaya Kerusakan / Ganti Rugi -->
                                     <td class="py-3.5 px-3">
                                         <input type="number" :name="'baris[' + item.id + '][biaya]'" min="0" step="1000"
                                                x-model.number="item.biaya"
                                                placeholder="0"
                                                class="w-full text-right text-xs py-1.5 px-2 font-mono rounded-lg border-stone-300 focus:border-[#0e1b15]">
+                                        <template x-if="item.hilang > 0 && item.hargaBeli > 0">
+                                            <span class="text-[9px] text-rose-600 font-bold block text-right mt-0.5">
+                                                Sesuai harga beli
+                                            </span>
+                                        </template>
                                     </td>
 
                                     <!-- Catatan -->
@@ -222,7 +251,16 @@
                             <span class="text-xs font-bold text-stone-300">Total Tagihan Baru:</span>
                             <span class="text-xl font-mono font-black text-[#5edd5b]" x-text="formatRupiah(dendaTelat + totalBiayaKerusakan())"></span>
                         </div>
-                        <span class="text-[10px] text-stone-400 block">Denda belum lunas dapat dilunasi tunai/transfer di menu Denda.</span>
+                        <span class="text-[10px] text-stone-400 block mb-3">Denda belum lunas dapat dilunasi tunai/transfer di menu Denda.</span>
+
+                        <!-- Notice Penahanan Jaminan (Foresta Notice) -->
+                        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200">
+                            <div class="font-bold flex items-center gap-1.5 text-amber-400 mb-1">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <span>Aturan Penahanan Jaminan</span>
+                            </div>
+                            <span class="leading-relaxed">Jika terdapat tagihan denda keterlambatan/kehilangan/kerusakan yang belum diselesaikan, kartu identitas jaminan (KTP/SIM) penyewa akan <strong>otomatis ditahan oleh sistem</strong> sampai seluruh denda dilunasi.</span>
+                        </div>
                     </div>
 
                     <div class="pt-5 flex items-center gap-2">
@@ -248,6 +286,40 @@
                 items: config.items,
                 dendaTelat: config.dendaAwal,
                 hariTelat: config.hariTelatAwal,
+                kategoriList: [
+                    @foreach($kategoriDendaList as $k)
+                    { id: '{{ $k->id }}', kode: '{{ $k->kode }}', nama: '{{ addslashes($k->nama) }}', tarif: {{ (float) $k->tarif_standar }} },
+                    @endforeach
+                ],
+
+                onUbahHilang(item) {
+                    if (item.hilang > 0) {
+                        const katHilang = this.kategoriList.find(k => k.kode === 'HILANG');
+                        if (katHilang) {
+                            item.kategoriDendaId = katHilang.id;
+                        }
+                        if (item.hargaBeli > 0) {
+                            item.biaya = item.hilang * item.hargaBeli;
+                        }
+                    } else if (item.hilang === 0 && item.rusakRingan === 0 && item.rusakBerat === 0) {
+                        item.biaya = 0;
+                        item.kategoriDendaId = '';
+                    }
+                },
+
+                ubahKategori(item) {
+                    if (item.kategoriDendaId) {
+                        const kat = this.kategoriList.find(k => k.id == item.kategoriDendaId);
+                        if (kat) {
+                            if (kat.kode === 'HILANG' && item.hargaBeli > 0) {
+                                const qty = item.hilang > 0 ? item.hilang : 1;
+                                item.biaya = qty * item.hargaBeli;
+                            } else if (kat.tarif > 0 && (!item.biaya || item.biaya === 0)) {
+                                item.biaya = kat.tarif;
+                            }
+                        }
+                    }
+                },
 
                 itemTotalKondisi(item) {
                     return (parseInt(item.baik) || 0) +

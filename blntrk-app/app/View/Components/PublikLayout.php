@@ -13,6 +13,11 @@ class PublikLayout extends Component
 
     public function render(): View
     {
-        return view('layouts.publik');
+        $cart = session()->get('keranjang_sewa', []);
+        $cartCount = (int) array_sum($cart);
+
+        return view('layouts.publik', [
+            'cartCount' => $cartCount,
+        ]);
     }
 }

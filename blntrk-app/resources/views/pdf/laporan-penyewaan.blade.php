@@ -15,7 +15,7 @@
         }
         .header-table {
             width: 100%;
-            border-bottom: 2px solid #0e1b15;
+            border-bottom: 3px double #0e1b15;
             padding-bottom: 8px;
             margin-bottom: 16px;
         }
@@ -110,14 +110,14 @@
     <!-- KOP DOKUMEN -->
     <table class="header-table">
         <tr>
-            <td style="width: 70%;">
+            <td style="width: 65%;">
                 <div class="brand-title">{{ $toko }}</div>
                 <div class="brand-subtitle">{{ $alamat }}</div>
-                <div class="brand-subtitle">Layanan Reservasi & Rental Perlengkapan Outdoor Subang</div>
+                <div class="brand-subtitle">WhatsApp Toko: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam</div>
             </td>
-            <td style="width: 30%; text-align: right; font-size: 8pt; color: #718096;">
-                Dicetak: {{ $tanggalCetak }} WIB<br>
-                Petugas: {{ $petugas }}
+            <td style="width: 35%; text-align: right; font-size: 8pt; color: #718096; vertical-align: bottom;">
+                <div>Tgl Cetak: {{ $tanggalCetak }} WIB</div>
+                <div>Petugas: <strong>{{ $petugas }}</strong></div>
             </td>
         </tr>
     </table>

@@ -222,13 +222,13 @@
                     $imgSrc = $alat->foto 
                         ? asset('storage/' . $alat->foto) 
                         : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
-                    $stokTersedia = $alat->kapasitas_fisik;
+                    $stokTersedia = $alat->stok_tersedia;
                 @endphp
                 <div class="bg-white rounded-2xl border border-stone-200/80 p-4 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                     <!-- Image Wrapper (1:1 Ratio Square) -->
                     <a href="{{ route('katalog.show', $alat->id) }}" class="block relative aspect-square bg-stone-50 rounded-xl overflow-hidden p-2 flex items-center justify-center mb-4">
                         <img src="{{ $imgSrc }}" alt="{{ $alat->nama }}" loading="lazy"
-                             class="object-cover w-full h-full rounded-lg group-hover:scale-105 transition-transform duration-300">
+                             class="object-cover w-full h-full rounded-lg group-hover:scale-105 transition-transform duration-300 {{ $stokTersedia <= 0 ? 'grayscale opacity-75' : '' }}">
 
                         <!-- Availability Pill -->
                         <div class="absolute top-3 left-3">
@@ -260,10 +260,27 @@
                         </div>
                     </div>
 
-                    <!-- Action Button -->
-                    <a href="{{ route('katalog.show', $alat->id) }}" class="mt-3.5 block w-full py-2.5 rounded-xl bg-stone-100 hover:bg-[#5edd5b] text-stone-800 hover:text-black text-xs font-bold text-center transition">
-                        Pilih &amp; Sewa
-                    </a>
+                    <!-- Action Buttons -->
+                    <div class="mt-3.5 grid grid-cols-2 gap-2">
+                        <a href="{{ route('katalog.show', $alat->id) }}" class="block w-full py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-[11px] font-bold text-center transition">
+                            Detail
+                        </a>
+                        @if($stokTersedia > 0)
+                            <form method="POST" action="{{ route('keranjang.tambah') }}">
+                                @csrf
+                                <input type="hidden" name="alat_id" value="{{ $alat->id }}">
+                                <input type="hidden" name="jumlah" value="1">
+                                <button type="submit" class="w-full py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-[11px] font-black text-center transition flex items-center justify-center gap-1 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                    <span>+ Sewa</span>
+                                </button>
+                            </form>
+                        @else
+                            <button type="button" disabled class="w-full py-2.5 rounded-xl bg-stone-100 text-stone-400 text-[11px] font-bold text-center cursor-not-allowed">
+                                Stok Habis
+                            </button>
+                        @endif
+                    </div>
                 </div>
             @empty
                 <div class="col-span-full rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center text-sm text-stone-500">
@@ -305,6 +322,125 @@
             @endforelse
         </div>
     </section>
+
+    <!-- SECTION: PAKET BUNDLING HEMAT (PAKET 1, 2, 3) -->
+    @if(isset($paketBundlingList) && $paketBundlingList->isNotEmpty())
+        <section id="paket-bundling" class="mb-16">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                    <span class="text-[#1e3a2c] font-urbanist font-extrabold text-xs uppercase tracking-wider block mb-1">Paling Praktis &amp; Hemat</span>
+                    <h2 class="font-urbanist text-2xl sm:text-4xl font-black text-stone-900 tracking-tight">Paket Bundling Outdoor (Paket 1, 2, 3)</h2>
+                    <p class="text-xs sm:text-sm text-stone-500 mt-1">
+                        Pilihan Paket 1, 2, dan 3 yang dirancang pas untuk kebutuhan pendakian Anda. Langsung siap jalan dengan <strong>diskon sewa harian spesial</strong>!
+                    </p>
+                </div>
+                <a href="{{ route('paket-bundling.index') }}" class="inline-flex items-center gap-2 bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-urbanist font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs transition hover:scale-[1.02] w-fit">
+                    <span>Lihat Semua Paket</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                @foreach($paketBundlingList as $paket)
+                    @php
+                        $nomorBadge = match($paket->nomor_paket) {
+                            1 => 'bg-emerald-100 text-emerald-950 border-emerald-300',
+                            2 => 'bg-[#5edd5b] text-black font-black',
+                            3 => 'bg-amber-100 text-amber-950 border-amber-300',
+                            default => 'bg-stone-100 text-stone-800'
+                        };
+                    @endphp
+                    <div class="bg-white rounded-3xl border border-stone-200/90 p-6 sm:p-7 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider {{ $nomorBadge }}">
+                                    Paket {{ $paket->nomor_paket }}
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-800 border border-rose-200">
+                                    Hemat Rp{{ number_format($paket->hemat_per_hari, 0, ',', '.') }}/hari
+                                </span>
+                            </div>
+
+                            <h3 class="font-urbanist font-black text-lg text-stone-900 group-hover:text-[#0e1b15] transition">
+                                <a href="{{ route('paket-bundling.show', $paket->slug) }}" class="hover:underline">
+                                    {{ $paket->nama }}
+                                </a>
+                            </h3>
+
+                            <div class="flex items-center gap-2 mt-1 text-xs text-stone-500 font-medium">
+                                <span class="inline-flex items-center gap-1 font-bold text-stone-700">
+                                    <svg class="w-3.5 h-3.5 text-[#1e3a2c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    <span>Kapasitas: {{ $paket->kapasitas_orang }}</span>
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-stone-600 mt-2.5 leading-relaxed line-clamp-2">
+                                {{ $paket->deskripsi }}
+                            </p>
+
+                            <!-- Daftar Alat Termasuk -->
+                            <div class="mt-4 pt-4 border-t border-stone-100">
+                                <span class="text-[10px] font-extrabold uppercase tracking-widest text-stone-400 block mb-2">
+                                    Kelengkapan Unit ({{ $paket->items->sum('jumlah') }} Unit):
+                                </span>
+                                <div class="space-y-1.5 text-xs text-stone-700">
+                                    @foreach($paket->items->take(4) as $it)
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-3.5 h-3.5 text-[#5edd5b] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            <span class="truncate font-semibold">{{ $it->jumlah }}x {{ $it->alat?->nama }}</span>
+                                        </div>
+                                    @endforeach
+                                    @if($paket->items->count() > 4)
+                                        <span class="text-[11px] text-stone-400 italic block pl-5">+ {{ $paket->items->count() - 4 }} alat lainnya</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Harga & Tombol Aksi -->
+                        <div class="mt-6 pt-4 border-t border-stone-100">
+                            <div class="flex items-baseline justify-between mb-3">
+                                <div>
+                                    <span class="text-[11px] text-stone-400 line-through font-mono block">
+                                        Rp{{ number_format($paket->harga_asli_per_hari, 0, ',', '.') }}
+                                    </span>
+                                    <span class="font-urbanist font-black text-xl text-[#0e1b15] font-mono">
+                                        Rp{{ number_format($paket->harga_paket_per_hari, 0, ',', '.') }}
+                                        <span class="text-[11px] text-stone-500 font-normal">/hari</span>
+                                    </span>
+                                </div>
+                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                    Diskon {{ $paket->persen_hemat }}%
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <!-- Tombol Sewa Langsung -->
+                                <form method="POST" action="{{ route('paket-bundling.sewa-langsung', $paket->slug) }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full py-2.5 px-3 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-black transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer font-urbanist hover:scale-102">
+                                        <span>Sewa Paket</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                    </button>
+                                </form>
+
+                                <!-- Tombol Masukkan ke Keranjang -->
+                                <form method="POST" action="{{ route('keranjang.tambah-paket', $paket->id) }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full py-2.5 px-3 rounded-xl bg-stone-100 hover:bg-[#0e1b15] hover:text-[#5edd5b] text-stone-800 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                        <span>+ Keranjang</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     <!-- SECTION: CARA SEWA (4 LANGKAH MUDAH) -->
     <section id="alur-sewa" class="relative mb-16 overflow-hidden rounded-[28px] sm:rounded-[36px] bg-[#0e1b15] text-white p-6 sm:p-12 shadow-xl">
@@ -362,6 +498,85 @@
                     </div>
                 </div>
             @endforeach
+        </div>
+    </section>
+
+    <!-- SECTION: TRANSPARANSI & KATEGORI DENDA TOKO -->
+    <section id="ketentuan-denda" class="mb-16">
+        <div class="max-w-3xl mb-8">
+            <span class="text-[#1e3a2c] font-urbanist font-extrabold text-xs uppercase tracking-wider block mb-1">Kebijakan Bertanggung Jawab</span>
+            <h2 class="font-urbanist text-2xl sm:text-4xl font-black text-stone-900 tracking-tight mb-2">Transparansi &amp; Kategori Denda</h2>
+            <p class="text-xs sm:text-sm text-stone-500 leading-relaxed">
+                Demi kenyamanan seluruh petualang, BLNTRK Outdoor menerapkan aturan pertanggungjawaban yang jelas, adil, dan transparan atas alat yang disewa.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- 1. Telat Pengembalian -->
+            <div class="bg-white rounded-3xl border border-stone-200/90 p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="font-urbanist font-bold text-base text-stone-900 mb-2">Telat Pengembalian</h3>
+                    <p class="text-xs text-stone-600 leading-relaxed">
+                        Batas pengembalian alat adalah pukul 12:00 siang. Keterlambatan dikenakan biaya sewa harian berjalan secara proporsional per hari keterlambatan.
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-stone-100 text-[11px] font-bold text-amber-700">
+                    Dihitung Otomatis per Hari
+                </div>
+            </div>
+
+            <!-- 2. Ganti Rugi Kehilangan Alat -->
+            <div class="bg-white rounded-3xl border border-stone-200/90 p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </div>
+                    <h3 class="font-urbanist font-bold text-base text-stone-900 mb-2">Ganti Rugi Kehilangan Alat</h3>
+                    <p class="text-xs text-stone-600 leading-relaxed">
+                        Jika alat atau komponen kelengkapannya hilang, penyewa mengganti rugi <strong class="text-stone-900">Sesuai Harga Beli Alat</strong> yang tertera pada sistem toko tanpa mark up sepihak.
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-stone-100 text-[11px] font-bold text-rose-700">
+                    Sesuai Harga Beli Alat
+                </div>
+            </div>
+
+            <!-- 3. Kerusakan Ringan / Berat -->
+            <div class="bg-white rounded-3xl border border-stone-200/90 p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <h3 class="font-urbanist font-bold text-base text-stone-900 mb-2">Kerusakan Ringan / Berat</h3>
+                    <p class="text-xs text-stone-600 leading-relaxed">
+                        Kerusakan fisik dinilai saat inspeksi pengembalian di toko bersama penyewa, dikenakan tarif reparasi atau penggantian part yang proporsional.
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-stone-100 text-[11px] font-bold text-emerald-800">
+                    Inspeksi Fisik Bersama
+                </div>
+            </div>
+        </div>
+
+        <!-- Ketentuan Penahanan Kartu Identitas Jaminan -->
+        <div class="bg-[#0e1b15] text-white rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#1e3a2c]">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-2xl bg-[#5edd5b]/20 text-[#5edd5b] flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div>
+                    <h4 class="font-urbanist font-bold text-sm sm:text-base text-white">Ketentuan Penahanan Kartu Identitas Jaminan</h4>
+                    <p class="text-xs text-stone-300 mt-1 leading-relaxed">
+                        Kartu identitas asli (KTP/SIM) yang dijadikan jaminan akan disimpan aman oleh toko dan diserahterimakan kembali penuh setelah seluruh alat kembali lengkap dan tidak ada tanggungan denda yang tertunda.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ route('katalog.index') }}" class="shrink-0 px-4 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-urbanist font-bold text-xs shadow-xs transition">
+                Sewa Aman Sekarang
+            </a>
         </div>
     </section>
 

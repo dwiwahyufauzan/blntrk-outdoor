@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Models\Denda;
+use App\Models\Pesanan;
+use App\Services\DendaService;
 use App\Services\PengembalianService;
+use App\Services\PesananService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,10 +16,34 @@ use Illuminate\View\View;
 class DendaController extends Controller
 {
     /**
-     * Menampilkan daftar denda sewa (keterlambatan & kerusakan).
+     * Menampilkan daftar denda sewa (keterlambatan, kehilangan, & kerusakan).
      */
-    public function index(Request $request): View
+    public function index(Request $request, DendaService $dendaService, PesananService $pesananService): View
     {
+        // 1. Sinkronisasi status pesanan realtime
+        $pesananService->sinkronStatus();
+
+        // 2. Ambil seluruh pesanan yang saat ini sedang terlambat (denda berjalan aktif)
+        $pesananTerlambatList = Pesanan::with(['pelanggan', 'detail.alat'])
+            ->where('status', StatusPesanan::Terlambat)
+            ->latest('jatuh_tempo')
+            ->get()
+            ->map(function ($p) use ($dendaService) {
+                $p->info_telat = $dendaService->hitungKeterlambatan($p, now());
+
+                $noHp = preg_replace('/\D/', '', $p->pelanggan->no_hp ?? '');
+                if (str_starts_with($noHp, '0')) {
+                    $noHp = '62'.substr($noHp, 1);
+                }
+                $p->no_wa = $noHp;
+                $p->pesan_wa = urlencode("Halo Kak {$p->pelanggan->nama_lengkap}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan No Resi {$p->no_resi} telah melewati batas waktu pengembalian (Terlambat {$p->info_telat['hari']} Hari). Estimasi denda keterlambatan saat ini adalah Rp ".number_format($p->info_telat['jumlah'], 0, ',', '.').". Mohon segera kembalikan unit ke toko. Terima kasih!");
+
+                return $p;
+            });
+
+        $totalEstimasiDendaBerjalan = (float) $pesananTerlambatList->sum(fn ($p) => $p->info_telat['jumlah']);
+
+        // 3. Query denda tercatat di tabel denda
         $statusBayar = $request->query('status_bayar');
         $jenis = $request->query('jenis');
         $q = $request->query('q');
@@ -41,7 +69,13 @@ class DendaController extends Controller
         $totalBelumLunas = (float) Denda::where('status_bayar', 'belum_lunas')->sum('jumlah');
         $totalLunas = (float) Denda::where('status_bayar', 'lunas')->sum('jumlah');
 
+        // Total akumulasi denda tertunggak = denda tercatat belum lunas + estimasi denda berjalan penyewa terlambat
+        $grandTotalTertunggak = $totalBelumLunas + $totalEstimasiDendaBerjalan;
+
         return view('admin.denda.index', compact(
+            'pesananTerlambatList',
+            'totalEstimasiDendaBerjalan',
+            'grandTotalTertunggak',
             'dendaList',
             'statusBayar',
             'jenis',

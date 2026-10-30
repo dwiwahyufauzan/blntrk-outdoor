@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PengembalianRequest;
+use App\Models\KategoriDenda;
 use App\Models\Pesanan;
 use App\Services\DendaService;
 use App\Services\PengembalianService;
@@ -31,7 +32,10 @@ class PengembalianController extends Controller
         $waktuSekarang = now();
         $telat = $dendaService->hitungKeterlambatan($pesanan, $waktuSekarang);
 
-        return view('admin.pengembalian.create', compact('pesanan', 'telat', 'waktuSekarang'));
+        KategoriDenda::seedDefault();
+        $kategoriDendaList = KategoriDenda::aktif()->get();
+
+        return view('admin.pengembalian.create', compact('pesanan', 'telat', 'waktuSekarang', 'kategoriDendaList'));
     }
 
     /**

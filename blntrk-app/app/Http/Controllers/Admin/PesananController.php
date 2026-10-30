@@ -9,10 +9,13 @@ use App\Http\Requests\BatalRequest;
 use App\Http\Requests\PembayaranRequest;
 use App\Http\Requests\PengambilanRequest;
 use App\Models\Alat;
+use App\Models\KategoriDenda;
 use App\Models\Pelanggan;
 use App\Models\Pesanan;
+use App\Services\DendaService;
 use App\Services\PengembalianService;
 use App\Services\PesananService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -66,6 +69,7 @@ class PesananController extends Controller
             ->where('is_aktif', true)
             ->orderBy('nama')
             ->get();
+        Alat::muatStokTersedia($alatList);
 
         return view('admin.pesanan.create', compact('pelangganList', 'alatList'));
     }
@@ -95,8 +99,11 @@ class PesananController extends Controller
     /**
      * Menampilkan detail pesanan di panel admin.
      */
-    public function show(Pesanan $pesanan): View
+    public function show(Pesanan $pesanan, PesananService $pesananService, DendaService $dendaService): View
     {
+        $pesananService->sinkronStatus();
+        $pesanan->refresh();
+
         $pesanan->load([
             'pelanggan',
             'pembuat',
@@ -106,7 +113,7 @@ class PesananController extends Controller
             'jaminan.penerima',
             'pengembalian.penerima',
             'pengembalian.detail.pesananDetail.alat',
-            'denda',
+            'denda.kategoriDenda',
         ]);
 
         // Format nomor WhatsApp pelanggan (konversi 08xx ke 628xx)
@@ -116,9 +123,43 @@ class PesananController extends Controller
         }
 
         $namaPelanggan = $pesanan->pelanggan->nama_lengkap ?? 'Pelanggan';
-        $pesanWa = urlencode("Halo Kak {$namaPelanggan}, kami dari BLNTRK Outdoor ingin menginformasikan perihal pesanan sewa Anda dengan no resi {$pesanan->no_resi}. Status saat ini: {$pesanan->status->label()}.");
 
-        return view('admin.pesanan.show', compact('pesanan', 'noHp', 'pesanWa'));
+        $infoKeterlambatan = null;
+        if ($pesanan->status === StatusPesanan::Terlambat || ($pesanan->status === StatusPesanan::Disewa && now()->gt($pesanan->jatuh_tempo))) {
+            $infoKeterlambatan = $dendaService->hitungKeterlambatan($pesanan, now());
+        }
+
+        if ($infoKeterlambatan && $infoKeterlambatan['hari'] > 0) {
+            $pesanWa = urlencode(WhatsAppService::pesanPeringatanTerlambat($pesanan, $infoKeterlambatan['hari'], $infoKeterlambatan['jumlah']));
+        } else {
+            $pesanWa = urlencode("Halo Kak {$namaPelanggan}, kami dari BLNTRK Outdoor ingin menginformasikan perihal pesanan sewa Anda dengan no resi {$pesanan->no_resi}. Status saat ini: {$pesanan->status->label()}.");
+        }
+
+        KategoriDenda::seedDefault();
+        $kategoriDendaList = KategoriDenda::aktif()->get();
+
+        return view('admin.pesanan.show', compact('pesanan', 'noHp', 'pesanWa', 'kategoriDendaList', 'infoKeterlambatan'));
+    }
+
+    /**
+     * Menambahkan denda manual ke pesanan (kategori denda, biaya, dan keterangan tambahan).
+     */
+    public function tambahDenda(Request $request, Pesanan $pesanan, PengembalianService $service): RedirectResponse
+    {
+        $validated = $request->validate([
+            'kategori_denda_id' => ['nullable', 'exists:kategori_denda,id'],
+            'jumlah' => ['required', 'numeric', 'min:1000'],
+            'keterangan' => ['required', 'string', 'max:255'],
+        ], [
+            'jumlah.required' => 'Nominal denda wajib diisi.',
+            'jumlah.min' => 'Nominal denda minimal Rp 1.000.',
+            'keterangan.required' => 'Keterangan atau informasi tambahan denda wajib diisi.',
+        ]);
+
+        $denda = $service->tambahDendaManual($pesanan, auth()->user(), $validated);
+
+        return redirect()->route('admin.pesanan.show', $pesanan->id)
+            ->with('status', "Denda baru sebesar Rp ".number_format($denda->jumlah, 0, ',', '.')." berhasil ditambahkan ke pesanan {$pesanan->no_resi}. Jaminan fisik ditahan sampai seluruh denda dilunasi.");
     }
 
     /**

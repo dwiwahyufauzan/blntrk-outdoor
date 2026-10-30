@@ -7,6 +7,7 @@ use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\Denda;
 use App\Models\Jaminan;
+use App\Models\KategoriDenda;
 use App\Models\LogAktivitas;
 use App\Models\Pengembalian;
 use App\Models\Pesanan;
@@ -96,15 +97,55 @@ class PengembalianService
                 $alat->stok_total -= $hilang;
                 $alat->save();
 
-                // Denda kerusakan atau penggantian unit hilang jika ada biaya
+                // Denda kerusakan atau penggantian unit hilang sesuai harga beli alat
                 $biaya = (float) ($x['biaya'] ?? 0);
+                if ($hilang > 0 && $biaya <= 0 && (float) ($alat->harga_beli ?? 0) > 0) {
+                    $biaya = (float) $alat->harga_beli * $hilang;
+                }
+
                 if ($biaya > 0) {
+                    $kategoriId = $x['kategori_denda_id'] ?? null;
+                    $jenisDenda = JenisDenda::Kerusakan;
+
+                    if ($kategoriId) {
+                        $kat = KategoriDenda::find($kategoriId);
+                        if ($kat) {
+                            $jenisDenda = match ($kat->jenis) {
+                                'kehilangan' => JenisDenda::Kehilangan,
+                                'keterlambatan' => JenisDenda::Keterlambatan,
+                                default => JenisDenda::Kerusakan,
+                            };
+                        }
+                    } elseif ($hilang > 0) {
+                        $katHilang = KategoriDenda::where('kode', 'HILANG')->orWhere('jenis', 'kehilangan')->first();
+                        $kategoriId = $katHilang?->id;
+                        $jenisDenda = JenisDenda::Kehilangan;
+                    } else {
+                        $katRusak = KategoriDenda::where('kode', 'RUSAK_BERAT')->orWhere('jenis', 'kerusakan')->first();
+                        $kategoriId = $katRusak?->id;
+                    }
+
+                    if ($hilang > 0) {
+                        $keteranganDenda = "Ganti rugi kehilangan {$hilang} unit {$det->alat->nama}";
+                        if ((float) ($alat->harga_beli ?? 0) > 0) {
+                            $keteranganDenda .= " (Sesuai harga beli @ Rp".number_format($alat->harga_beli, 0, ',', '.').")";
+                        }
+                        if (! empty($x['catatan'])) {
+                            $keteranganDenda .= " - {$x['catatan']}";
+                        }
+                    } else {
+                        $keteranganDenda = ! empty($x['catatan'])
+                            ? "Biaya kerusakan alat: {$det->alat->nama} ({$x['catatan']})"
+                            : "Biaya kerusakan alat: {$det->alat->nama}";
+                    }
+
                     Denda::create([
                         'pesanan_id' => $p->id,
+                        'kategori_denda_id' => $kategoriId,
                         'pengembalian_id' => $kembali->id,
                         'pengembalian_detail_id' => $kd->id,
-                        'jenis' => JenisDenda::Kerusakan,
-                        'keterangan' => "Biaya kerusakan / kehilangan alat: {$det->alat->nama}",
+                        'jenis' => $jenisDenda,
+                        'keterangan' => $keteranganDenda,
                         'jumlah' => $biaya,
                         'status_bayar' => 'belum_lunas',
                     ]);
@@ -115,8 +156,10 @@ class PengembalianService
             $telat = $this->dendaService->hitungKeterlambatan($p, $waktuKembali);
             if ($telat['jumlah'] > 0) {
                 $kembali->update(['hari_terlambat' => $telat['hari']]);
+                $katTelat = KategoriDenda::where('kode', 'TELAT')->orWhere('jenis', 'keterlambatan')->first();
                 Denda::create([
                     'pesanan_id' => $p->id,
+                    'kategori_denda_id' => $katTelat?->id,
                     'pengembalian_id' => $kembali->id,
                     'pengembalian_detail_id' => null,
                     'jenis' => JenisDenda::Keterlambatan,
@@ -159,6 +202,13 @@ class PengembalianService
             if ($jaminan->status === 'dikembalikan') {
                 throw ValidationException::withMessages([
                     'jaminan' => 'Jaminan kartu identitas sudah dikembalikan sebelumnya.',
+                ]);
+            }
+
+            // Aturan Penahanan Jaminan: Jaminan fisik DITAHAN bila pelanggan memiliki denda yang belum dilunasi
+            if ($pesanan->denda()->where('status_bayar', 'belum_lunas')->exists()) {
+                throw ValidationException::withMessages([
+                    'jaminan' => 'Jaminan kartu identitas DITAHAN dan belum dapat dikembalikan karena terdapat denda yang belum dilunasi. Pelanggan wajib mempertanggungjawabkan/melunasi denda terlebih dahulu.',
                 ]);
             }
 
@@ -205,6 +255,55 @@ class PengembalianService
             );
 
             return $d;
+        });
+    }
+
+    /**
+     * Menambahkan denda manual ke pesanan oleh admin (misal saat cek kelengkapan barang hilang/rusak).
+     */
+    public function tambahDendaManual(Pesanan $pesanan, User $admin, array $data): Denda
+    {
+        return DB::transaction(function () use ($pesanan, $admin, $data) {
+            $p = Pesanan::lockForUpdate()->findOrFail($pesanan->id);
+
+            $kategori = null;
+            if (! empty($data['kategori_denda_id'])) {
+                $kategori = KategoriDenda::find($data['kategori_denda_id']);
+            }
+
+            $jenis = JenisDenda::Kerusakan;
+            if ($kategori) {
+                $jenis = match ($kategori->jenis) {
+                    'keterlambatan' => JenisDenda::Keterlambatan,
+                    'kehilangan' => JenisDenda::Kehilangan,
+                    'kerusakan' => JenisDenda::Kerusakan,
+                    default => JenisDenda::Lainnya,
+                };
+            }
+
+            $keterangan = trim($data['keterangan'] ?? '');
+            if ($keterangan === '') {
+                $keterangan = $kategori ? $kategori->nama : 'Denda Tambahan';
+            }
+
+            $denda = Denda::create([
+                'pesanan_id' => $p->id,
+                'kategori_denda_id' => $kategori?->id,
+                'pengembalian_id' => $p->pengembalian?->id,
+                'pengembalian_detail_id' => $data['pengembalian_detail_id'] ?? null,
+                'jenis' => $jenis,
+                'keterangan' => $keterangan,
+                'jumlah' => (float) $data['jumlah'],
+                'status_bayar' => 'belum_lunas',
+            ]);
+
+            LogAktivitas::catat(
+                $admin,
+                'denda.tambah',
+                "Menambahkan denda manual #{$denda->id} ({$denda->keterangan}) sebesar Rp".number_format($denda->jumlah, 0, ',', '.')." untuk pesanan [{$p->no_resi}]."
+            );
+
+            return $denda;
         });
     }
 }

@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             PengaturanSeeder::class,
             KategoriAlatSeeder::class,
             AlatSeeder::class,
+            PaketBundlingSeeder::class,
         ]);
+
+        \App\Models\KategoriDenda::seedDefault();
     }
 }

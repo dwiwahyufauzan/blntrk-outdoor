@@ -92,7 +92,8 @@ class LaporanController extends Controller
             'pembayaran.pencatat',
             'jaminan.penerima',
             'pengembalian.penerima',
-            'denda',
+            'pengembalian.detail.pesananDetail.alat',
+            'denda.kategoriDenda',
         ]);
 
         $toko = Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor');

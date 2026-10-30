@@ -25,6 +25,7 @@ class PengembalianRequest extends FormRequest
             'baris.*.rusak_berat' => ['required', 'integer', 'min:0'],
             'baris.*.hilang' => ['required', 'integer', 'min:0'],
             'baris.*.biaya' => ['nullable', 'numeric', 'min:0'],
+            'baris.*.kategori_denda_id' => ['nullable', 'exists:kategori_denda,id'],
             'baris.*.catatan' => ['nullable', 'string', 'max:255'],
         ];
     }

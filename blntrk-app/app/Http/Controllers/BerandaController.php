@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Alat;
 use App\Models\KategoriAlat;
+use App\Models\KategoriDenda;
+use App\Models\PaketBundling;
 use App\Models\Pengaturan;
 use Illuminate\View\View;
 
@@ -21,6 +23,14 @@ class BerandaController extends Controller
             ->orderBy('id', 'asc')
             ->take(8)
             ->get();
+        Alat::muatStokTersedia($alatUnggulan);
+
+        $paketBundlingList = PaketBundling::aktif()
+            ->urut()
+            ->with(['items.alat'])
+            ->get();
+
+        $kategoriDendaList = KategoriDenda::aktif()->get();
 
         $toko = [
             'nama' => Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor'),
@@ -28,6 +38,6 @@ class BerandaController extends Controller
             'wa' => Pengaturan::ambil('no_wa_toko', '6281234567890'),
         ];
 
-        return view('beranda', compact('kategoriList', 'alatUnggulan', 'toko'));
+        return view('beranda', compact('kategoriList', 'alatUnggulan', 'paketBundlingList', 'kategoriDendaList', 'toko'));
     }
 }

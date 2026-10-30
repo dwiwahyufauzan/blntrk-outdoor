@@ -60,8 +60,12 @@ class PesananService
                 // Pengecekan ketersediaan stok setelah row-level lock
                 if (! $this->ketersediaan->cukup($alat, $jumlah, $mulai, $selesai)) {
                     $stokTersedia = $this->ketersediaan->tersedia($alat, $mulai, $selesai);
+                    $pesanStok = $stokTersedia <= 0
+                        ? "Stok {$alat->nama} saat ini sedang kosong/habis untuk periode tanggal {$mulai->format('d/m/Y')} - {$selesai->format('d/m/Y')}. Alat tidak dapat dipesan."
+                        : "Stok {$alat->nama} tidak mencukupi untuk tanggal {$mulai->format('d/m/Y')} - {$selesai->format('d/m/Y')}. Sisa tersedia: {$stokTersedia} unit (diminta: {$jumlah} unit).";
+
                     throw ValidationException::withMessages([
-                        "items.{$index}.jumlah" => "Stok {$alat->nama} tidak mencukupi untuk tanggal {$mulai->format('d/m/Y')} - {$selesai->format('d/m/Y')}. Sisa tersedia: {$stokTersedia} unit (diminta: {$jumlah} unit).",
+                        "items.{$index}.jumlah" => $pesanStok,
                     ]);
                 }
 

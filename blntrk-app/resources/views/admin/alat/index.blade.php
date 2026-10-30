@@ -89,8 +89,15 @@
                                     {{ $alat->kategori?->nama ?? 'Umum' }}
                                 </span>
                             </td>
-                            <td class="py-3.5 px-4 font-extrabold text-[#14201a] text-sm">
-                                Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}<span class="text-[10px] font-normal text-stone-400">/hari</span>
+                            <td class="py-3.5 px-4">
+                                <div class="font-extrabold text-[#14201a] text-sm">
+                                    Rp {{ number_format($alat->harga_per_hari, 0, ',', '.') }}<span class="text-[10px] font-normal text-stone-400">/hari</span>
+                                </div>
+                                @if($alat->harga_beli > 0)
+                                    <div class="text-[10px] text-stone-500 font-mono mt-0.5">
+                                        Beli: <span class="font-bold text-stone-700">Rp {{ number_format($alat->harga_beli, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="py-3.5 px-4 text-center">
                                 <div class="inline-flex items-center gap-1.5 font-mono font-bold text-xs">
@@ -123,7 +130,12 @@
                                     <a href="{{ route('admin.alat.edit', $alat->id) }}" class="px-2.5 py-1.5 rounded-xl bg-stone-100 hover:bg-[#5edd5b] hover:text-black text-stone-700 font-bold text-[11px] transition">
                                         Edit
                                     </a>
-                                    <form method="POST" action="{{ route('admin.alat.destroy', $alat->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus alat {{ $alat->nama }}?');" class="inline">
+                                    <form method="POST" action="{{ route('admin.alat.destroy', $alat->id) }}"
+                                          data-konfirmasi="danger"
+                                          data-judul="Hapus Alat Outdoor"
+                                          data-pesan="Apakah Anda yakin ingin menghapus alat {{ $alat->nama }}? Data yang telah dihapus tidak dapat dipulihkan."
+                                          data-tombol="Ya, Hapus Alat"
+                                          class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200/80 transition cursor-pointer">

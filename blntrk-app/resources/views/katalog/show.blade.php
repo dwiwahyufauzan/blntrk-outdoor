@@ -119,11 +119,16 @@
                             </span>
                             <span class="text-xs font-semibold text-stone-500">/ 24 Jam</span>
                         </div>
-                        <div class="flex items-center gap-3 mt-3 text-xs text-stone-500">
-                            <span class="inline-flex items-center gap-1.5 font-medium">
-                                <span class="w-2 h-2 rounded-full bg-[#5edd5b]"></span>
-                                Total Stok Fisik: <strong class="text-[#14201a]">{{ $alat->stok_total }} unit</strong>
+                        <div class="flex flex-wrap items-center gap-3 mt-3 text-xs text-stone-500">
+                            <span class="inline-flex items-center gap-1.5 font-bold {{ $alat->stok_tersedia > 0 ? 'text-emerald-800' : 'text-rose-600' }}">
+                                <span class="w-2.5 h-2.5 rounded-full {{ $alat->stok_tersedia > 0 ? 'bg-[#5edd5b]' : 'bg-rose-500' }}"></span>
+                                Stok Siap Sewa: <strong class="text-stone-900">{{ $alat->stok_tersedia }} unit</strong>
                             </span>
+                            <span class="text-stone-300">|</span>
+                            <span class="text-stone-500">Total Fisik: {{ $alat->stok_total }} unit</span>
+                            @if($alat->stok_disewa > 0)
+                                <span class="text-stone-500">({{ $alat->stok_disewa }} sedang disewa)</span>
+                            @endif
                             @if($alat->stok_perawatan > 0)
                                 <span class="text-amber-600 font-semibold">({{ $alat->stok_perawatan }} servis)</span>
                             @endif
@@ -211,8 +216,23 @@
                             </div>
                         </div>
 
-                        <!-- Tombol Aksi Sewa (Foresta Neon Lime) -->
-                        <div class="pt-2">
+                        <!-- Tombol Aksi Sewa & Keranjang (Foresta Style) -->
+                        <div class="pt-2 space-y-2">
+                            <!-- Tombol 1: Tambah ke Keranjang Belanja -->
+                            <form method="POST" action="{{ route('keranjang.tambah') }}" id="form-keranjang">
+                                @csrf
+                                <input type="hidden" name="alat_id" value="{{ $alat->id }}">
+                                <input type="hidden" name="jumlah" id="cart-jumlah" value="1">
+                                <input type="hidden" name="mulai" id="cart-mulai" value="{{ today()->toDateString() }}">
+                                <input type="hidden" name="selesai" id="cart-selesai" value="{{ today()->addDay()->toDateString() }}">
+                                <button type="submit"
+                                        class="w-full py-3 px-4 rounded-xl bg-[#0e1b15] hover:bg-[#1a3026] text-[#5edd5b] font-extrabold text-xs uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-2 cursor-pointer font-urbanist">
+                                    <svg class="w-4 h-4 text-[#5edd5b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                    <span>Tambah ke Keranjang</span>
+                                </button>
+                            </form>
+
+                            <!-- Tombol 2: Pesan Langsung Sekarang -->
                             @auth
                                 <a id="btn-sewa" href="{{ route('pesanan.create', ['alat_id' => $alat->id]) }}"
                                     class="w-full py-3.5 px-4 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black font-extrabold text-xs uppercase tracking-wider transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer font-urbanist">
@@ -300,7 +320,7 @@
     <script>
         const HARGA_PER_HARI = {{ (float) $alat->harga_per_hari }};
         const ALAT_ID = {{ $alat->id }};
-        let stokTersediaSekarang = {{ max(0, $alat->stok_total - $alat->stok_perawatan) }};
+        let stokTersediaSekarang = {{ $alat->stok_tersedia }};
 
         const inputMulai = document.getElementById('tanggal_mulai');
         const inputSelesai = document.getElementById('tanggal_selesai');
@@ -313,6 +333,8 @@
         const statusContent = document.getElementById('status-content');
         const labelTersedia = document.getElementById('label-tersedia');
         const btnSewa = document.getElementById('btn-sewa');
+        const formKeranjang = document.getElementById('form-keranjang');
+        const btnKeranjang = formKeranjang ? formKeranjang.querySelector('button[type="submit"]') : null;
 
         const estimasiDurasi = document.getElementById('estimasi-durasi');
         const estimasiUnitCount = document.getElementById('estimasi-unit-count');
@@ -370,6 +392,10 @@
                         statusJudul.textContent = 'Stok Habis pada Tanggal Ini';
                         statusPesan.textContent = 'Seluruh unit alat sudah terpesan oleh penyewa lain pada rentang tanggal tersebut. Silakan pilih tanggal lain.';
                         if (btnSewa) btnSewa.classList.add('opacity-50', 'pointer-events-none');
+                        if (btnKeranjang) {
+                            btnKeranjang.disabled = true;
+                            btnKeranjang.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
                     } else {
                         statusBox.className = 'p-4 rounded-2xl border transition-all duration-300 bg-emerald-50 border-emerald-200';
                         statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0';
@@ -377,6 +403,10 @@
                         statusJudul.textContent = `Tersedia ${data.tersedia} Unit`;
                         statusPesan.textContent = `Alat siap disewa dari ${data.tanggal_mulai} s.d. ${data.tanggal_selesai} (${data.durasi_hari} hari).`;
                         if (btnSewa) btnSewa.classList.remove('opacity-50', 'pointer-events-none');
+                        if (btnKeranjang) {
+                            btnKeranjang.disabled = false;
+                            btnKeranjang.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
 
                         // Batasi max input unit jika melebihi stok yang tersedia
                         if (parseInt(inputJumlah.value) > data.tersedia) {
@@ -390,6 +420,10 @@
                     statusJudul.textContent = 'Perhatian';
                     statusPesan.textContent = data.pesan || 'Tidak dapat memverifikasi jadwal.';
                     if (btnSewa) btnSewa.classList.add('opacity-50', 'pointer-events-none');
+                    if (btnKeranjang) {
+                        btnKeranjang.disabled = true;
+                        btnKeranjang.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
                 }
             } catch (err) {
                 statusLoading.classList.add('hidden');
@@ -418,6 +452,13 @@
                 if (btnSewa && btnSewa.getAttribute('href').includes('pesanan/buat')) {
                     btnSewa.href = `{{ route('pesanan.create') }}?alat_id={{ $alat->id }}&jumlah=${unit}&mulai=${inputMulai.value}&selesai=${inputSelesai.value}`;
                 }
+
+                const cartJumlah = document.getElementById('cart-jumlah');
+                const cartMulai = document.getElementById('cart-mulai');
+                const cartSelesai = document.getElementById('cart-selesai');
+                if (cartJumlah) cartJumlah.value = unit;
+                if (cartMulai) cartMulai.value = inputMulai.value;
+                if (cartSelesai) cartSelesai.value = inputSelesai.value;
             }
         }
 
