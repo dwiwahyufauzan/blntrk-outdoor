@@ -37,18 +37,13 @@
                     <span class="text-[10px] text-[#5edd5b] font-extrabold tracking-wider uppercase block">Panel Admin Toko</span>
                 </div>
             </a>
-
-            <!-- Tombol Toggle Mobile Nav (Hanya Muncul di Layar HP/Tablet) -->
-            <button type="button" @click="mobileNav = !mobileNav" class="md:hidden text-stone-300 hover:text-white p-1.5 rounded-lg focus:outline-none" aria-label="Toggle Menu">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
         </div>
 
         <!-- Sisi Kanan Navbar: Kontrol Web & Dropdown Profil Admin -->
-        <div class="flex-1 flex items-center justify-end px-4 sm:px-6 h-16 gap-3 sm:gap-4">
-            <!-- Shortcut Lihat Web Utama -->
+        <div class="flex-1 flex items-center justify-end px-4 sm:px-6 h-16 gap-2.5 sm:gap-4">
+            <!-- Shortcut Lihat Web Utama (Hanya Tampil di Desktop/Tablet) -->
             <a href="{{ route('beranda') }}" target="_blank"
-               class="text-xs text-stone-300 hover:text-white font-bold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition shadow-2xs">
+               class="text-xs text-stone-300 hover:text-white font-bold hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition shadow-2xs">
                 <span>Lihat Web Utama</span>
                 <svg class="w-3.5 h-3.5 text-[#5edd5b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
             </a>
@@ -144,6 +139,15 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tombol Toggle Mobile Nav (Pojok Kanan di Layar HP/Tablet) -->
+            <button type="button" @click="mobileNav = !mobileNav"
+                    class="md:hidden relative w-10 h-10 flex items-center justify-center rounded-xl bg-[#14251e] hover:bg-[#1b3329] text-stone-200 hover:text-white border border-[#234234] shadow-xs cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-[#5edd5b]/60"
+                    aria-label="Toggle Menu Navigasi">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
         </div>
     </header>
 
@@ -211,6 +215,14 @@
                     <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <span>Laporan & Cetak PDF</span>
                 </a>
+
+                <div class="pt-3 mt-2 border-t border-stone-800">
+                    <a href="{{ route('beranda') }}" target="_blank"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-stone-300 hover:text-white transition">
+                        <svg class="w-4 h-4 text-[#5edd5b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        <span class="font-bold">Lihat Web Utama</span>
+                    </a>
+                </div>
             </nav>
         </aside>
     </div>
