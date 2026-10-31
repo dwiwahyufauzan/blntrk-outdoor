@@ -6,11 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('beranda') }}" class="flex items-center gap-2.5 group">
-                        <span class="w-8 h-8 rounded-xl bg-[#5edd5b] flex items-center justify-center text-xs font-black text-[#0e1b15] shadow-xs group-hover:scale-105 transition">
-                            <svg class="w-4 h-4 text-[#0e1b15]" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M14 6l-3.8 6.2 1.9 2.8H4l7-11 3 4.8 2.2-3.8L21 15h-4.8L14 6z"/>
-                            </svg>
-                        </span>
+                        <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-8 h-8 rounded-full object-cover shadow-xs ring-1 ring-white/15 group-hover:scale-105 transition">
                         <div class="leading-tight">
                             <span class="font-extrabold text-base tracking-tight text-white block bl-d">BLNTRK<span class="text-[#5edd5b]">.</span></span>
                             <span class="text-[9px] font-semibold text-stone-400 uppercase tracking-widest block -mt-1">Outdoor</span>

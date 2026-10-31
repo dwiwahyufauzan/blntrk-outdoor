@@ -29,10 +29,8 @@
                     </div>
                 </div>
 
-                <div class="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 hidden lg:flex items-center justify-center pointer-events-none">
-                    <svg class="w-96 h-96 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M14 6l4 8h-3l2 4H7l4-7 2 3 1-2v-6zm0-4L9 11l-3-5L1 18h22L14 2z"/>
-                    </svg>
+                <div class="absolute right-6 -bottom-8 opacity-15 hidden lg:flex items-center justify-center pointer-events-none">
+                    <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Watermark" class="w-72 h-72 rounded-full object-cover">
                 </div>
             </div>
 

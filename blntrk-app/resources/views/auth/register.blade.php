@@ -2,13 +2,7 @@
     <x-slot:title>Daftar Akun Pelanggan</x-slot:title>
 
     <div class="mb-6 text-center">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#5edd5b] mb-3 shadow-md">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-                <path d="M6 6h10"></path>
-                <path d="M6 10h10"></path>
-            </svg>
-        </div>
+        <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="inline-block w-16 h-16 rounded-full object-cover shadow-md mb-3 ring-2 ring-[#0e1b15]/10">
         <h1 class="text-2xl font-extrabold text-[#14201a] tracking-tight">Daftar Akun Baru</h1>
         <p class="text-xs text-stone-500 mt-1">Sewa alat outdoor lebih cepat dengan akun terdaftar</p>
     </div>

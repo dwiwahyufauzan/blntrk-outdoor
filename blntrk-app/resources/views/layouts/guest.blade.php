@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'Autentikasi' }} - BLNTRK Outdoor</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     <!-- Google Fonts: Bricolage Grotesque & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,13 +32,9 @@
     <!-- Top Minimal Navbar -->
     <header class="w-full px-6 py-5 flex items-center justify-between max-w-6xl mx-auto">
         <a href="{{ route('beranda') }}" class="flex items-center gap-3 group">
-            <div class="w-10 h-10 rounded-xl bg-[#5edd5b] flex items-center justify-center text-black shadow-md group-hover:scale-105 transition">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 3l4 8 5-5 5 15H2L8 3z"/>
-                </svg>
-            </div>
+            <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-11 h-11 rounded-full object-cover shadow-md ring-1 ring-white/20 group-hover:scale-105 transition">
             <div>
-                <span class="text-lg font-extrabold tracking-tight text-white block leading-none">BLNTRK</span>
+                <span class="text-lg font-extrabold tracking-tight text-white block leading-none font-urbanist">BLNTRK</span>
                 <span class="text-[9px] tracking-widest uppercase font-extrabold text-[#5edd5b] block mt-1 leading-none">Outdoor Subang</span>
             </div>
         </a>

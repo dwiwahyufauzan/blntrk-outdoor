@@ -2,12 +2,7 @@
     <x-slot:title>Masuk ke Akun</x-slot:title>
 
     <div class="mb-5 text-center">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#5edd5b] mb-3 shadow-md">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-        </div>
+        <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="inline-block w-16 h-16 rounded-full object-cover shadow-md mb-3 ring-2 ring-[#0e1b15]/10">
         <h1 class="text-2xl font-extrabold text-[#14201a] tracking-tight">Masuk ke Akun</h1>
         <p class="text-xs text-stone-500 mt-1">Kelola penyewaan alat outdoor di BLNTRK Outdoor</p>
     </div>

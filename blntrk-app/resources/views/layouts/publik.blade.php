@@ -61,6 +61,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'Sewa Perlengkapan Outdoor Subang - Buka 24 Jam' }} - BLNTRK Outdoor</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     <!-- Google Fonts: Urbanist & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -129,11 +130,7 @@
 
                 <!-- Brand Logo -->
                 <a href="{{ route('beranda') }}" class="flex items-center gap-3 group shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-[#0e1b15] flex items-center justify-center text-[#5edd5b] shadow-sm ring-1 ring-[#1e3a2c] group-hover:scale-105 transition">
-                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M14 6l4 8h-3l2 4H7l4-7 2 3 1-2v-6zm0-4L9 11l-3-5L1 18h22L14 2z"/>
-                        </svg>
-                    </div>
+                    <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-black/10 group-hover:scale-105 transition">
                     <div class="leading-none">
                         <span class="font-urbanist text-xl font-black tracking-tight text-[#0e1b15] block">BLNTRK</span>
                         <span class="text-[11px] font-bold text-[#1e3a2c]/70 block mt-1">Outdoor Subang</span>
@@ -320,11 +317,7 @@
             <!-- Header Drawer: Logo & Tombol Close (X) -->
             <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-[#5edd5b] flex items-center justify-center text-black font-black text-xs shadow-xs">
-                        <svg class="w-4 h-4 text-[#0e1b15]" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M14 6l4 8h-3l2 4H7l4-7 2 3 1-2v-6zm0-4L9 11l-3-5L1 18h22L14 2z"/>
-                        </svg>
-                    </div>
+                    <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-8 h-8 rounded-full object-cover shadow-xs ring-1 ring-white/10">
                     <div>
                         <span class="font-urbanist font-black text-sm text-white tracking-tight block">BLNTRK OUTDOOR</span>
                         <span class="text-[9px] font-bold text-[#5edd5b] tracking-wider uppercase block">Menu Navigasi</span>
@@ -416,11 +409,7 @@
                 <!-- Col 1: Brand Info -->
                 <div class="md:col-span-1">
                     <div class="flex items-center gap-2.5 mb-4">
-                        <div class="w-9 h-9 rounded-xl bg-[#5edd5b] text-black flex items-center justify-center font-black text-sm">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M14 6l4 8h-3l2 4H7l4-7 2 3 1-2v-6zm0-4L9 11l-3-5L1 18h22L14 2z"/>
-                            </svg>
-                        </div>
+                        <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-white/15">
                         <span class="text-white font-black text-lg font-urbanist tracking-tight">BLNTRK OUTDOOR</span>
                     </div>
                     <p class="text-xs text-stone-400 leading-relaxed mb-4">

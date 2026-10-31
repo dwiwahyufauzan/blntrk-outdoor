@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'Panel Pemilik' }} - BLNTRK Outdoor</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     <!-- Google Fonts: Bricolage Grotesque & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,11 +28,7 @@
         <!-- Area Logo Brand: Sejajar Sempurna di Atas Sidebar (w-64 di Desktop) -->
         <div class="flex items-center justify-between w-auto md:w-64 shrink-0 h-16 px-4 sm:px-6 md:border-r md:border-stone-800">
             <a href="{{ route('pemilik.dashboard') }}" class="flex items-center gap-3 group">
-                <div class="w-9 h-9 rounded-xl bg-[#5edd5b] flex items-center justify-center text-black font-extrabold text-sm shadow-sm group-hover:scale-105 transition">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3l4 8 5-5 5 15H2L8 3z"/>
-                    </svg>
-                </div>
+                <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-9 h-9 rounded-full object-cover shadow-sm ring-1 ring-white/15 group-hover:scale-105 transition">
                 <div>
                     <span class="font-extrabold text-sm text-white tracking-wide block leading-tight">BLNTRK OUTDOOR</span>
                     <span class="text-[10px] text-[#5edd5b] font-extrabold tracking-wider uppercase block">Panel Pemilik Toko</span>
@@ -174,7 +171,13 @@
                x-transition:leave-end="-translate-x-full"
                class="relative w-72 max-w-[85vw] bg-[#0e1b15] text-stone-300 flex flex-col justify-between p-4 shadow-2xl z-10 border-r border-stone-800">
             <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
-                <span class="font-extrabold text-sm text-white">Menu Monitoring Usaha</span>
+                <div class="flex items-center gap-2.5">
+                    <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-8 h-8 rounded-full object-cover shadow-xs ring-1 ring-white/10">
+                    <div>
+                        <span class="font-extrabold text-sm text-white block leading-tight">BLNTRK OUTDOOR</span>
+                        <span class="text-[9px] font-bold text-[#5edd5b] tracking-wider uppercase block">Panel Pemilik Toko</span>
+                    </div>
+                </div>
                 <button type="button" @click="mobileNav = false" class="text-stone-400 hover:text-white p-1 rounded-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>

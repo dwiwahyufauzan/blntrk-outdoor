@@ -56,16 +56,19 @@
             <div class="bg-white rounded-none sm:rounded-lg shadow-xl sm:border sm:border-stone-200/90 p-6 sm:p-10 text-stone-900 print:shadow-none print:border-none print:p-0 print:m-0 font-sans">
                 
                 <!-- KOP SURAT RESMI RESI -->
-                <div class="border-b-[3px] border-double border-[#0e1b15] pb-4 mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                    <div>
-                        <div class="text-xl sm:text-2xl font-black text-[#0e1b15] tracking-tight uppercase font-urbanist">
-                            {{ \App\Models\Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor') }}
-                        </div>
-                        <div class="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
-                            {{ \App\Models\Pengaturan::ambil('alamat_toko', 'Jl. Raya Jalancagak No. 12, Subang, Jawa Barat') }}
-                        </div>
-                        <div class="text-[11px] text-stone-500 mt-0.5">
-                            WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
+                <div class="border-b-[3px] border-double border-[#0e1b15] pb-4 mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-3.5 sm:gap-4">
+                        <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover shrink-0 shadow-xs ring-1 ring-black/10">
+                        <div>
+                            <div class="text-xl sm:text-2xl font-black text-[#0e1b15] tracking-tight uppercase font-urbanist">
+                                {{ \App\Models\Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor') }}
+                            </div>
+                            <div class="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
+                                {{ \App\Models\Pengaturan::ambil('alamat_toko', 'Jl. Raya Jalancagak No. 12, Subang, Jawa Barat') }}
+                            </div>
+                            <div class="text-[11px] text-stone-500 mt-0.5">
+                                WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
+                            </div>
                         </div>
                     </div>
 

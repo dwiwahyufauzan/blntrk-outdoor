@@ -147,14 +147,23 @@
     <!-- KOP RESI RESMI DOKUMEN -->
     <table class="header-table">
         <tr>
-            <td style="width: 58%;">
-                <div class="brand-title">{{ $toko }}</div>
-                <div class="brand-subtitle">{{ $alamat }}</div>
-                <div class="brand-subtitle">
-                    WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
-                </div>
+            <td style="width: 60%; vertical-align: middle;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 58px; vertical-align: middle; padding-right: 8px;">
+                            <img src="{{ public_path('images/logo.png') }}" width="52" height="52" style="border-radius: 50%;">
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <div class="brand-title">{{ $toko }}</div>
+                            <div class="brand-subtitle">{{ $alamat }}</div>
+                            <div class="brand-subtitle">
+                                WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </td>
-            <td style="width: 42%; text-align: right;">
+            <td style="width: 40%; text-align: right; vertical-align: middle;">
                 <div class="brand-subtitle" style="text-transform: uppercase; font-weight: bold; color: #4a5568;">SURAT BUKTI SEWA & RESI TRANSAKSI</div>
                 <div class="resi-title">#{{ $pesanan->no_resi }}</div>
                 @php
