@@ -1,19 +1,18 @@
-# BLNTRK Outdoor – Sistem Informasi Persewaan Alat Outdoor
+# BLNTRK Outdoor – Aplikasi Laravel
 
-Web aplikasi persewaan alat outdoor BLNTRK Outdoor berbasis Laravel 12 & Foresta Adventure Design System.
-Dokumentasi lengkap dan panduan instalasi dapat dilihat pada berkas root: [`../README.md`](file:///c:/Users/Dwi%20Wahyu%20Fauzan/blntrk-outdoor/README.md).
+Source code utama sistem informasi persewaan alat outdoor BLNTRK Outdoor (Laravel 13, PHP ≥ 8.3, Foresta Adventure Design System).
+Dokumentasi lengkap, instalasi, akun bawaan, dan alur penggunaan ada di [`../README.md`](../README.md).
 
-### Perintah Cepat Pengembangan:
-```powershell
-# Jalankan server
-php artisan serve
+### Perintah cepat
 
-# Jalankan pengujian otomatis (129 tests)
-php artisan test
+```bash
+php artisan serve                 # jalankan server lokal
+php artisan migrate --seed        # migrasi + data awal
+php artisan schedule:work         # scheduler (status terlambat / kedaluwarsa)
+php artisan test                  # 173 test
+./vendor/bin/pint                 # format kode
+npm run dev                       # hot reload aset (atau npm run build)
 
-# Format kode sesuai PSR/Laravel standard
-./vendor/bin/pint
-
-# Seed data transaksi demo
+# Data transaksi demo
 php artisan db:seed --class=TransaksiDemoSeeder
 ```

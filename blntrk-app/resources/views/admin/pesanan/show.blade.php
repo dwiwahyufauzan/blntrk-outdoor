@@ -89,6 +89,7 @@
                 <p class="text-xs text-stone-500 mt-1">Dibuat pada {{ $pesanan->created_at->format('d/m/Y H:i') }} WIB oleh {{ $pesanan->pembuat?->nama ?? 'Sistem Reservasi Daring' }}</p>
             </div>
 
+            <div class="flex flex-wrap items-center gap-2">
                 <!-- Tombol WhatsApp Pelanggan (T14) -->
                 @php
                     $dendaBelumLunas = $pesanan->denda->where('status_bayar', 'belum_lunas')->sum('jumlah');
