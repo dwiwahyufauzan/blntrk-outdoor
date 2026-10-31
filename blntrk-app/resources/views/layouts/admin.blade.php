@@ -152,9 +152,31 @@
     </header>
 
     <!-- Drawer Mobile Sidebar (Layar HP/Tablet) -->
-    <div x-show="mobileNav" x-cloak class="fixed inset-0 z-50 md:hidden flex">
-        <div @click="mobileNav = false" class="fixed inset-0 bg-black/60 backdrop-blur-xs"></div>
-        <aside class="relative w-72 max-w-[80vw] bg-[#0e1b15] text-stone-300 flex flex-col justify-between p-4 shadow-2xl z-10 border-r border-stone-800">
+    <div x-show="mobileNav" x-cloak
+         @keydown.escape.window="mobileNav = false"
+         class="fixed inset-0 z-50 md:hidden flex">
+        <!-- Backdrop Redup & Blur yang Bisa Diklik di Mana Saja untuk Menutup -->
+        <div @click="mobileNav = false"
+             x-show="mobileNav"
+             x-transition:enter="transition-opacity ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/70 backdrop-blur-md cursor-pointer"
+             aria-hidden="true"></div>
+
+        <!-- Aside Drawer Menu -->
+        <aside x-show="mobileNav"
+               @click.away="mobileNav = false"
+               x-transition:enter="transition ease-out duration-300 transform"
+               x-transition:enter-start="-translate-x-full"
+               x-transition:enter-end="translate-x-0"
+               x-transition:leave="transition ease-in duration-200 transform"
+               x-transition:leave-start="translate-x-0"
+               x-transition:leave-end="-translate-x-full"
+               class="relative w-72 max-w-[85vw] bg-[#0e1b15] text-stone-300 flex flex-col justify-between p-4 shadow-2xl z-10 border-r border-stone-800">
             <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
                 <span class="font-extrabold text-sm text-white">Menu Navigasi Admin</span>
                 <button type="button" @click="mobileNav = false" class="text-stone-400 hover:text-white p-1 rounded-lg">

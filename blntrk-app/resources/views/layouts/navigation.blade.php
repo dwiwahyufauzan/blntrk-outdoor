@@ -80,8 +80,28 @@
         </div>
     </div>
 
+    <!-- Backdrop Redup & Blur Saat Menu Mobile Terbuka (Bisa diklik di mana saja untuk menutup) -->
+    <div x-show="open" x-cloak
+         @click="open = false"
+         x-transition:enter="transition-opacity ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 top-16 bg-black/70 backdrop-blur-md sm:hidden cursor-pointer z-30"
+         aria-hidden="true"></div>
+
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-[#1e3a2c] bg-[#14201a]">
+    <div x-show="open" x-cloak
+         @click.away="open = false"
+         x-transition:enter="transition ease-out duration-250"
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         class="relative sm:hidden border-t border-[#1e3a2c] bg-[#14201a] shadow-2xl z-40">
         <div class="pt-2 pb-3 space-y-1 px-4">
             <a href="{{ route('beranda') }}" class="block py-2 text-xs font-bold text-stone-300 hover:text-[#5edd5b]">
                 Beranda

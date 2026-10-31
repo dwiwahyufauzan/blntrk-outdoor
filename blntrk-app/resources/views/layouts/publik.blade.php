@@ -291,15 +291,28 @@
             </div>
         </div>
 
-        <!-- Menu Mobile Drawer -->
+        <!-- Backdrop Redup & Blur Saat Menu Mobile Terbuka (Bisa diklik di mana saja untuk menutup) -->
+        <div x-show="mobileOpen" x-cloak
+             @click="mobileOpen = false"
+             x-transition:enter="transition-opacity ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 top-16 lg:top-[72px] bg-black/70 backdrop-blur-md md:hidden cursor-pointer z-30"
+             aria-hidden="true"></div>
+
+        <!-- Menu Mobile Drawer Dropdown -->
         <div id="menu-mobile" x-show="mobileOpen" x-cloak
-             x-transition:enter="transition ease-out duration-200"
+             @click.away="mobileOpen = false"
+             x-transition:enter="transition ease-out duration-250"
              x-transition:enter-start="opacity-0 -translate-y-2"
              x-transition:enter-end="opacity-100 translate-y-0"
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             class="md:hidden border-t border-stone-200 bg-white">
+             class="relative md:hidden border-t border-stone-200 bg-white shadow-2xl z-40">
             <nav class="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-1" aria-label="Navigasi mobile">
                     <a href="{{ route('keranjang.index') }}" @click="mobileOpen = false"
                        class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition {{ request()->routeIs('keranjang.*') ? 'bg-[#0e1b15] text-white' : 'text-stone-700 hover:bg-stone-100' }}">
