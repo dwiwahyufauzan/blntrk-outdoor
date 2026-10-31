@@ -76,7 +76,7 @@
         .bl-d { font-family: 'Urbanist', 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.02em; }
     </style>
 </head>
-<body class="bg-[#f4f5f6] text-stone-900 antialiased flex flex-col min-h-screen">
+<body x-data="{ mobileOpen: false }" class="bg-[#f4f5f6] text-stone-900 antialiased flex flex-col min-h-screen">
 
     <!-- Top Contact Bar (Foresta Adventure Style) -->
     <div class="bg-[#0e1b15] text-stone-300 text-xs border-b border-[#1e3a2c]/60 print:hidden">
@@ -119,9 +119,8 @@
     </div>
 
     <!-- Main Navigation Bar -->
-    <header x-data="{ mobileOpen: false, scrolled: false }"
+    <header x-data="{ scrolled: false }"
             @scroll.window="scrolled = window.scrollY > 8"
-            @keydown.escape.window="mobileOpen = false"
             :class="scrolled ? 'shadow-[0_8px_24px_-12px_rgba(14,27,21,0.25)] border-stone-200' : 'border-stone-200/70'"
             class="bg-white/95 backdrop-blur-xl border-b sticky top-0 z-40 transition-shadow duration-300 print:hidden">
 
@@ -290,48 +289,79 @@
                 </div>
             </div>
         </div>
+    </header>
 
-        <!-- Backdrop Redup & Blur Saat Menu Mobile Terbuka (Bisa diklik di mana saja untuk menutup) -->
-        <div x-show="mobileOpen" x-cloak
-             @click="mobileOpen = false"
+    <!-- Drawer Mobile Nav (Layar HP/Tablet) - Efek Redup & Blur Full-Screen Identik Panel Admin -->
+    <div x-show="mobileOpen" x-cloak
+         @keydown.escape.window="mobileOpen = false"
+         class="fixed inset-0 z-50 md:hidden flex justify-end">
+        <!-- Backdrop Redup & Blur yang Bisa Diklik di Mana Saja untuk Menutup -->
+        <div @click="mobileOpen = false"
+             x-show="mobileOpen"
              x-transition:enter="transition-opacity ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
              x-transition:leave="transition-opacity ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 top-16 lg:top-[72px] bg-black/70 backdrop-blur-md md:hidden cursor-pointer z-30"
+             class="fixed inset-0 bg-black/75 backdrop-blur-md cursor-pointer"
              aria-hidden="true"></div>
 
-        <!-- Menu Mobile Drawer Dropdown -->
-        <div id="menu-mobile" x-show="mobileOpen" x-cloak
-             @click.away="mobileOpen = false"
-             x-transition:enter="transition ease-out duration-250"
-             x-transition:enter-start="opacity-0 -translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-2"
-             class="relative md:hidden border-t border-stone-200 bg-white shadow-2xl z-40">
-            <nav class="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-1" aria-label="Navigasi mobile">
-                    <a href="{{ route('keranjang.index') }}" @click="mobileOpen = false"
-                       class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition {{ request()->routeIs('keranjang.*') ? 'bg-[#0e1b15] text-white' : 'text-stone-700 hover:bg-stone-100' }}">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            <span>Keranjang Sewa</span>
-                        </span>
-                        <span class="min-w-[20px] h-5 px-1.5 rounded-full {{ $jumlahKeranjang > 0 ? 'bg-[#5edd5b] text-black font-black' : 'bg-stone-100 text-stone-600' }} text-[11px] flex items-center justify-center">
-                            {{ $jumlahKeranjang }}
-                        </span>
-                    </a>
+        <!-- Aside Drawer Menu Slide-Over Foresta Theme -->
+        <aside x-show="mobileOpen"
+               @click.away="mobileOpen = false"
+               x-transition:enter="transition ease-out duration-300 transform"
+               x-transition:enter-start="translate-x-full"
+               x-transition:enter-end="translate-x-0"
+               x-transition:leave="transition ease-in duration-200 transform"
+               x-transition:leave-start="translate-x-0"
+               x-transition:leave-end="translate-x-full"
+               class="relative w-80 max-w-[85vw] bg-[#0e1b15] text-stone-300 flex flex-col justify-between p-5 shadow-2xl z-10 border-l border-stone-800">
+            <!-- Header Drawer: Logo & Tombol Close (X) -->
+            <div class="flex items-center justify-between pb-4 border-b border-stone-800 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-[#5edd5b] flex items-center justify-center text-black font-black text-xs shadow-xs">
+                        <svg class="w-4 h-4 text-[#0e1b15]" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 6l4 8h-3l2 4H7l4-7 2 3 1-2v-6zm0-4L9 11l-3-5L1 18h22L14 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="font-urbanist font-black text-sm text-white tracking-tight block">BLNTRK OUTDOOR</span>
+                        <span class="text-[9px] font-bold text-[#5edd5b] tracking-wider uppercase block">Menu Navigasi</span>
+                    </div>
+                </div>
+                <button type="button" @click="mobileOpen = false"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-white transition cursor-pointer"
+                        aria-label="Tutup Menu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Konten Navigasi Drawer -->
+            <nav class="space-y-1.5 text-xs font-semibold overflow-y-auto flex-1 py-1" aria-label="Navigasi mobile">
+                <!-- Keranjang Sewa -->
+                <a href="{{ route('keranjang.index') }}" @click="mobileOpen = false"
+                   class="flex items-center justify-between px-3.5 py-3 rounded-xl transition {{ request()->routeIs('keranjang.*') ? 'bg-[#14251e] text-white font-extrabold border-l-4 border-[#5edd5b]' : 'hover:bg-[#14251e]/60 text-stone-300' }}">
+                    <span class="flex items-center gap-3">
+                        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span class="text-sm">Keranjang Sewa</span>
+                    </span>
+                    <span class="min-w-[20px] h-5 px-1.5 rounded-full {{ $jumlahKeranjang > 0 ? 'bg-[#5edd5b] text-black font-black' : 'bg-stone-800 text-stone-400' }} text-[11px] flex items-center justify-center">
+                        {{ $jumlahKeranjang }}
+                    </span>
+                </a>
+
+                <div class="text-[10px] font-bold uppercase tracking-wider text-stone-500 px-3 pt-3 pb-1">Halaman Utama</div>
+
+                <!-- Nav Links Dinamis -->
                 @foreach ($navLinks as $link)
                     <a href="{{ $link['href'] }}" @click="mobileOpen = false"
                        @if ($link['active']) aria-current="page" @endif
-                       class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition
+                       class="flex items-center justify-between px-3.5 py-3 rounded-xl transition
                               {{ $link['active']
-                                  ? 'bg-[#0e1b15] text-white'
-                                  : 'text-stone-700 hover:bg-stone-100' }}">
-                        <span>{{ $link['label'] }}</span>
+                                  ? 'bg-[#14251e] text-white font-extrabold border-l-4 border-[#5edd5b]'
+                                  : 'hover:bg-[#14251e]/60 text-stone-300' }}">
+                        <span class="text-sm">{{ $link['label'] }}</span>
                         @if ($link['badge'] > 0)
                             <span class="min-w-[20px] h-5 px-1.5 rounded-full bg-[#5edd5b] text-black text-[11px] font-black flex items-center justify-center">
                                 {{ $link['badge'] }}
@@ -339,22 +369,35 @@
                         @endif
                     </a>
                 @endforeach
+            </nav>
 
+            <!-- Bagian Bawah Drawer: Masuk/Daftar (untuk Tamu) & Info Toko -->
+            <div class="pt-4 border-t border-stone-800/80 mt-auto">
                 @guest
-                    <div class="grid grid-cols-2 gap-2 pt-3 mt-2 border-t border-stone-100">
-                        <a href="{{ route('login') }}"
-                           class="text-center px-4 py-3 rounded-xl text-sm font-bold text-stone-800 border border-stone-200 hover:bg-stone-50 transition">
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <a href="{{ route('login') }}" @click="mobileOpen = false"
+                           class="text-center py-2.5 px-3 rounded-xl text-xs font-bold text-stone-200 bg-stone-800/80 hover:bg-stone-700 transition">
                             Masuk
                         </a>
-                        <a href="{{ route('register') }}"
-                           class="text-center px-4 py-3 rounded-xl text-sm font-extrabold text-black bg-[#5edd5b] hover:bg-[#4ed04b] transition">
+                        <a href="{{ route('register') }}" @click="mobileOpen = false"
+                           class="text-center py-2.5 px-3 rounded-xl text-xs font-extrabold text-black bg-[#5edd5b] hover:bg-[#4ed04b] transition">
                             Daftar
                         </a>
                     </div>
                 @endguest
-            </nav>
-        </div>
-    </header>
+
+                <div class="flex items-center justify-between text-[11px] text-stone-400">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-[#5edd5b]"></span>
+                        <span>Buka 24 Jam</span>
+                    </span>
+                    <a href="https://wa.me/{{ $noWa }}" target="_blank" rel="noopener" class="text-[#5edd5b] hover:underline font-bold">
+                        WhatsApp CS &rarr;
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </div>
 
     <!-- Main Content Body -->
     <main class="flex-grow print:p-0 print:m-0">
