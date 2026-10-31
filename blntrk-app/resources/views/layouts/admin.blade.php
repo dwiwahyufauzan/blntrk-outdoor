@@ -301,5 +301,6 @@
     <!-- Modal Konfirmasi Pop-up Konsisten -->
     <x-modal-konfirmasi />
 
+    @stack('scripts')
 </body>
 </html>

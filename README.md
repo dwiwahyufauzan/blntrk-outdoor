@@ -1,156 +1,198 @@
 # BLNTRK Outdoor – Sistem Informasi Persewaan Alat Outdoor
 
-> Aplikasi berbasis web untuk manajemen persewaan perlengkapan alam terbuka, pengecekan ketersediaan stok berbasis tanggal secara real-time, pencatatan jaminan fisik, perhitungan denda otomatis, dan pelaporan operasional toko. Dikembangkan untuk skripsi program studi Informatika/Sistem Informasi.
+> Aplikasi web untuk mengelola persewaan perlengkapan alam terbuka: katalog dan stok berbasis tanggal, keranjang dan paket bundling, pembayaran, jaminan identitas, pengembalian, denda otomatis, serta laporan operasional toko. Dikembangkan sebagai proyek skripsi Informatika / Sistem Informasi.
 
 ---
 
-## 🌲 Ikhtisar Proyek
+## Ikhtisar
 
-**BLNTRK Outdoor** adalah solusi digital komprehensif bagi penyedia jasa sewa perlengkapan outdoor di Jalancagak, Subang. Sistem mengadopsi prinsip desain antarmuka modern **Foresta Adventure** (*Zero Emoji*, 100% SVG, palet warna alam *Emerald/Sage/Forest Dark*), serta didukung oleh mekanisme *State Machine* yang ketat untuk mengawal integritas alur sewa.
+**BLNTRK Outdoor** adalah solusi digital untuk penyedia sewa perlengkapan outdoor di Jalancagak, Subang. Alur sewa dijaga oleh *state machine* yang ketat, stok dihitung per hari, dan tampilan mengikuti desain **Foresta Adventure** (tanpa emoji, ikon SVG, palet Emerald/Sage/Forest Dark).
 
-### Fitur Utama Sistem:
-1. **Katalog & Ketersediaan Real-Time (F01–F03):** Pengecekan ketersediaan unit alat berdasarkan irisan rentang tanggal sewa (`tanggal_mulai` s/d `tanggal_selesai`), pencegahan *double-booking* dengan database lock (`lockForUpdate`), dan pengurangan kuota untuk unit dalam perbaikan (*maintenance*).
-2. **Pemesanan Daring & Walk-in (F04, F07):** Formulir reservasi interaktif, kalkulasi durasi otomatis, pembatasan durasi sewa maksimal 14 hari, nomor resi unik harian (`BLN-yymmdd-xxxx`), serta pencatatan pelanggan langsung di toko oleh kasir (*walk-in*).
-3. **Konfirmasi & Serah Terima Jaminan (F05a, F05b):** Pencatatan pembayaran lunas tunai/transfer, serah terima alat fisik dengan kartu identitas jaminan (KTP/SIM/Kartu Pelajar) bernomor tersamar untuk kepatuhan privasi data, dan unduh lembar bukti resi resmi format PDF.
-4. **Pengembalian, Kondisi Unit & Denda Otomatis (F06a, F06b, F11):** Inspeksi kondisi fisik per unit (baik, rusak ringan, rusak berat, hilang), sinkronisasi stok perawatan, deteksi keterlambatan dengan jendela toleransi toko, kalkulasi denda harian proporsional, dan penandaan pelunasan denda.
-5. **Laporan & Ekspor Berkas (F08, F09, F13):** Rekapitulasi pendapatan dan statistik sewa per periode, cetak PDF berformat A4 rapi, serta ekspor data ke Excel (XLSX) dan CSV.
-6. **Manajemen Akun & Log Aktivitas (F10, F12, F15):** Autentikasi multi-peran (Admin, Pemilik, Pelanggan), konfigurasi aturan toko dinamis oleh pemilik, dan pencatatan riwayat aktivitas penting (*audit trail*).
+### Alur status pesanan
+
+```
+menunggu ──► dibayar ──► disewa ──► (terlambat) ──► dikembalikan
+    │            │
+    └────────────┴──► dibatalkan
+```
+
+| Transisi | Pelaku | Keterangan |
+|---|---|---|
+| Pesanan dibuat → `menunggu` | Pelanggan / Admin (walk-in) | Stok langsung ditahan |
+| `menunggu` → `dibayar` | Admin | Tombol **Catat Pembayaran**; nominal harus sama dengan total sewa |
+| `dibayar` → `disewa` | Admin | Tombol **Konfirmasi Serah Terima**; jaminan KTP/SIM dicatat |
+| `disewa` → `terlambat` | Sistem | Lewat jatuh tempo + toleransi (scheduler / saat halaman dibuka) |
+| `disewa`/`terlambat` → `dikembalikan` | Admin | Form pengembalian; cek kondisi per unit, denda dihitung |
+| `menunggu`/`dibayar` → `dibatalkan` | Admin (alasan wajib) | Pelanggan hanya bisa batal saat `menunggu` |
+| `menunggu` → `dibatalkan` otomatis | Sistem | Melewati batas pengambilan (`batas_ambil`) |
 
 ---
 
-## 🛠️ Prasyarat & Lingkungan
+## Fitur
 
-- **Bahasa Pemrograman:** PHP &ge; 8.2
-- **Framework:** Laravel 12.x
-- **Basis Data:** MySQL &ge; 8.0 (atau MariaDB 10.4+ / SQLite untuk lingkungan testing)
-- **Node.js & NPM:** Node.js &ge; 18.x & NPM &ge; 9.x
-- **Ekstensi PHP Wajib:** `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`, `gd`, `zip`
-- **Composer:** Composer 2.x
+**Pelanggan**
+- Beranda, katalog alat (stok tersedia real-time, alat habis dipisahkan), detail alat, dan cek ketersediaan per rentang tanggal.
+- Keranjang sewa (tambah alat atau paket bundling, ubah jumlah, checkout) dan **paket bundling hemat**.
+- Reservasi sewa dengan durasi otomatis (maksimal 14 hari), nomor resi unik harian `BLN-yymmdd-####`, resi cetak dan PDF.
+- Pantau pesanan (tab aktif / riwayat), batal mandiri sebelum dibayar, kelola profil dan sesi login.
+
+**Admin (kasir)**
+- Dashboard operasional dan manajemen pesanan, termasuk pesanan **walk-in**.
+- **Catat Pembayaran** (tunai / transfer), **Serah Terima** dengan jaminan KTP / SIM / Kartu Pelajar (nomor disamarkan, hanya 4 digit terakhir yang disimpan), **Batalkan Pesanan**.
+- **Pengembalian**: kondisi per unit (baik, rusak ringan, rusak berat, hilang), stok perawatan otomatis, unit hilang mengurangi stok total.
+- **Denda**: keterlambatan (tarif harian × hari × persen, dengan toleransi), kerusakan, kehilangan (sesuai harga beli), denda manual, dan tandai lunas. Jaminan **ditahan** selama ada denda belum lunas.
+- Master data: kategori, alat, paket bundling, kategori denda, pelanggan, pengguna. Menu perawatan alat, laporan, dan tautan WhatsApp (pengingat, tagihan denda, peringatan terlambat).
+
+**Pemilik**
+- Dashboard eksekutif dan grafik, laporan (penyewaan, pendapatan, denda, alat terlaris, stok kritis) dalam **PDF dan CSV**.
+- Pengaturan toko dan aturan denda, manajemen akun admin, **log aktivitas** (audit trail).
+
+**Integritas data**
+- Pemesanan atomik dengan `lockForUpdate` (anti double-booking) dan retry nomor resi saat bentrok.
+- Pesanan milik orang lain dijawab 404 untuk pelanggan (resi tidak bisa ditebak), `PesananPolicy`, middleware `role`, throttle pada pembuatan pesanan.
 
 ---
 
-## 🚀 Panduan Instalasi Cepat
+## Teknologi
 
-Buka terminal PowerShell / Command Prompt dan jalankan langkah-langkah berikut:
+| Bagian | Teknologi |
+|---|---|
+| Bahasa / Framework | PHP ≥ 8.3, Laravel 13 |
+| Basis data | MySQL ≥ 8.0 / MariaDB 10.4+ (SQLite didukung untuk dev dan test) |
+| Frontend | Blade, Alpine.js 3, Tailwind CSS 3, Vite |
+| PDF | `barryvdh/laravel-dompdf` |
+| Autentikasi | Laravel Breeze, multi-peran (admin, pemilik, pelanggan) |
+| Pengujian | PHPUnit 12 |
 
-```powershell
-# 1. Pindah ke direktori aplikasi
+Prasyarat tambahan: Node.js ≥ 18, Composer 2.x, serta ekstensi PHP `pdo_mysql` (atau `pdo_sqlite`), `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`, `gd`, `zip`.
+
+---
+
+## Instalasi
+
+```bash
 cd blntrk-app
 
-# 2. Pasang dependensi PHP
 composer install
+npm install && npm run build
 
-# 3. Pasang dependensi frontend (Node.js) & bangun aset
-npm install
-npm run build
-
-# 4. Salin berkas konfigurasi lingkungan
-copy .env.example .env
-
-# 5. Buat application key unik
+cp .env.example .env          # Windows: copy .env.example .env
 php artisan key:generate
+```
 
-# 6. Konfigurasi basis data pada berkas .env
-# Sesuaikan DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
-# Contoh:
-# DB_CONNECTION=mysql
-# DB_DATABASE=blntrk_outdoor
-# DB_USERNAME=root
-# DB_PASSWORD=
+Atur basis data di `.env`, pilih salah satu.
 
-# 7. Jalankan migrasi basis data dan seeder data awal
+**MySQL** (default `.env.example`): buat database `blntrk_outdoor`, lalu sesuaikan `DB_USERNAME` dan `DB_PASSWORD`.
+
+**SQLite** (tanpa server database):
+```bash
+# di .env: DB_CONNECTION=sqlite, hapus baris DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD
+touch database/database.sqlite
+```
+
+Lanjutkan:
+```bash
 php artisan migrate --seed
-
-# (Opsional) Mengisi 30 transaksi demo historis untuk keperluan sidang:
-php artisan db:seed --class=TransaksiDemoSeeder
-
-# 8. Pastikan symlink direktori storage aktif
 php artisan storage:link
-
-# 9. Jalankan server lokal
-php artisan serve
+php artisan serve              # http://127.0.0.1:8000
 ```
 
-Aplikasi dapat diakses melalui browser pada URL: `http://127.0.0.1:8000`
+Opsional, 30 transaksi demo historis:
+```bash
+php artisan db:seed --class=TransaksiDemoSeeder
+```
+
+> `.env` dan `database/*.sqlite` diabaikan git, sehingga pengaturan lokal tidak ikut ter-push. Untuk pengembangan dengan hot reload aset, jalankan `npm run dev`.
+
+### Penjadwalan status otomatis
+
+Perintah `pesanan:perbarui-status` berjalan **tiap jam**. Perintah ini menandai pesanan terlambat dan membatalkan pesanan yang kedaluwarsa. Selama pengembangan jalankan:
+
+```bash
+php artisan schedule:work
+```
+
+Di server produksi, tambahkan cron: `* * * * * cd /path/blntrk-app && php artisan schedule:run >> /dev/null 2>&1`. Status juga disinkronkan saat halaman detail pesanan atau halaman denda dibuka.
 
 ---
 
-## 👥 Akun Bawaan (Default Seeder)
+## Akun Bawaan (Seeder)
 
-| Peran (Role) | Alamat Email | Kata Sandi | Halaman Awal | Hak Akses |
-|---|---|---|---|---|
-| **Admin** | `admin@blntrk.test` | `password` | `/admin` | Manajemen data master alat, transaksi sewa, pembayaran, pengambilan jaminan, pengembalian alat, denda, stok perawatan, laporan toko. |
-| **Pemilik** | `pemilik@blntrk.test` | `password` | `/pemilik` | Dashboard eksekutif toko, grafik omset, unduh laporan PDF/Excel, konfigurasi aturan denda & toko, manajemen admin, log aktivitas sistem. |
-| **Pelanggan** | `budi@blntrk.test` | `password` | `/` | Katalog alat, cek ketersediaan tanggal, reservasi sewa, bukti resi PDF, pantau status pesanan, pembatalan mandiri sebelum bayar. |
+Kata sandi semua akun: `password`.
+
+| Peran | Email | Halaman awal |
+|---|---|---|
+| Admin | `admin@blntrk.test` | `/admin` |
+| Pemilik | `pemilik@blntrk.test` | `/pemilik` |
+| Pelanggan | `budi@blntrk.test`, `siti@blntrk.test` | `/` |
+
+Seeder juga membuat 8 kategori alat, 23 alat, 4 paket bundling, 4 kategori denda, dan pengaturan toko.
+
+**Pengaturan toko bawaan** (dapat diubah pemilik di `/pemilik/pengaturan`): jam kembali `12:00`, toleransi `60` menit, denda harian `100%` dari tarif sewa, maksimal durasi `14` hari.
+
+> **Ganti kata sandi bawaan sebelum aplikasi dipakai di server publik.**
 
 ---
 
-## 🧪 Pengujian Sistem (*Automated Tests*)
+## Panduan Menjalankan Alur Sewa (Admin)
 
-Aplikasi dilengkapi dengan pengujian otomatis menggunakan **PHPUnit/Pest** untuk menjamin kestabilan dan mencegah regresi (*zero regression*):
+1. Buka **Admin → Pesanan**, lalu pilih pesanan berstatus *Menunggu*.
+2. Klik **Catat Pembayaran**, pilih metode, lalu simpan. Status menjadi *Sudah Dibayar*.
+3. Klik **Konfirmasi Serah Terima**, isi jenis dan nomor identitas jaminan. Status menjadi *Sedang Disewa*.
+4. Saat alat kembali, klik **Proses Pengembalian**, isi kondisi tiap unit (total harus sama dengan jumlah disewa), lalu simpan. Denda tercatat otomatis.
+5. Lunasi denda di **Admin → Denda** (**Tandai Lunas**) atau di kartu denda pada detail pesanan.
+6. Setelah semua denda lunas, klik **Kembalikan Kartu Identitas**.
 
-```powershell
-# Jalankan seluruh rangkaian uji otomatis (129 tests)
-php artisan test
+---
 
-# Menjalankan pengujian spesifik logika bisnis:
+## Pengujian
+
+```bash
+php artisan test                                   # seluruh suite (173 test)
+php artisan test --filter=RevisiKlienTest          # regresi revisi klien
 php artisan test tests/Unit/KetersediaanServiceTest.php
-php artisan test tests/Unit/HitungTotalTest.php
-php artisan test tests/Unit/DendaServiceTest.php
-php artisan test tests/Feature/PesananAlurTest.php
-php artisan test tests/Feature/TransisiStatusTest.php
+php artisan test tests/Feature/PengembalianDendaTest.php
 ```
 
-Hasil pengujian otomatis: **129 passed, 478 assertions, 0 failures**.  
-Laporan pengujian fungsional lengkap (BB-01 sampai BB-74) dan evaluasi System Usability Scale (SUS) dapat dilihat pada dokumen:  
-[`plan/hasil-blackbox.md`](file:///c:/Users/Dwi%20Wahyu%20Fauzan/blntrk-outdoor/plan/hasil-blackbox.md)
+Cakupan: autentikasi dan peran, master data, katalog dan stok, keranjang dan paket bundling, alur pesanan dan transisi status, konfirmasi, pengembalian dan denda, laporan dan dashboard, serta regresi tampilan admin. Dokumen pengujian fungsional (black-box) dan evaluasi SUS ada di [`plan/hasil-blackbox.md`](plan/hasil-blackbox.md).
 
 ---
 
-## ⏱️ Skenario Demonstrasi Sidang (10 Menit)
-
-1. **Alur Pelanggan (2–3 Menit):**
-   - Buka Beranda publik `http://localhost:8000`.
-   - Pilih alat (misal: *Tenda Dome 4P*), gunakan kalkulator tanggal sewa untuk mengecek ketersediaan unit.
-   - Buat pesanan reservasi sewa 2 hari, sistem menerbitkan nomor resi resmi dan kalkulasi total biaya sewa yang presisi.
-   - Tunjukkan tampilan lembar resi dan unduh berkas bukti resi format PDF.
-2. **Alur Admin & Kasir (4–5 Menit):**
-   - Masuk sebagai Admin (`admin@blntrk.test`).
-   - Buka detail pesanan, konfirmasi penerimaan pembayaran lunas (tunai/transfer).
-   - Lakukan serah terima barang: pilih jenis jaminan fisik (KTP/SIM) dan input nomor identitas (sistem otomatis menyamarkan angka demi privasi).
-   - Buka menu Pengembalian: simulasikan pelanggan mengembalikan unit lewat jatuh tempo dengan 1 alat robek ringan.
-   - Tunjukkan kalkulasi denda keterlambatan otomatis, biaya perbaikan kerusakan, kenaikan stok perawatan, dan pelunasan denda serta serah terima kembali kartu jaminan.
-3. **Alur Pemilik Toko (2–3 Menit):**
-   - Masuk sebagai Pemilik (`pemilik@blntrk.test`).
-   - Tinjau metrik omset dan grafik transaksi di Dashboard Pemilik.
-   - Buka menu Laporan, filter periode transaksi, dan ekspor laporan ke format PDF dan Excel.
-   - Buka Pengaturan Toko untuk mendemonstrasikan perubahan parameter denda/toleransi secara langsung.
-   - Tunjukkan rekam jejak pada menu Log Aktivitas Sistem (*audit trail*).
-
----
-
-## 📂 Struktur Direktori Proyek
+## Struktur Direktori
 
 ```
 blntrk-outdoor/
-├── blntrk-app/                  # Source code utama aplikasi Laravel 12
+├── blntrk-app/                   # Aplikasi Laravel
 │   ├── app/
-│   │   ├── Enums/               # StatusPesanan, MetodePembayaran, JenisDenda
-│   │   ├── Http/Controllers/    # Admin, Pemilik, Pelanggan, Auth, Katalog
-│   │   ├── Models/              # Alat, Pesanan, Jaminan, Pengembalian, Denda, dll.
-│   │   ├── Policies/            # PesananPolicy (Keamanan & State Machine)
-│   │   └── Services/            # KetersediaanService, PesananService, DendaService, LogService
-│   ├── database/
-│   │   ├── migrations/          # 12 file migrasi skema tabel
-│   │   └── seeders/             # Role, User, Pengaturan, Alat, TransaksiDemoSeeder
-│   ├── resources/views/         # Antarmuka Blade (Desain Foresta Adventure, 100% SVG)
-│   └── tests/                   # 129 Unit & Feature automated test suites
-├── docs/                        # Dokumen perencanaan, analisis RUP, perancangan skripsi
-└── plan/                        # Lembar rencana implementasi (Plan 1 s/d 12) & hasil-blackbox.md
+│   │   ├── Console/Commands/     # pesanan:perbarui-status, pesanan:cek-kadaluarsa
+│   │   ├── Enums/                # StatusPesanan, MetodePembayaran, JenisDenda, JenisJaminan
+│   │   ├── Http/Controllers/     # Admin, Pemilik, Pelanggan, Auth, Katalog, Keranjang, PaketBundling
+│   │   ├── Http/Requests/        # Validasi form
+│   │   ├── Models/               # Alat, Pesanan, Jaminan, Pengembalian, Denda, PaketBundling, ...
+│   │   ├── Policies/             # PesananPolicy
+│   │   └── Services/             # Pesanan, Ketersediaan, Pengembalian, Denda, Keranjang,
+│   │                             # Laporan, LaporanExport, WhatsApp, Log
+│   ├── database/                 # 19 migrasi, seeder, factory
+│   ├── resources/views/          # Blade: admin, pemilik, pelanggan, publik, pdf
+│   ├── routes/                   # web.php, auth.php, console.php (scheduler)
+│   └── tests/                    # Unit dan Feature test
+├── docs/perencanaan/             # Evaluasi kebutuhan, perancangan DB / Laravel / UI, ERD
+├── plan/                         # Rencana implementasi Plan 1–12 dan hasil pengujian
+├── dokumen skripsi/              # Draf dokumen skripsi
+└── PULL_REQUEST.md               # Ringkasan fitur PR terakhir
 ```
 
 ---
 
-## 📄 Lisensi & Hak Cipta
+## Catatan Pengembangan
 
-Aplikasi dan seluruh dokumentasi ini dikembangkan untuk penyelesaian Tugas Akhir / Skripsi Sarjana Program Studi Informatika / Sistem Informasi. Hak cipta dilindungi undang-undang.
+- Setiap halaman admin yang memakai `@push('scripts')` bergantung pada `@stack('scripts')` di `layouts/admin.blade.php`. Jangan hapus baris itu.
+- Hindari `@json(...)` dengan ekspresi yang mengandung koma langsung di Blade. Siapkan datanya dulu dengan `@php`.
+- Ekspor laporan berformat **CSV** (UTF-8) dan dapat dibuka langsung di Excel.
+- Format kode: `./vendor/bin/pint`.
+
+---
+
+## Lisensi dan Hak Cipta
+
+Aplikasi dan dokumentasi ini dikembangkan untuk penyelesaian Tugas Akhir / Skripsi Program Studi Informatika / Sistem Informasi. Hak cipta dilindungi undang-undang.

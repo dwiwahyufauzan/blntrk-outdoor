@@ -193,17 +193,21 @@
         </form>
     </div>
 
+    @php
+        $masterAlatJson = $alatList->map(fn ($a) => [
+            'id' => $a->id,
+            'nama' => $a->nama,
+            'kode' => $a->kode_alat,
+            'harga' => (float) $a->harga_per_hari,
+            'kategori' => $a->kategori?->nama ?? '-',
+        ])->values();
+    @endphp
+
     @push('scripts')
     <script>
         function bundlingForm() {
             return {
-                masterAlat: @json($alatList->map(fn($a) => [
-                    'id' => $a->id,
-                    'nama' => $a->nama,
-                    'kode' => $a->kode_alat,
-                    'harga' => (float)$a->harga_per_hari,
-                    'kategori' => $a->kategori?->nama ?? '-'
-                ])),
+                masterAlat: @json($masterAlatJson),
                 hargaPaket: {{ old('harga_paket_per_hari', 0) }},
                 items: [
                     { alat_id: '{{ old("items.0.alat_id", "") }}', jumlah: {{ old("items.0.jumlah", 1) }} }

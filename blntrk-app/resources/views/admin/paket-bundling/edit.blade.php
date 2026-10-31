@@ -199,22 +199,28 @@
         </form>
     </div>
 
+    @php
+        $masterAlatJson = $alatList->map(fn ($a) => [
+            'id' => $a->id,
+            'nama' => $a->nama,
+            'kode' => $a->kode_alat,
+            'harga' => (float) $a->harga_per_hari,
+            'kategori' => $a->kategori?->nama ?? '-',
+        ])->values();
+
+        $itemsJson = old('items', $paket->items->map(fn ($it) => [
+            'alat_id' => (string) $it->alat_id,
+            'jumlah' => (int) $it->jumlah,
+        ])->values()->toArray());
+    @endphp
+
     @push('scripts')
     <script>
         function bundlingEditForm() {
             return {
-                masterAlat: @json($alatList->map(fn($a) => [
-                    'id' => $a->id,
-                    'nama' => $a->nama,
-                    'kode' => $a->kode_alat,
-                    'harga' => (float)$a->harga_per_hari,
-                    'kategori' => $a->kategori?->nama ?? '-'
-                ])),
+                masterAlat: @json($masterAlatJson),
                 hargaPaket: {{ old('harga_paket_per_hari', $paket->harga_paket_per_hari) }},
-                items: @json(old('items', $paket->items->map(fn($it) => [
-                    'alat_id' => (string)$it->alat_id,
-                    'jumlah' => (int)$it->jumlah
-                ])->toArray())),
+                items: @json($itemsJson),
                 addItem() {
                     this.items.push({ alat_id: '', jumlah: 1 });
                 },
