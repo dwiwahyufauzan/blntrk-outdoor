@@ -84,17 +84,7 @@ class LaporanController extends Controller
      */
     public function cetakResi(Pesanan $pesanan): Response
     {
-        $pesanan->load([
-            'pelanggan',
-            'pembuat',
-            'pemroses',
-            'detail.alat.kategori',
-            'pembayaran.pencatat',
-            'jaminan.penerima',
-            'pengembalian.penerima',
-            'pengembalian.detail.pesananDetail.alat',
-            'denda.kategoriDenda',
-        ]);
+        $pesanan->load(Pesanan::RELASI_RINCIAN);
 
         $toko = Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor');
         $alamat = Pengaturan::ambil('alamat_toko', 'Desa Kumpay, Kec. Jalancagak, Kab. Subang');
@@ -108,9 +98,9 @@ class LaporanController extends Controller
     }
 
     /**
-     * Mengunduh data laporan dalam format spreadsheet Excel/CSV (T13).
+     * Mengunduh data laporan dalam format CSV yang dapat dibuka di Excel (T13).
      */
-    public function eksporExcel(Request $request, LaporanService $laporanService, LaporanExportService $exportService): StreamedResponse
+    public function eksporCsv(Request $request, LaporanService $laporanService, LaporanExportService $exportService): StreamedResponse
     {
         $jenis = $request->query('jenis', 'penyewaan');
         $dariInput = $request->query('dari', now()->startOfMonth()->toDateString());

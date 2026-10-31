@@ -25,7 +25,9 @@ class KeranjangController extends Controller
         $jadwal = $keranjang->getJadwal();
         $totalUnit = $keranjang->totalUnit();
         $totalPerHari = $keranjang->totalHargaPerHari();
-        $grandTotal = $keranjang->grandTotal();
+        $subtotalKotor = $keranjang->subtotalKotor();
+        $diskonPaket = $keranjang->diskonPaket();
+        $grandTotal = max(0.0, $subtotalKotor - $diskonPaket['diskon']);
 
         // Rekomendasi Paket Bundling Hemat
         $paketBundling = PaketBundling::aktif()
@@ -39,6 +41,8 @@ class KeranjangController extends Controller
             'totalUnit',
             'totalPerHari',
             'grandTotal',
+            'subtotalKotor',
+            'diskonPaket',
             'paketBundling'
         ));
     }
@@ -101,12 +105,22 @@ class KeranjangController extends Controller
      */
     public function tambahPaket(PaketBundling $paket, KeranjangService $keranjang): RedirectResponse
     {
-        $added = $keranjang->tambahPaket($paket);
+        $hasil = $keranjang->tambahPaket($paket);
 
-        return redirect()->route('keranjang.index')->with(
+        if ($hasil['ditambahkan'] === 0) {
+            return back()->with('error', "Paket {$paket->nama} tidak dapat ditambahkan karena stok perlengkapannya sedang tidak mencukupi.");
+        }
+
+        $redirect = redirect()->route('keranjang.index')->with(
             'status',
-            "Seluruh perlengkapan {$paket->nama} ({$added} jenis alat) berhasil dimasukkan ke keranjang belanja!"
+            "Perlengkapan {$paket->nama} ({$hasil['ditambahkan']} jenis alat) berhasil dimasukkan ke keranjang belanja!"
         );
+
+        if (! empty($hasil['dilewati'])) {
+            $redirect->with('error', 'Paket belum lengkap, item berikut dilewati karena stok tidak mencukupi: '.implode(', ', $hasil['dilewati']).'. Diskon paket tidak berlaku sampai semua item terpenuhi.');
+        }
+
+        return $redirect;
     }
 
     /**
@@ -176,4 +190,3 @@ class KeranjangController extends Controller
         ]);
     }
 }
-

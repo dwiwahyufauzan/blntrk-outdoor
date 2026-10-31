@@ -97,7 +97,7 @@ class Alat extends Model
     /**
      * Helper static untuk memasang stok_tersedia dan stok_disewa secara massal (eager aggregation) tanpa N+1 query.
      *
-     * @param iterable<Alat> $alatList
+     * @param  iterable<Alat>  $alatList
      * @return iterable<Alat>
      */
     public static function muatStokTersedia(iterable $alatList): iterable

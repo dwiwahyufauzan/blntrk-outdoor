@@ -18,9 +18,23 @@ class Pesanan extends Model
 
     protected $table = 'pesanan';
 
+    public const RELASI_RINCIAN = [
+        'pelanggan',
+        'paketBundling',
+        'pembuat',
+        'pemroses',
+        'detail.alat.kategori',
+        'pembayaran.pencatat',
+        'jaminan.penerima',
+        'pengembalian.penerima',
+        'pengembalian.detail.pesananDetail.alat',
+        'denda.kategoriDenda',
+    ];
+
     protected $fillable = [
         'no_resi',
         'pelanggan_id',
+        'paket_bundling_id',
         'dibuat_oleh',
         'diproses_oleh',
         'tanggal_mulai',
@@ -30,6 +44,8 @@ class Pesanan extends Model
         'batas_ambil',
         'status',
         'total_sewa',
+        'jumlah_paket',
+        'diskon_paket',
         'diambil_pada',
         'dibatalkan_pada',
         'alasan_batal',
@@ -46,6 +62,8 @@ class Pesanan extends Model
             'jatuh_tempo' => 'datetime',
             'batas_ambil' => 'datetime',
             'total_sewa' => 'decimal:2',
+            'jumlah_paket' => 'integer',
+            'diskon_paket' => 'decimal:2',
             'diambil_pada' => 'datetime',
             'dibatalkan_pada' => 'datetime',
         ];
@@ -62,6 +80,30 @@ class Pesanan extends Model
         }
 
         return $query->whereHas('pelanggan', fn ($q) => $q->where('user_id', $user?->id ?? 0));
+    }
+
+    /**
+     * Tarif sewa harian bersih (setelah diskon paket bundling) yang menjadi dasar denda keterlambatan.
+     */
+    public function getTarifHarianAttribute(): float
+    {
+        $kotor = (float) $this->detail->sum(fn ($d) => $d->harga_per_hari * $d->jumlah);
+        $diskonHarian = (float) $this->diskon_paket / max(1, (int) $this->durasi_hari);
+
+        return max(0.0, $kotor - $diskonHarian);
+    }
+
+    public function paketBundling(): BelongsTo
+    {
+        return $this->belongsTo(PaketBundling::class, 'paket_bundling_id');
+    }
+
+    /**
+     * Memuat seluruh relasi yang dibutuhkan halaman detail, resi, dan PDF pesanan.
+     */
+    public function scopeDenganRincian(Builder $query): Builder
+    {
+        return $query->with(self::RELASI_RINCIAN);
     }
 
     public function pelanggan(): BelongsTo

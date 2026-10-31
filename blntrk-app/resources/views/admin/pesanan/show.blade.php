@@ -317,7 +317,17 @@
                                 @endforeach
                             </tbody>
                             <tfoot class="border-t-2 border-stone-200 bg-stone-50/50">
+@if($pesanan->diskon_paket > 0)
                                 <tr>
+                                    <td colspan="3" class="py-2 px-5 text-right font-bold text-[#2f8f2c] uppercase text-[11px]">
+                                        Diskon {{ $pesanan->paketBundling?->nama ?? 'Paket Bundling' }}{{ $pesanan->jumlah_paket > 1 ? ' x'.$pesanan->jumlah_paket : '' }}
+                                    </td>
+                                    <td class="py-2 px-5 text-right font-mono font-bold text-[#2f8f2c]">
+                                        -Rp{{ number_format($pesanan->diskon_paket, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                                @endif
+                                                                <tr>
                                     <td colspan="3" class="py-3.5 px-5 text-right font-bold text-stone-500 uppercase text-[11px]">
                                         Total Biaya Sewa ({{ $pesanan->durasi_hari }} Hari)
                                     </td>

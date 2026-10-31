@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MetodePembayaran;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\Pelanggan;
+use App\Models\Pesanan;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -341,12 +343,12 @@ class PesananTest extends TestCase
         ]);
 
         $prefix = 'BLN-'.now()->format('ymd').'-0001';
-        $pesanan = \App\Models\Pesanan::where('no_resi', $prefix)->first();
+        $pesanan = Pesanan::where('no_resi', $prefix)->first();
 
         // Admin bayar pesanan
         $this->actingAs($this->admin)->post(route('admin.pesanan.bayar', $pesanan), [
             'jumlah' => $pesanan->total_sewa,
-            'metode' => \App\Enums\MetodePembayaran::Tunai->value,
+            'metode' => MetodePembayaran::Tunai->value,
             'catatan' => 'Lunas tunai di toko',
         ]);
 
@@ -378,7 +380,7 @@ class PesananTest extends TestCase
         $resiAktif = 'BLN-'.now()->format('ymd').'-0001';
 
         // 2. Buat pesanan selesai (status Dikembalikan) secara manual
-        $pesananSelesai = \App\Models\Pesanan::create([
+        $pesananSelesai = Pesanan::create([
             'no_resi' => 'BLN-'.now()->format('ymd').'-0099',
             'pelanggan_id' => $this->pelanggan->id,
             'dibuat_oleh' => $this->userPelanggan->id,

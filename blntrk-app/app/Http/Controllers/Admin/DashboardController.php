@@ -9,30 +9,21 @@ use App\Models\Denda;
 use App\Models\Pelanggan;
 use App\Models\Pesanan;
 use App\Services\DendaService;
-use App\Services\PesananService;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(DendaService $dendaService, PesananService $pesananService): View
+    public function index(DendaService $dendaService): View
     {
-        // Sinkronisasi status pesanan realtime (misal melewati batas toleransi 12:00 -> terlambat)
-        $pesananService->sinkronStatus();
-
-        // Ambil pesanan terlambat dan hitung denda berjalannya
-        $pesananTerlambat = Pesanan::with(['pelanggan', 'detail.alat'])
+        // Satu query untuk seluruh pesanan terlambat; denda berjalan dihitung sekali per pesanan
+        $semuaTerlambat = Pesanan::with(['pelanggan', 'detail.alat'])
             ->where('status', StatusPesanan::Terlambat)
             ->latest('jatuh_tempo')
-            ->take(5)
             ->get()
-            ->map(function ($p) use ($dendaService) {
-                $p->kalkulasi_telat = $dendaService->hitungKeterlambatan($p, now());
-                return $p;
-            });
+            ->each(fn ($p) => $p->kalkulasi_telat = $dendaService->hitungKeterlambatan($p, now()));
 
-        // Hitung estimasi seluruh denda berjalan dari semua pesanan berstatus terlambat
-        $semuaTerlambat = Pesanan::with('detail')->where('status', StatusPesanan::Terlambat)->get();
-        $estimasiDendaBerjalan = (float) $semuaTerlambat->sum(fn ($p) => $dendaService->hitungKeterlambatan($p, now())['jumlah']);
+        $pesananTerlambat = $semuaTerlambat->take(5);
+        $estimasiDendaBerjalan = (float) $semuaTerlambat->sum(fn ($p) => $p->kalkulasi_telat['jumlah']);
         $dendaTercatatBelumLunas = (float) Denda::where('status_bayar', 'belum_lunas')->sum('jumlah');
         $totalDendaTertunggak = $dendaTercatatBelumLunas + $estimasiDendaBerjalan;
 

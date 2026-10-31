@@ -11,6 +11,8 @@ use App\Models\Pelanggan;
 use App\Models\Pengaturan;
 use App\Models\Pesanan;
 use App\Services\DendaService;
+use App\Services\KeranjangService;
+use App\Services\PaketBundlingService;
 use App\Services\PesananService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -96,7 +98,7 @@ class PesananController extends Controller
     /**
      * Menampilkan form pembuatan pesanan baru.
      */
-    public function create(Request $request): View
+    public function create(Request $request, PaketBundlingService $paketBundling): View
     {
         $user = auth()->user();
         $pelanggan = $user->pelanggan;
@@ -147,13 +149,13 @@ class PesananController extends Controller
             'initialMulai',
             'initialSelesai',
             'paketNama'
-        ));
+        ) + ['paketData' => $paketBundling->dataUntukKlien()]);
     }
 
     /**
      * Memproses penyimpanan pesanan baru.
      */
-    public function store(PesananRequest $request, PesananService $service, \App\Services\KeranjangService $keranjangService): RedirectResponse
+    public function store(PesananRequest $request, PesananService $service, KeranjangService $keranjangService): RedirectResponse
     {
         $user = auth()->user();
         $pelanggan = $user->pelanggan;
@@ -180,21 +182,9 @@ class PesananController extends Controller
     /**
      * Menampilkan halaman detail pesanan pelanggan.
      */
-    public function show(string $resi, PesananService $pesananService, DendaService $dendaService): View
+    public function show(string $resi, DendaService $dendaService): View
     {
-        $pesananService->sinkronStatus();
-
-        $pesanan = Pesanan::with([
-            'pelanggan',
-            'pembuat',
-            'pemroses',
-            'detail.alat.kategori',
-            'pembayaran.pencatat',
-            'jaminan.penerima',
-            'pengembalian.penerima',
-            'pengembalian.detail.pesananDetail.alat',
-            'denda.kategoriDenda',
-        ])
+        $pesanan = Pesanan::denganRincian()
             ->where('no_resi', $resi)
             ->tampilkanUntuk(auth()->user())
             ->firstOrFail();
@@ -214,17 +204,7 @@ class PesananController extends Controller
      */
     public function resi(string $resi): View
     {
-        $pesanan = Pesanan::with([
-            'pelanggan',
-            'pembuat',
-            'pemroses',
-            'detail.alat.kategori',
-            'pembayaran.pencatat',
-            'jaminan.penerima',
-            'pengembalian.penerima',
-            'pengembalian.detail.pesananDetail.alat',
-            'denda.kategoriDenda',
-        ])
+        $pesanan = Pesanan::denganRincian()
             ->where('no_resi', $resi)
             ->tampilkanUntuk(auth()->user())
             ->firstOrFail();
@@ -245,17 +225,7 @@ class PesananController extends Controller
      */
     public function cetakPdf(string $resi): Response
     {
-        $pesanan = Pesanan::with([
-            'pelanggan',
-            'pembuat',
-            'pemroses',
-            'detail.alat.kategori',
-            'pembayaran.pencatat',
-            'jaminan.penerima',
-            'pengembalian.penerima',
-            'pengembalian.detail.pesananDetail.alat',
-            'denda.kategoriDenda',
-        ])
+        $pesanan = Pesanan::denganRincian()
             ->where('no_resi', $resi)
             ->tampilkanUntuk(auth()->user())
             ->firstOrFail();

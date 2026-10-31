@@ -232,6 +232,9 @@
                             <p class="text-xs text-stone-400 mt-1">
                                 Termasuk <span class="font-bold text-white" x-text="hitungTotalUnit()"></span> unit alat untuk <span class="font-bold text-white" x-text="durasiHari"></span> hari sewa.
                             </p>
+                            <p class="text-xs text-[#5edd5b] mt-1 font-bold" x-show="diskonPaket().diskon > 0" x-cloak>
+                                Diskon <span x-text="diskonPaket().nama"></span>: -Rp<span x-text="formatRupiah(diskonPaket().diskon)"></span>
+                            </p>
                         </div>
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -255,6 +258,8 @@
             </form>
         </div>
     </div>
+
+    @include('partials.diskon-paket-js')
 
     <!-- Script Alpine Component -->
     <script>
@@ -325,10 +330,18 @@
                     this.items[index].harga = alat ? parseFloat(alat.harga_per_hari) : 0;
                 },
 
-                hitungTotal() {
+                hitungKotor() {
                     return this.items.reduce((acc, curr) => {
                         return acc + (curr.harga * curr.jumlah * this.durasiHari);
                     }, 0);
+                },
+
+                diskonPaket() {
+                    return window.hitungDiskonPaket(this.items, this.daftarAlat, this.durasiHari);
+                },
+
+                hitungTotal() {
+                    return Math.max(0, this.hitungKotor() - this.diskonPaket().diskon);
                 },
 
                 hitungTotalUnit() {

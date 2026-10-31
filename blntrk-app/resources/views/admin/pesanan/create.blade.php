@@ -190,6 +190,9 @@
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-[#5edd5b] block">Total Tagihan Sewa</span>
                 <div class="text-2xl sm:text-3xl font-extrabold bl-d" x-text="'Rp' + formatRupiah(hitungTotal())"></div>
+                <p class="text-[11px] text-[#5edd5b] font-bold mt-1" x-show="diskonPaket().diskon > 0" x-cloak>
+                    Diskon <span x-text="diskonPaket().nama"></span>: -Rp<span x-text="formatRupiah(diskonPaket().diskon)"></span>
+                </p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -204,6 +207,8 @@
             </div>
         </div>
     </form>
+
+    @include('partials.diskon-paket-js')
 
     <script>
         function adminWalkinForm(daftarAlat) {
@@ -252,8 +257,16 @@
                     this.items[idx].harga = alat ? parseFloat(alat.harga_per_hari) : 0;
                 },
 
-                hitungTotal() {
+                hitungKotor() {
                     return this.items.reduce((acc, curr) => acc + (curr.harga * curr.jumlah * this.durasiHari), 0);
+                },
+
+                diskonPaket() {
+                    return window.hitungDiskonPaket(this.items, this.daftarAlat, this.durasiHari);
+                },
+
+                hitungTotal() {
+                    return Math.max(0, this.hitungKotor() - this.diskonPaket().diskon);
                 },
 
                 formatRupiah(val) {

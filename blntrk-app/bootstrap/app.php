@@ -13,7 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+        // Daftar IP/CIDR proxy dipisah koma; '*' hanya untuk platform yang IP proxy-nya dinamis (mis. Render).
+        $proxies = env('TRUSTED_PROXIES');
+        if ($proxies) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
 
         $middleware->alias([
             'role' => CekRole::class,

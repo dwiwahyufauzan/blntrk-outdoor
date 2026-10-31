@@ -301,7 +301,7 @@ class FiturBersyaratTest extends TestCase
         $sampai = now()->toDateString();
 
         // 1. Admin mengunduh CSV Laporan Penyewaan
-        $responseAdmin = $this->actingAs($this->admin)->get(route('admin.laporan.excel', [
+        $responseAdmin = $this->actingAs($this->admin)->get(route('admin.laporan.csv', [
             'jenis' => 'penyewaan',
             'dari' => $dari,
             'sampai' => $sampai,
@@ -311,7 +311,7 @@ class FiturBersyaratTest extends TestCase
         $responseAdmin->assertHeader('content-type', 'text/csv; charset=UTF-8');
 
         // 2. Pemilik mengunduh CSV Laporan Pendapatan
-        $responsePemilik = $this->actingAs($this->pemilik)->get(route('pemilik.laporan.excel', [
+        $responsePemilik = $this->actingAs($this->pemilik)->get(route('pemilik.laporan.csv', [
             'jenis' => 'pendapatan',
             'dari' => $dari,
             'sampai' => $sampai,

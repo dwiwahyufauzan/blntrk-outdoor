@@ -128,7 +128,7 @@ class PengembalianService
                     if ($hilang > 0) {
                         $keteranganDenda = "Ganti rugi kehilangan {$hilang} unit {$det->alat->nama}";
                         if ((float) ($alat->harga_beli ?? 0) > 0) {
-                            $keteranganDenda .= " (Sesuai harga beli @ Rp".number_format($alat->harga_beli, 0, ',', '.').")";
+                            $keteranganDenda .= ' (Sesuai harga beli @ Rp'.number_format($alat->harga_beli, 0, ',', '.').')';
                         }
                         if (! empty($x['catatan'])) {
                             $keteranganDenda .= " - {$x['catatan']}";

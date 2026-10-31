@@ -35,4 +35,3 @@ class PaketBundlingDetail extends Model
         return $this->belongsTo(Alat::class, 'alat_id');
     }
 }
-

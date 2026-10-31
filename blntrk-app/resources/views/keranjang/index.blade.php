@@ -264,6 +264,16 @@
                                     <span>Durasi Penggunaan:</span>
                                     <span class="font-bold text-[#5edd5b]">{{ $jadwal['durasi'] }} Hari (x24 Jam)</span>
                                 </div>
+                                @if($diskonPaket['diskon'] > 0)
+                                    <div class="flex justify-between">
+                                        <span>Subtotal Eceran:</span>
+                                        <span class="font-mono font-bold text-white">Rp{{ number_format($subtotalKotor, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-[#5edd5b]">
+                                        <span>Diskon {{ $diskonPaket['paket']->nama }}{{ $diskonPaket['jumlah_paket'] > 1 ? ' x'.$diskonPaket['jumlah_paket'] : '' }}:</span>
+                                        <span class="font-mono font-bold">-Rp{{ number_format($diskonPaket['diskon'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="pt-4 pb-5 flex items-baseline justify-between">

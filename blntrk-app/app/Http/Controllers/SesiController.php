@@ -76,4 +76,3 @@ class SesiController extends Controller
         ]);
     }
 }
-

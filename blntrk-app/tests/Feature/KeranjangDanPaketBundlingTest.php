@@ -18,12 +18,19 @@ class KeranjangDanPaketBundlingTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $pelangganUser;
+
     protected Pelanggan $pelanggan;
+
     protected KategoriAlat $kategoriTenda;
+
     protected KategoriAlat $kategoriTidur;
+
     protected Alat $alatTenda;
+
     protected Alat $alatSleepingBag;
+
     protected PaketBundling $paketSolo;
 
     protected function setUp(): void

@@ -19,10 +19,15 @@ class StokDanKetersediaanProdukTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $pelangganUser;
+
     protected Pelanggan $pelanggan;
+
     protected KategoriAlat $kategoriTenda;
+
     protected Alat $alatTenda;
+
     protected Alat $alatKompor;
 
     protected function setUp(): void
@@ -261,4 +266,3 @@ class StokDanKetersediaanProdukTest extends TestCase
         $response->assertDontSee('pagination');
     }
 }
-

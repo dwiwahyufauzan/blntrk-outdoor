@@ -353,7 +353,13 @@
                                 <span>Durasi Sewa:</span>
                                 <span class="font-bold text-stone-800">{{ $pesanan->durasi_hari }} Hari (24 Jam &times; {{ $pesanan->durasi_hari }})</span>
                             </div>
-                            <div class="flex justify-between items-center pt-2 border-t border-stone-100">
+@if($pesanan->diskon_paket > 0)
+                            <div class="flex justify-between items-center text-[#2f8f2c] font-bold">
+                                <span>Diskon {{ $pesanan->paketBundling?->nama ?? 'Paket Bundling' }}{{ $pesanan->jumlah_paket > 1 ? ' x'.$pesanan->jumlah_paket : '' }}:</span>
+                                <span>-Rp{{ number_format($pesanan->diskon_paket, 0, ',', '.') }}</span>
+                            </div>
+                            @endif
+                                                        <div class="flex justify-between items-center pt-2 border-t border-stone-100">
                                 <span class="font-extrabold text-stone-900 text-sm font-urbanist">Total Biaya Sewa:</span>
                                 <span class="text-xl sm:text-2xl font-black font-urbanist text-[#0e1b15]">
                                     Rp{{ number_format($pesanan->total_sewa, 0, ',', '.') }}

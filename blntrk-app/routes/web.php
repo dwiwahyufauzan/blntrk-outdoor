@@ -8,6 +8,8 @@ use App\Http\Controllers\PaketBundlingController;
 use App\Http\Controllers\Pelanggan\PesananController;
 use App\Http\Controllers\Pemilik;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SesiController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,10 +26,10 @@ Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog.index
 Route::get('/katalog/{alat}', [KatalogController::class, 'show'])->name('katalog.show');
 Route::get('/katalog/{alat}/ketersediaan', [KatalogController::class, 'ketersediaan'])->name('katalog.ketersediaan');
 
-// Alias rute /alat sesuai dokumen skripsi
-Route::get('/alat', [KatalogController::class, 'index'])->name('alat.index');
-Route::get('/alat/{alat}', [KatalogController::class, 'show'])->name('alat.show');
-Route::get('/alat/{alat}/ketersediaan', [KatalogController::class, 'ketersediaan'])->name('alat.ketersediaan');
+// Alias URL /alat (sesuai dokumen skripsi) dialihkan permanen ke rute kanonis /katalog
+Route::permanentRedirect('/alat', '/katalog');
+Route::get('/alat/{alat}', fn (string $alat) => redirect()->route('katalog.show', $alat, 301));
+Route::get('/alat/{alat}/ketersediaan', fn (Request $request, string $alat) => redirect()->route('katalog.ketersediaan', ['alat' => $alat] + $request->query(), 301));
 
 // Fitur Keranjang Belanja (Sewa Alat Outdoor)
 Route::get('/keranjang', [KeranjangController::class, 'index'])->name('keranjang.index');
@@ -57,13 +59,13 @@ Route::get('/dashboard', function () {
 // Profil Pengguna
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
+    Route::redirect('/profil', '/profile', 301);
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Sesi Login Pengguna
-    Route::get('/sesi-login', [\App\Http\Controllers\SesiController::class, 'index'])->name('sesi.index');
-    Route::get('/sesi', [\App\Http\Controllers\SesiController::class, 'index'])->name('sesi.alias');
+    Route::get('/sesi-login', [SesiController::class, 'index'])->name('sesi.index');
+    Route::redirect('/sesi', '/sesi-login', 301);
 
     // Alur Pemesanan & Resi Pelanggan
     Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
@@ -79,10 +81,10 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
-    // Laporan & Cetak PDF / Excel (F08, T13)
+    // Laporan & Cetak PDF / CSV (F08, T13)
     Route::get('laporan', [Admin\LaporanController::class, 'index'])->name('laporan.index');
     Route::get('laporan/pdf', [Admin\LaporanController::class, 'cetakPdf'])->name('laporan.pdf');
-    Route::get('laporan/excel', [Admin\LaporanController::class, 'eksporExcel'])->name('laporan.excel');
+    Route::get('laporan/csv', [Admin\LaporanController::class, 'eksporCsv'])->name('laporan.csv');
 
     // Cetak PDF Resi Pesanan
     Route::get('pesanan/{pesanan}/pdf', [Admin\LaporanController::class, 'cetakResi'])->name('pesanan.pdf');
@@ -137,7 +139,7 @@ Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->name('pemilik.')
     Route::get('/', [Pemilik\DashboardController::class, 'index'])->name('dashboard');
     Route::get('laporan', [Pemilik\LaporanController::class, 'index'])->name('laporan.index');
     Route::get('laporan/pdf', [Pemilik\LaporanController::class, 'cetakPdf'])->name('laporan.pdf');
-    Route::get('laporan/excel', [Pemilik\LaporanController::class, 'eksporExcel'])->name('laporan.excel');
+    Route::get('laporan/csv', [Pemilik\LaporanController::class, 'eksporCsv'])->name('laporan.csv');
 
     // Pengaturan Toko & Aturan Denda
     Route::get('pengaturan', [Pemilik\PengaturanController::class, 'index'])->name('pengaturan.index');

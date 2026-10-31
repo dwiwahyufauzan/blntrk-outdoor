@@ -25,7 +25,7 @@ class DendaService
             return [
                 'hari' => 0,
                 'jumlah' => 0.0,
-                'tarif_harian' => (float) $pesanan->detail->sum(fn ($d) => $d->harga_per_hari * $d->jumlah),
+                'tarif_harian' => $pesanan->tarif_harian,
             ];
         }
 
@@ -34,7 +34,7 @@ class DendaService
         $hari = (int) ceil($selisihMenit / 1440);
 
         // Tarif harian total dari seluruh item yang disewa
-        $tarifHarian = (float) $pesanan->detail->sum(fn ($d) => $d->harga_per_hari * $d->jumlah);
+        $tarifHarian = $pesanan->tarif_harian;
         $jumlahDenda = $hari * $tarifHarian * $persen;
 
         return [

@@ -58,6 +58,7 @@ class KategoriDenda extends Model
 
     /**
      * Memastikan data kategori denda bawaan tersedia di sistem.
+     * Hanya membuat yang belum ada, sehingga perubahan tarif oleh pemilik tidak tertimpa.
      */
     public static function seedDefault(): void
     {
@@ -101,7 +102,7 @@ class KategoriDenda extends Model
         ];
 
         foreach ($defaultCategories as $cat) {
-            self::updateOrCreate(['kode' => $cat['kode']], $cat);
+            self::firstOrCreate(['kode' => $cat['kode']], $cat);
         }
     }
 }

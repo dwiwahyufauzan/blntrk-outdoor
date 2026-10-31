@@ -96,9 +96,8 @@ class NavbarProfilPelangganTest extends TestCase
         $response->assertSee('Keluar Sesi Ini');
 
         // Akses via alias (/sesi)
-        $responseAlias = $this->actingAs($this->userPelanggan)->get(route('sesi.alias'));
-        $responseAlias->assertOk();
-        $responseAlias->assertSee('Sesi Login & Perangkat Aktif', false);
+        $responseAlias = $this->actingAs($this->userPelanggan)->get('/sesi');
+        $responseAlias->assertRedirect(route('sesi.index'));
 
         // Tamu dialihkan ke halaman login
         auth()->logout();
@@ -114,9 +113,7 @@ class NavbarProfilPelangganTest extends TestCase
         $responseProfile->assertSee('informasi-profil');
         $responseProfile->assertSee('pengaturan-profil');
 
-        $responseProfilAlias = $this->actingAs($this->userPelanggan)->get(route('profil.edit'));
-        $responseProfilAlias->assertOk();
-        $responseProfilAlias->assertSee('Pengaturan Profil & Akun');
+        $this->actingAs($this->userPelanggan)->get('/profil')->assertRedirect(route('profile.edit'));
     }
 
     public function test_halaman_profile_admin_mengikuti_gaya_panel_admin_dan_bukan_halaman_pelanggan(): void

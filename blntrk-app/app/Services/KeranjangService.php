@@ -10,10 +10,12 @@ use Illuminate\Support\Collection;
 class KeranjangService
 {
     protected const SESSION_KEY = 'keranjang_sewa';
+
     protected const JADWAL_KEY = 'keranjang_jadwal';
 
     public function __construct(
-        protected KetersediaanService $ketersediaan
+        protected KetersediaanService $ketersediaan,
+        protected PaketBundlingService $paketBundling
     ) {}
 
     /**
@@ -68,20 +70,29 @@ class KeranjangService
 
     /**
      * Menambahkan seluruh item dari suatu Paket Bundling sekaligus ke dalam keranjang.
+     * Item yang tidak aktif atau stoknya tidak mencukupi dilewati dan dilaporkan agar pelanggan
+     * tahu bahwa paket yang masuk keranjang tidak lengkap.
+     *
+     * @return array{ditambahkan: int, dilewati: array<int, string>}
      */
-    public function tambahPaket(PaketBundling $paket): int
+    public function tambahPaket(PaketBundling $paket): array
     {
         $paket->load('items.alat');
-        $added = 0;
+        $ditambahkan = 0;
+        $dilewati = [];
 
         foreach ($paket->items as $item) {
-            if ($item->alat && $item->alat->is_aktif && $item->alat->stok_tersedia > 0) {
-                $this->tambah($item->alat_id, $item->jumlah);
-                $added++;
+            $nama = $item->alat?->nama ?? 'Alat tidak tersedia';
+
+            if ($item->alat && $item->alat->is_aktif && $item->alat->stok_tersedia >= $item->jumlah
+                && $this->tambah($item->alat_id, $item->jumlah)) {
+                $ditambahkan++;
+            } else {
+                $dilewati[] = $nama;
             }
         }
 
-        return $added;
+        return ['ditambahkan' => $ditambahkan, 'dilewati' => $dilewati];
     }
 
     /**
@@ -195,11 +206,29 @@ class KeranjangService
     }
 
     /**
-     * Menghitung grand total sewa berdasarkan jadwal aktif.
+     * Total sewa sebelum diskon paket bundling.
+     */
+    public function subtotalKotor(): float
+    {
+        return (float) $this->ambil()->sum('subtotal');
+    }
+
+    /**
+     * Diskon paket bundling yang otomatis berlaku untuk isi keranjang pada jadwal aktif.
+     *
+     * @return array{paket: ?PaketBundling, jumlah_paket: int, hemat_per_hari: float, diskon: float}
+     */
+    public function diskonPaket(): array
+    {
+        return $this->paketBundling->hitungDiskon($this->getRaw(), $this->getJadwal()['durasi']);
+    }
+
+    /**
+     * Menghitung grand total sewa (setelah diskon paket) berdasarkan jadwal aktif.
      */
     public function grandTotal(): float
     {
-        return $this->ambil()->sum('subtotal');
+        return max(0.0, $this->subtotalKotor() - $this->diskonPaket()['diskon']);
     }
 
     /**
@@ -241,4 +270,3 @@ class KeranjangService
         ];
     }
 }
-

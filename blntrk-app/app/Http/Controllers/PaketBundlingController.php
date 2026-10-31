@@ -73,4 +73,3 @@ class PaketBundlingController extends Controller
         ])->with('status', "Paket {$paket->nama} telah dimuat ke formulir pemesanan.");
     }
 }
-

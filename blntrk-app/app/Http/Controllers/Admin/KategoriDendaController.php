@@ -16,8 +16,6 @@ class KategoriDendaController extends Controller
      */
     public function index(Request $request): View
     {
-        KategoriDenda::seedDefault();
-
         $q = $request->query('q');
         $jenis = $request->query('jenis');
 

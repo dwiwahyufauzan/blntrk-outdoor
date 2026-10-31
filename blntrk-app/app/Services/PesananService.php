@@ -17,7 +17,8 @@ use Illuminate\Validation\ValidationException;
 class PesananService
 {
     public function __construct(
-        protected KetersediaanService $ketersediaan
+        protected KetersediaanService $ketersediaan,
+        protected PaketBundlingService $paketBundling
     ) {}
 
     /**
@@ -45,6 +46,7 @@ class PesananService
 
             $total = 0;
             $detail = [];
+            $kuantitas = [];
 
             foreach ($data['items'] as $index => $item) {
                 $alatId = (int) $item['alat_id'];
@@ -71,6 +73,7 @@ class PesananService
 
                 $subtotal = $alat->harga_per_hari * $jumlah * $durasi;
                 $total += $subtotal;
+                $kuantitas[$alat->id] = $jumlah;
 
                 $detail[] = [
                     'alat_id' => $alat->id,
@@ -79,6 +82,11 @@ class PesananService
                     'subtotal' => $subtotal,
                 ];
             }
+
+            // Diskon paket bundling otomatis bila isi pesanan memenuhi suatu paket aktif
+            $diskonPaket = $this->paketBundling->hitungDiskon($kuantitas, $durasi);
+            $diskon = min((float) $diskonPaket['diskon'], (float) $total);
+            $total -= $diskon;
 
             $jamKembali = Pengaturan::ambil('jam_kembali', '12:00');
             $jatuhTempo = $selesai->copy()->setTimeFromTimeString($jamKembali);
@@ -94,6 +102,9 @@ class PesananService
                 'batas_ambil' => $batasAmbil,
                 'status' => StatusPesanan::Menunggu,
                 'total_sewa' => $total,
+                'paket_bundling_id' => $diskon > 0 ? $diskonPaket['paket']?->id : null,
+                'jumlah_paket' => $diskon > 0 ? $diskonPaket['jumlah_paket'] : 0,
+                'diskon_paket' => $diskon,
                 'catatan' => $data['catatan'] ?? null,
             ]);
 
@@ -103,6 +114,7 @@ class PesananService
                 $pembuat,
                 'pesanan.buat',
                 "Membuat pesanan baru [{$pesanan->no_resi}] untuk {$pelanggan->nama_lengkap} (Total Rp".number_format($total, 0, ',', '.').')'
+                .($diskon > 0 ? " dengan diskon {$diskonPaket['paket']->nama} Rp".number_format($diskon, 0, ',', '.') : '')
             );
 
             return $pesanan->load(['detail.alat.kategori', 'pelanggan', 'pembuat']);

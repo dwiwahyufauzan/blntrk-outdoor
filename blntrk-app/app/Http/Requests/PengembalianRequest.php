@@ -9,6 +9,9 @@ use Illuminate\Validation\Validator;
 
 class PengembalianRequest extends FormRequest
 {
+    /** Batas wajar denda kerusakan/kehilangan per baris alat (Rp) untuk mencegah salah ketik nominal. */
+    public const BIAYA_MAKS = 10000000;
+
     public function authorize(): bool
     {
         return $this->user() && $this->user()->punyaRole('admin');
@@ -24,7 +27,7 @@ class PengembalianRequest extends FormRequest
             'baris.*.rusak_ringan' => ['required', 'integer', 'min:0'],
             'baris.*.rusak_berat' => ['required', 'integer', 'min:0'],
             'baris.*.hilang' => ['required', 'integer', 'min:0'],
-            'baris.*.biaya' => ['nullable', 'numeric', 'min:0'],
+            'baris.*.biaya' => ['nullable', 'numeric', 'min:0', 'max:'.self::BIAYA_MAKS],
             'baris.*.kategori_denda_id' => ['nullable', 'exists:kategori_denda,id'],
             'baris.*.catatan' => ['nullable', 'string', 'max:255'],
         ];

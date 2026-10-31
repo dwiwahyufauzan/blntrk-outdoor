@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\MetodePembayaran;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\Denda;
@@ -11,13 +10,11 @@ use App\Models\KategoriAlat;
 use App\Models\KategoriDenda;
 use App\Models\Pelanggan;
 use App\Models\Pesanan;
-use App\Models\PesananDetail;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\PengembalianService;
+use App\Services\PesananService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class KategoriDendaDanPenahananJaminanTest extends TestCase
@@ -25,8 +22,11 @@ class KategoriDendaDanPenahananJaminanTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $userPelanggan;
+
     private Pelanggan $pelanggan;
+
     private Alat $alat;
 
     protected function setUp(): void
@@ -108,7 +108,7 @@ class KategoriDendaDanPenahananJaminanTest extends TestCase
 
     protected function bikinPesananDisewa(string $catatan = 'Uji denda'): Pesanan
     {
-        $pesananService = app(\App\Services\PesananService::class);
+        $pesananService = app(PesananService::class);
         $pesanan = $pesananService->buat($this->pelanggan, $this->userPelanggan, [
             'tanggal_mulai' => Carbon::today()->subDays(2)->toDateString(),
             'tanggal_selesai' => Carbon::yesterday()->toDateString(),

@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\View\Components\AdminLayout;
 use App\View\Components\PemilikLayout;
 use App\View\Components\PublikLayout;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,20 +33,20 @@ class AppServiceProvider extends ServiceProvider
         Blade::component('pemilik-layout', PemilikLayout::class);
 
         // Macro adapter agar Collection kompatibel jika view pagination lama dipanggil
-        \Illuminate\Support\Collection::macro('firstItem', function () {
-            /** @var \Illuminate\Support\Collection $this */
+        Collection::macro('firstItem', function () {
+            /** @var Collection $this */
             return $this->isEmpty() ? 0 : 1;
         });
-        \Illuminate\Support\Collection::macro('lastItem', function () {
-            /** @var \Illuminate\Support\Collection $this */
+        Collection::macro('lastItem', function () {
+            /** @var Collection $this */
             return $this->count();
         });
-        \Illuminate\Support\Collection::macro('total', function () {
-            /** @var \Illuminate\Support\Collection $this */
+        Collection::macro('total', function () {
+            /** @var Collection $this */
             return $this->count();
         });
-        \Illuminate\Support\Collection::macro('links', function () {
-            return new \Illuminate\Support\HtmlString('');
+        Collection::macro('links', function () {
+            return new HtmlString('');
         });
     }
 }

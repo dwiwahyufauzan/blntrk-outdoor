@@ -8,11 +8,13 @@ use App\Http\Requests\AdminPesananRequest;
 use App\Http\Requests\BatalRequest;
 use App\Http\Requests\PembayaranRequest;
 use App\Http\Requests\PengambilanRequest;
+use App\Http\Requests\PengembalianRequest;
 use App\Models\Alat;
 use App\Models\KategoriDenda;
 use App\Models\Pelanggan;
 use App\Models\Pesanan;
 use App\Services\DendaService;
+use App\Services\PaketBundlingService;
 use App\Services\PengembalianService;
 use App\Services\PesananService;
 use App\Services\WhatsAppService;
@@ -62,7 +64,7 @@ class PesananController extends Controller
     /**
      * Menampilkan form buat pesanan walk-in di toko.
      */
-    public function create(): View
+    public function create(PaketBundlingService $paketBundling): View
     {
         $pelangganList = Pelanggan::orderBy('nama_lengkap')->get();
         $alatList = Alat::with('kategori')
@@ -71,7 +73,9 @@ class PesananController extends Controller
             ->get();
         Alat::muatStokTersedia($alatList);
 
-        return view('admin.pesanan.create', compact('pelangganList', 'alatList'));
+        $paketData = $paketBundling->dataUntukKlien();
+
+        return view('admin.pesanan.create', compact('pelangganList', 'alatList', 'paketData'));
     }
 
     /**
@@ -99,22 +103,9 @@ class PesananController extends Controller
     /**
      * Menampilkan detail pesanan di panel admin.
      */
-    public function show(Pesanan $pesanan, PesananService $pesananService, DendaService $dendaService): View
+    public function show(Pesanan $pesanan, DendaService $dendaService): View
     {
-        $pesananService->sinkronStatus();
-        $pesanan->refresh();
-
-        $pesanan->load([
-            'pelanggan',
-            'pembuat',
-            'pemroses',
-            'detail.alat.kategori',
-            'pembayaran.pencatat',
-            'jaminan.penerima',
-            'pengembalian.penerima',
-            'pengembalian.detail.pesananDetail.alat',
-            'denda.kategoriDenda',
-        ]);
+        $pesanan->load(Pesanan::RELASI_RINCIAN);
 
         // Format nomor WhatsApp pelanggan (konversi 08xx ke 628xx)
         $noHp = preg_replace('/\D/', '', $pesanan->pelanggan->no_hp ?? '');
@@ -135,7 +126,6 @@ class PesananController extends Controller
             $pesanWa = urlencode("Halo Kak {$namaPelanggan}, kami dari BLNTRK Outdoor ingin menginformasikan perihal pesanan sewa Anda dengan no resi {$pesanan->no_resi}. Status saat ini: {$pesanan->status->label()}.");
         }
 
-        KategoriDenda::seedDefault();
         $kategoriDendaList = KategoriDenda::aktif()->get();
 
         return view('admin.pesanan.show', compact('pesanan', 'noHp', 'pesanWa', 'kategoriDendaList', 'infoKeterlambatan'));
@@ -148,18 +138,19 @@ class PesananController extends Controller
     {
         $validated = $request->validate([
             'kategori_denda_id' => ['nullable', 'exists:kategori_denda,id'],
-            'jumlah' => ['required', 'numeric', 'min:1000'],
+            'jumlah' => ['required', 'numeric', 'min:1000', 'max:'.PengembalianRequest::BIAYA_MAKS],
             'keterangan' => ['required', 'string', 'max:255'],
         ], [
             'jumlah.required' => 'Nominal denda wajib diisi.',
             'jumlah.min' => 'Nominal denda minimal Rp 1.000.',
+            'jumlah.max' => 'Nominal denda melebihi batas wajar Rp 10.000.000, periksa kembali angkanya.',
             'keterangan.required' => 'Keterangan atau informasi tambahan denda wajib diisi.',
         ]);
 
         $denda = $service->tambahDendaManual($pesanan, auth()->user(), $validated);
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
-            ->with('status', "Denda baru sebesar Rp ".number_format($denda->jumlah, 0, ',', '.')." berhasil ditambahkan ke pesanan {$pesanan->no_resi}. Jaminan fisik ditahan sampai seluruh denda dilunasi.");
+            ->with('status', 'Denda baru sebesar Rp '.number_format($denda->jumlah, 0, ',', '.')." berhasil ditambahkan ke pesanan {$pesanan->no_resi}. Jaminan fisik ditahan sampai seluruh denda dilunasi.");
     }
 
     /**

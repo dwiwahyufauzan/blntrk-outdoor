@@ -6,18 +6,41 @@ services:
     dockerfilePath: Dockerfile
     plan: free
     region: singapore
+    healthCheckPath: /up
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
+      # Hasilkan lokal dengan `php artisan key:generate --show`, lalu isi di dashboard Render
+      - key: APP_KEY
+        sync: false
       - key: APP_URL
         value: https://blntrk-outdoor.onrender.com
+      - key: TRUSTED_PROXIES
+        value: "*"
+      # Database terkelola: data tetap ada walau service di-redeploy
       - key: DB_CONNECTION
-        value: sqlite
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: blntrk-db
+          property: connectionString
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
         value: database
+      # Kata sandi akun awal (pemilik/admin). Isi sendiri di dashboard Render.
+      - key: SEED_DEFAULT_PASSWORD
+        sync: false
+      # Setel "true" hanya untuk demo/presentasi agar katalog & transaksi contoh dimuat
+      - key: SEED_DEMO
+        value: "false"
+
+databases:
+  - name: blntrk-db
+    plan: free
+    region: singapore
+    databaseName: blntrk_outdoor

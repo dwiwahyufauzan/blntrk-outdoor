@@ -21,6 +21,11 @@ class TransaksiDemoSeeder extends Seeder
 {
     public function run(): void
     {
+        // Idempoten: jangan menambah transaksi demo bila sudah ada pesanan (mis. saat container restart)
+        if (Pesanan::query()->exists()) {
+            return;
+        }
+
         $admin = User::whereHas('role', fn ($q) => $q->where('nama', 'admin'))->first()
             ?? User::first();
 

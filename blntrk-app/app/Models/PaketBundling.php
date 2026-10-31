@@ -83,7 +83,7 @@ class PaketBundling extends Model
      */
     public function getLabelPaketAttribute(): string
     {
-        return 'Paket ' . $this->nomor_paket;
+        return 'Paket '.$this->nomor_paket;
     }
 
     /**

@@ -106,13 +106,13 @@ php artisan db:seed --class=TransaksiDemoSeeder
 
 ### Penjadwalan status otomatis
 
-Perintah `pesanan:perbarui-status` berjalan **tiap jam**. Perintah ini menandai pesanan terlambat dan membatalkan pesanan yang kedaluwarsa. Selama pengembangan jalankan:
+Perintah `pesanan:perbarui-status` berjalan **tiap 5 menit**. Perintah ini menandai pesanan terlambat dan membatalkan pesanan yang kedaluwarsa. Selama pengembangan jalankan:
 
 ```bash
 php artisan schedule:work
 ```
 
-Di server produksi, tambahkan cron: `* * * * * cd /path/blntrk-app && php artisan schedule:run >> /dev/null 2>&1`. Status juga disinkronkan saat halaman detail pesanan atau halaman denda dibuka.
+Di server produksi, tambahkan cron: `* * * * * cd /path/blntrk-app && php artisan schedule:run >> /dev/null 2>&1`. Membuka halaman **tidak lagi** mengubah data; seluruh perubahan status dikerjakan oleh scheduler. Container Docker (`entrypoint.sh`) sudah menjalankan `schedule:run` tiap menit.
 
 ---
 
@@ -148,7 +148,7 @@ Seeder juga membuat 8 kategori alat, 23 alat, 4 paket bundling, 4 kategori denda
 ## Pengujian
 
 ```bash
-php artisan test                                   # seluruh suite (173 test)
+php artisan test                                   # seluruh suite (192 test)
 php artisan test --filter=RevisiKlienTest          # regresi revisi klien
 php artisan test tests/Unit/KetersediaanServiceTest.php
 php artisan test tests/Feature/PengembalianDendaTest.php
@@ -188,7 +188,18 @@ blntrk-outdoor/
 
 - Setiap halaman admin yang memakai `@push('scripts')` bergantung pada `@stack('scripts')` di `layouts/admin.blade.php`. Jangan hapus baris itu.
 - Hindari `@json(...)` dengan ekspresi yang mengandung koma langsung di Blade. Siapkan datanya dulu dengan `@php`.
-- Ekspor laporan berformat **CSV** (UTF-8) dan dapat dibuka langsung di Excel.
+- Ekspor laporan berformat **CSV** (UTF-8) dan dapat dibuka langsung di Excel (rute `laporan.csv`).
+- **Diskon paket bundling otomatis**: bila isi pesanan/keranjang memenuhi suatu paket aktif (termasuk kelipatannya), selisih harga eceran dan harga paket dipotong dan dicatat pada `pesanan.diskon_paket`. Denda keterlambatan memakai tarif harian setelah diskon.
+- URL lama `/alat`, `/profil`, dan `/sesi` dialihkan (301) ke `/katalog`, `/profile`, dan `/sesi-login`.
+- CI GitHub Actions (`.github/workflows/ci.yml`) menjalankan Pint dan seluruh test pada setiap push/PR.
+
+### Deployment (Render)
+
+- `render.yaml` memakai **PostgreSQL terkelola** (`blntrk-db`) sehingga data tidak hilang saat redeploy. SQLite hanya untuk lokal/percobaan.
+- Isi di dashboard Render: `APP_KEY` (`php artisan key:generate --show`) dan `SEED_DEFAULT_PASSWORD`.
+- `SEED_DEMO=true` memuat katalog alat, paket, dan transaksi contoh (hanya untuk demo). Biarkan `false` untuk data nyata.
+- `TRUSTED_PROXIES` berisi IP/CIDR proxy dipisah koma; `*` hanya untuk platform berIP dinamis seperti Render.
+- Foto alat disimpan di `storage/app/public` yang bersifat sementara di Render. Untuk produksi sungguhan, pindahkan ke disk S3-compatible.
 - Format kode: `./vendor/bin/pint`.
 
 ---

@@ -8,4 +8,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('pesanan:perbarui-status')->hourly();
+// Menandai pesanan terlambat dan membatalkan pesanan kedaluwarsa (tidak lagi dikerjakan saat halaman dibuka)
+Schedule::command('pesanan:perbarui-status')->everyFiveMinutes()->withoutOverlapping();

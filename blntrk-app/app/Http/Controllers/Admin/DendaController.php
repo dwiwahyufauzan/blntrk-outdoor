@@ -8,7 +8,6 @@ use App\Models\Denda;
 use App\Models\Pesanan;
 use App\Services\DendaService;
 use App\Services\PengembalianService;
-use App\Services\PesananService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,12 +17,9 @@ class DendaController extends Controller
     /**
      * Menampilkan daftar denda sewa (keterlambatan, kehilangan, & kerusakan).
      */
-    public function index(Request $request, DendaService $dendaService, PesananService $pesananService): View
+    public function index(Request $request, DendaService $dendaService): View
     {
-        // 1. Sinkronisasi status pesanan realtime
-        $pesananService->sinkronStatus();
-
-        // 2. Ambil seluruh pesanan yang saat ini sedang terlambat (denda berjalan aktif)
+        // 1. Ambil seluruh pesanan yang saat ini sedang terlambat (denda berjalan aktif)
         $pesananTerlambatList = Pesanan::with(['pelanggan', 'detail.alat'])
             ->where('status', StatusPesanan::Terlambat)
             ->latest('jatuh_tempo')
@@ -36,7 +32,7 @@ class DendaController extends Controller
                     $noHp = '62'.substr($noHp, 1);
                 }
                 $p->no_wa = $noHp;
-                $p->pesan_wa = urlencode("Halo Kak {$p->pelanggan->nama_lengkap}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan No Resi {$p->no_resi} telah melewati batas waktu pengembalian (Terlambat {$p->info_telat['hari']} Hari). Estimasi denda keterlambatan saat ini adalah Rp ".number_format($p->info_telat['jumlah'], 0, ',', '.').". Mohon segera kembalikan unit ke toko. Terima kasih!");
+                $p->pesan_wa = urlencode("Halo Kak {$p->pelanggan->nama_lengkap}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan No Resi {$p->no_resi} telah melewati batas waktu pengembalian (Terlambat {$p->info_telat['hari']} Hari). Estimasi denda keterlambatan saat ini adalah Rp ".number_format($p->info_telat['jumlah'], 0, ',', '.').'. Mohon segera kembalikan unit ke toko. Terima kasih!');
 
                 return $p;
             });

@@ -32,7 +32,6 @@ class PengembalianController extends Controller
         $waktuSekarang = now();
         $telat = $dendaService->hitungKeterlambatan($pesanan, $waktuSekarang);
 
-        KategoriDenda::seedDefault();
         $kategoriDendaList = KategoriDenda::aktif()->get();
 
         return view('admin.pengembalian.create', compact('pesanan', 'telat', 'waktuSekarang', 'kategoriDendaList'));
