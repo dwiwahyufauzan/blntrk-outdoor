@@ -1,0 +1,11 @@
+.git
+.github
+blntrk-app/node_modules
+blntrk-app/vendor
+blntrk-app/.env
+blntrk-app/database/*.sqlite*
+blntrk-app/storage/*.key
+blntrk-app/tests
+dokumen skripsi
+docs
+plan
