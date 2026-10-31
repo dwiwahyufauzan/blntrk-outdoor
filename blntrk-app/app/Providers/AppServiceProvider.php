@@ -7,6 +7,7 @@ use App\View\Components\PemilikLayout;
 use App\View\Components\PublikLayout;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (request()->header('x-forwarded-proto') === 'https' || str_contains(request()->header('host', ''), 'ngrok')) {
+            URL::forceScheme('https');
+        }
+
         Blade::component('layouts.publik', PublikLayout::class);
         Blade::component('layouts.admin', AdminLayout::class);
         Blade::component('layouts.pemilik', PemilikLayout::class);
