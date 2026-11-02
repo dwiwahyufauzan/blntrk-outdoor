@@ -43,9 +43,9 @@ class LogAktivitasController extends Controller
 
         if ($q) {
             $query->where(function ($sub) use ($q) {
-                $sub->where('aksi', 'like', "%{$q}%")
-                    ->orWhere('deskripsi', 'like', "%{$q}%")
-                    ->orWhere('ip_address', 'like', "%{$q}%");
+                $sub->where('aksi', 'like', like_pattern($q))
+                    ->orWhere('deskripsi', 'like', like_pattern($q))
+                    ->orWhere('ip_address', 'like', like_pattern($q));
             });
         }
 

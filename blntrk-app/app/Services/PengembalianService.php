@@ -11,6 +11,7 @@ use App\Models\KategoriDenda;
 use App\Models\LogAktivitas;
 use App\Models\Pengembalian;
 use App\Models\Pesanan;
+use App\Models\RiwayatPerawatan;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +97,15 @@ class PengembalianService
                 $alat->stok_perawatan += ($rusakRingan + $rusakBerat);
                 $alat->stok_total -= $hilang;
                 $alat->save();
+
+                RiwayatPerawatan::catat(
+                    $alat,
+                    RiwayatPerawatan::MASUK,
+                    $rusakRingan + $rusakBerat,
+                    "Rusak saat pengembalian pesanan {$p->no_resi}".($rusakBerat > 0 ? " ({$rusakBerat} rusak berat)" : ''),
+                    $admin,
+                    $p->id
+                );
 
                 // Denda kerusakan atau penggantian unit hilang sesuai harga beli alat
                 $biaya = (float) ($x['biaya'] ?? 0);
@@ -221,7 +231,7 @@ class PengembalianService
             LogAktivitas::catat(
                 $admin,
                 'jaminan.kembali',
-                "Mengembalikan jaminan identitas ({$jaminan->jenis->label()} {$jaminan->nomor_identitas_samar}) untuk pesanan [{$pesanan->no_resi}]."
+                "Mengembalikan jaminan identitas ({$jaminan->label_jenis} {$jaminan->nomor_identitas_samar}) untuk pesanan [{$pesanan->no_resi}]."
             );
 
             return $jaminan;

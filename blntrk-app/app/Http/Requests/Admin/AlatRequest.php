@@ -25,6 +25,7 @@ class AlatRequest extends FormRequest
                 Rule::unique('alat', 'kode_alat')->ignore($alatId)->whereNull('deleted_at'),
             ],
             'nama' => ['required', 'string', 'max:100'],
+            'varian' => ['nullable', 'string', 'max:50'],
             'deskripsi' => ['nullable', 'string'],
             'harga_per_hari' => ['required', 'numeric', 'min:0'],
             'harga_beli' => ['nullable', 'numeric', 'min:0'],

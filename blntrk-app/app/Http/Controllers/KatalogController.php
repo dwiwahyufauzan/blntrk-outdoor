@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alat;
 use App\Models\KategoriAlat;
+use App\Models\Pengaturan;
 use App\Services\KetersediaanService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -39,7 +40,7 @@ class KatalogController extends Controller
 
         // Pencarian kata kunci nama/varian/deskripsi/kode
         if ($request->filled('q')) {
-            $search = '%'.trim($request->input('q')).'%';
+            $search = like_pattern($request->input('q'));
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', $search)
                     ->orWhere('varian', 'like', $search)
@@ -75,9 +76,10 @@ class KatalogController extends Controller
                     $tanggalSelesai = $tSelesai;
                     $durasiHari = (int) $tMulai->diffInDays($tSelesai);
 
-                    // Hitung ketersediaan per alat untuk rentang tanggal ini
+                    // Hitung ketersediaan seluruh alat untuk rentang tanggal ini dengan satu query pemakaian
+                    $tersediaRentang = $this->ketersediaanService->tersediaBanyak($alatList, $tMulai, $tSelesai);
                     foreach ($alatList as $alat) {
-                        $alat->stok_tersedia_rentang = $this->ketersediaanService->tersedia($alat, $tMulai, $tSelesai);
+                        $alat->stok_tersedia_rentang = $tersediaRentang[$alat->id] ?? 0;
                         $alat->stok_tersedia = $alat->stok_tersedia_rentang;
                     }
                 }
@@ -125,8 +127,12 @@ class KatalogController extends Controller
             ->get();
         Alat::muatStokTersedia($alatTerkait);
 
+        // Kalender ketersediaan 6 minggu ke depan (heatmap di halaman detail)
+        $kalender = $this->ketersediaanService->kalender($alat, today(), 42);
+
         return view('katalog.show', [
             'alat' => $alat,
+            'kalender' => $kalender,
             'alatTerkait' => $alatTerkait,
             'tMulaiDef' => $tMulaiDef,
             'tSelesaiDef' => $tSelesaiDef,
@@ -156,10 +162,12 @@ class KatalogController extends Controller
 
         $durasiHari = (int) $mulai->diffInDays($selesai);
 
-        if ($durasiHari > 14) {
+        $maksDurasi = Pengaturan::maksDurasiHari();
+
+        if ($durasiHari > $maksDurasi) {
             return response()->json([
                 'sukses' => false,
-                'pesan' => 'Maksimal durasi penyewaan adalah 14 hari.',
+                'pesan' => "Maksimal durasi penyewaan adalah {$maksDurasi} hari.",
                 'tersedia' => 0,
             ], 422);
         }

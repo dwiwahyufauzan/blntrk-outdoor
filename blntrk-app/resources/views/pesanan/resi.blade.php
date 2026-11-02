@@ -173,7 +173,7 @@
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center text-stone-700">
-                                    <span>Kartu: <strong>{{ is_string($pesanan->jaminan->jenis) ? strtoupper($pesanan->jaminan->jenis) : $pesanan->jaminan->jenis->label() }} (Asli)</strong></span>
+                                    <span>Kartu: <strong>{{ $pesanan->jaminan->label_jenis }}{{ $pesanan->jaminan->is_deposit ? '' : ' (Asli)' }}</strong></span>
                                     <span class="font-mono font-bold text-stone-800">{{ $pesanan->jaminan->nomor_identitas_samar ?? $pesanan->jaminan->nomor_identitas }}</span>
                                 </div>
                                 <div class="text-[11px] text-stone-500 mt-1">

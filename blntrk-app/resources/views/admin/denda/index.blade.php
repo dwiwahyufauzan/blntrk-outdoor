@@ -93,7 +93,7 @@
                                 {{ $pesananTerlambatList->count() }} Aktif
                             </span>
                         </h2>
-                        <p class="text-[11px] text-stone-500 mt-0.5">Unit perlengkapan masih di tangan penyewa melebihi batas waktu 12:00 WIB. Denda keterlambatan berjalan terhitung otomatis per 24 jam.</p>
+                        <p class="text-[11px] text-stone-500 mt-0.5">Unit perlengkapan masih di tangan penyewa melebihi batas jam pengembalian. Denda keterlambatan berjalan terhitung otomatis per 24 jam.</p>
                     </div>
                 </div>
 
@@ -129,7 +129,7 @@
                                             </a>
                                         </div>
                                         <div class="text-[11px] text-stone-500 mt-0.5">
-                                            Batas: <span class="font-medium text-rose-700">{{ $p->tanggal_selesai->format('d/m/Y') }} 12:00 WIB</span>
+                                            Batas: <span class="font-medium text-rose-700">{{ $p->jatuh_tempo?->format('d/m/Y H:i') ?? $p->tanggal_selesai->format('d/m/Y') }} WIB</span>
                                         </div>
                                     </td>
                                     <td class="py-3.5 px-4">
@@ -162,7 +162,7 @@
                                     <td class="py-3.5 px-4 text-center">
                                         @if($p->jaminan)
                                             <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                                                {{ $p->jaminan->jenis->label() }} (Ditahan)
+                                                {{ $p->jaminan->label_jenis }} (Ditahan)
                                             </span>
                                         @else
                                             <span class="text-[10px] text-stone-400 italic">Belum Ada</span>

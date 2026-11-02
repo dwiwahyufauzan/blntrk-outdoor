@@ -25,6 +25,8 @@ class PengaturanController extends Controller
             'persen_denda_harian' => (float) Pengaturan::ambil('persen_denda_harian', 100),
             'maks_durasi_hari' => (int) Pengaturan::ambil('maks_durasi_hari', 14),
             'ambang_stok_kritis' => (int) Pengaturan::ambil('ambang_stok_kritis', 2),
+            'noshow_batal_otomatis' => (int) Pengaturan::ambil('noshow_batal_otomatis', 1),
+            'noshow_toleransi_hari' => (int) Pengaturan::ambil('noshow_toleransi_hari', 1),
         ];
 
         return view('pemilik.pengaturan.index', compact('pengaturan'));
@@ -44,6 +46,8 @@ class PengaturanController extends Controller
             'persen_denda_harian' => ['required', 'numeric', 'min:0', 'max:500'],
             'maks_durasi_hari' => ['required', 'integer', 'min:1', 'max:90'],
             'ambang_stok_kritis' => ['required', 'integer', 'min:0', 'max:50'],
+            'noshow_batal_otomatis' => ['sometimes', 'required', 'in:0,1'],
+            'noshow_toleransi_hari' => ['sometimes', 'required', 'integer', 'min:0', 'max:30'],
         ], [
             'nama_toko.required' => 'Nama toko wajib diisi.',
             'alamat_toko.required' => 'Alamat toko wajib diisi.',
@@ -53,6 +57,8 @@ class PengaturanController extends Controller
             'persen_denda_harian.required' => 'Persentase denda harian wajib diisi.',
             'maks_durasi_hari.required' => 'Maksimum durasi peminjaman wajib diisi.',
             'ambang_stok_kritis.required' => 'Ambang batas stok kritis wajib diisi.',
+            'noshow_batal_otomatis.required' => 'Pilihan pembatalan otomatis no-show wajib dipilih.',
+            'noshow_toleransi_hari.required' => 'Toleransi hari no-show wajib diisi.',
         ]);
 
         $deskripsi = [
@@ -64,6 +70,8 @@ class PengaturanController extends Controller
             'persen_denda_harian' => 'Persentase tarif harian alat untuk denda per hari keterlambatan (%)',
             'maks_durasi_hari' => 'Batas maksimum durasi peminjaman yang diizinkan (hari)',
             'ambang_stok_kritis' => 'Batas minimum unit alat untuk peringatan stok kritis',
+            'noshow_batal_otomatis' => 'Batalkan otomatis pesanan sudah dibayar yang tidak diambil (1 = aktif, 0 = nonaktif)',
+            'noshow_toleransi_hari' => 'Toleransi hari setelah batas pengambilan sebelum pesanan dibayar dianggap tidak diambil (no-show)',
         ];
 
         foreach ($validated as $kunci => $nilai) {

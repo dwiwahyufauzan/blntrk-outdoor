@@ -47,6 +47,14 @@
                     Rp{{ number_format($ringkasan['pendapatan_bulan_ini'], 0, ',', '.') }}
                 </span>
                 <span class="text-[11px] text-stone-400 block mt-0.5">akumulasi kas {{ now()->translatedFormat('F Y') }}</span>
+                @if($perbandingan['persen'] !== null)
+                    <span class="text-[11px] font-bold block mt-0.5 {{ $perbandingan['persen'] >= 0 ? 'text-emerald-700' : 'text-rose-600' }}">
+                        {{ $perbandingan['persen'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($perbandingan['persen']), 1, ',', '.') }}% vs {{ $perbandingan['nama_bulan_lalu'] }}
+                        (Rp{{ number_format($perbandingan['bulan_lalu'], 0, ',', '.') }})
+                    </span>
+                @else
+                    <span class="text-[11px] text-stone-400 block mt-0.5">Belum ada pendapatan di {{ $perbandingan['nama_bulan_lalu'] }}</span>
+                @endif
             </div>
             <div class="w-12 h-12 rounded-2xl bg-[#0e1b15] text-[#5edd5b] flex items-center justify-center font-bold text-xl shadow-2xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -97,6 +105,39 @@
 
         <div class="relative w-full aspect-16/9 sm:aspect-21/9 h-64 sm:h-72">
             <canvas id="chartPendapatan6Bulan"></canvas>
+        </div>
+    </div>
+
+    <!-- Analitik Bulan Ini: Rasio Denda & Okupansi Alat -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl border border-stone-200/90 shadow-xs p-5">
+            <h3 class="text-xs font-bold text-[#14201a] uppercase tracking-wider pb-3 border-b border-stone-100 mb-4">Rasio Denda terhadap Pendapatan</h3>
+            @if($rasioDenda['persen'] !== null)
+                <span class="text-3xl font-black font-mono text-[#14201a]">{{ number_format($rasioDenda['persen'], 1, ',', '.') }}%</span>
+                <p class="text-[11px] text-stone-500 mt-1">Denda lunas Rp{{ number_format($rasioDenda['denda'], 0, ',', '.') }} dari total pendapatan {{ now()->translatedFormat('F Y') }}. Rasio tinggi menandakan banyak keterlambatan atau kerusakan.</p>
+            @else
+                <p class="text-xs text-stone-400">Belum ada pendapatan bulan ini.</p>
+            @endif
+        </div>
+
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-stone-200/90 shadow-xs p-5">
+            <h3 class="text-xs font-bold text-[#14201a] uppercase tracking-wider pb-3 border-b border-stone-100 mb-4">Okupansi Alat {{ now()->translatedFormat('F Y') }}</h3>
+            <div class="space-y-2.5">
+                @forelse($okupansi as $o)
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="font-bold text-stone-800">{{ $o['alat']->nama }} <span class="text-stone-400 font-normal">&bull; {{ $o['alat']->stok_total }} unit</span></span>
+                            <span class="font-mono font-black">{{ number_format($o['persen'], 1, ',', '.') }}%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-stone-100 overflow-hidden">
+                            <div class="h-full rounded-full bg-[#5edd5b]" style="width: {{ $o['persen'] }}%"></div>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-xs text-stone-400">Belum ada data alat.</p>
+                @endforelse
+            </div>
+            <p class="text-[10px] text-stone-400 mt-3">Persentase unit-hari tersewa terhadap kapasitas (jumlah unit &times; hari dalam bulan).</p>
         </div>
     </div>
 

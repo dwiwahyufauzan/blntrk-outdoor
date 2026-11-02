@@ -18,6 +18,7 @@ class Jaminan extends Model
         'jenis',
         'nomor_identitas_samar',
         'keterangan',
+        'nominal',
         'status',
         'diterima_pada',
         'diterima_oleh',
@@ -29,6 +30,7 @@ class Jaminan extends Model
     {
         return [
             'jenis' => JenisJaminan::class,
+            'nominal' => 'decimal:2',
             'diterima_pada' => 'datetime',
             'dikembalikan_pada' => 'datetime',
         ];
@@ -47,5 +49,20 @@ class Jaminan extends Model
     public function pengembali(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dikembalikan_oleh');
+    }
+
+    /**
+     * Jaminan berupa uang tunai yang dititipkan (bukan kartu identitas).
+     */
+    public function getIsDepositAttribute(): bool
+    {
+        return $this->nominal !== null && (float) $this->nominal > 0;
+    }
+
+    public function getLabelJenisAttribute(): string
+    {
+        return $this->is_deposit
+            ? 'Deposit Uang Rp'.number_format((float) $this->nominal, 0, ',', '.')
+            : $this->jenis->label();
     }
 }

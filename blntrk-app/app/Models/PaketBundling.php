@@ -109,7 +109,7 @@ class PaketBundling extends Model
     public function getFotoUrlAttribute(): ?string
     {
         if ($this->foto) {
-            return asset('storage/'.$this->foto);
+            return foto_url($this->foto);
         }
 
         // Default cover paket

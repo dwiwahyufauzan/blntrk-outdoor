@@ -45,10 +45,26 @@ class PengaturanSeeder extends Seeder
                 'nilai' => '6281234567890',
                 'keterangan' => 'Nomor WhatsApp konfirmasi pesanan toko (format internasional 62...)',
             ],
+            [
+                'kunci' => 'ambang_stok_kritis',
+                'nilai' => '2',
+                'keterangan' => 'Batas minimum unit alat untuk peringatan stok kritis',
+            ],
+            [
+                'kunci' => 'noshow_batal_otomatis',
+                'nilai' => '1',
+                'keterangan' => 'Batalkan otomatis pesanan sudah dibayar yang tidak diambil (1 = aktif, 0 = nonaktif)',
+            ],
+            [
+                'kunci' => 'noshow_toleransi_hari',
+                'nilai' => '1',
+                'keterangan' => 'Toleransi hari setelah batas pengambilan sebelum pesanan dibayar dianggap tidak diambil (no-show)',
+            ],
         ];
 
+        // Create-only: nilai yang sudah diubah pemilik di halaman Pengaturan tidak boleh tertimpa saat restart/deploy.
         foreach ($pengaturan as $item) {
-            Pengaturan::updateOrCreate(
+            Pengaturan::firstOrCreate(
                 ['kunci' => $item['kunci']],
                 ['nilai' => $item['nilai'], 'keterangan' => $item['keterangan']]
             );

@@ -49,9 +49,9 @@ class DendaController extends Controller
             ->when($jenis, fn ($query, $j) => $query->where('jenis', $j))
             ->when($q, function ($query, $q) {
                 $query->where(function ($sub) use ($q) {
-                    $sub->where('keterangan', 'like', "%{$q}%")
-                        ->orWhereHas('pesanan', fn ($p) => $p->where('no_resi', 'like', "%{$q}%")
-                            ->orWhereHas('pelanggan', fn ($pel) => $pel->where('nama_lengkap', 'like', "%{$q}%")));
+                    $sub->where('keterangan', 'like', like_pattern($q))
+                        ->orWhereHas('pesanan', fn ($p) => $p->where('no_resi', 'like', like_pattern($q))
+                            ->orWhereHas('pelanggan', fn ($pel) => $pel->where('nama_lengkap', 'like', like_pattern($q))));
                 });
             })
             ->latest('id')

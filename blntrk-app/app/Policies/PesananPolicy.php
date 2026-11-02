@@ -69,4 +69,36 @@ class PesananPolicy
     {
         return $user->punyaRole('admin') && $pesanan->status === StatusPesanan::Dibayar;
     }
+
+    /**
+     * Pelanggan pemilik pesanan dapat mengunggah bukti transfer selama pembayaran belum dikonfirmasi.
+     */
+    public function uploadBukti(User $user, Pesanan $pesanan): bool
+    {
+        return $pesanan->status === StatusPesanan::Menunggu
+            && $pesanan->pelanggan
+            && $pesanan->pelanggan->user_id === $user->id;
+    }
+
+    /**
+     * Ubah jadwal sebelum pengambilan: admin (menunggu/dibayar) atau pemilik pesanan (menunggu).
+     */
+    public function ubahJadwal(User $user, Pesanan $pesanan): bool
+    {
+        if ($user->punyaRole('admin')) {
+            return in_array($pesanan->status, [StatusPesanan::Menunggu, StatusPesanan::Dibayar], true);
+        }
+
+        return $pesanan->status === StatusPesanan::Menunggu
+            && $pesanan->pelanggan
+            && $pesanan->pelanggan->user_id === $user->id;
+    }
+
+    /**
+     * Perpanjangan sewa dilakukan admin saat pesanan sedang disewa.
+     */
+    public function perpanjang(User $user, Pesanan $pesanan): bool
+    {
+        return $user->punyaRole('admin') && $pesanan->status === StatusPesanan::Disewa;
+    }
 }

@@ -16,6 +16,8 @@ class PasswordResetLinkController extends Controller
      */
     public function create(): View
     {
+        abort_unless(reset_sandi_tersedia(), 404);
+
         return view('auth.forgot-password');
     }
 
@@ -26,6 +28,8 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        abort_unless(reset_sandi_tersedia(), 404);
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);

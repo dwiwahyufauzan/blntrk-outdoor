@@ -17,8 +17,8 @@ class PelangganController extends Controller
 
         if ($search = $request->input('q')) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_lengkap', 'like', "%{$search}%")
-                    ->orWhere('no_hp', 'like', "%{$search}%");
+                $q->where('nama_lengkap', 'like', like_pattern($search))
+                    ->orWhere('no_hp', 'like', like_pattern($search));
             });
         }
 

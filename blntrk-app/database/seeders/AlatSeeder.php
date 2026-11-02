@@ -264,9 +264,12 @@ class AlatSeeder extends Seeder
             if (! isset($alat['harga_beli'])) {
                 $alat['harga_beli'] = $alat['harga_per_hari'] * 10;
             }
-            $record = Alat::firstOrNew(['kode_alat' => $alat['kode_alat']]);
-            $record->fill($alat);
-            $record->save();
+            // Create-only: alat yang sudah ada (termasuk yang dihapus lunak) tidak ditimpa stok/harganya
+            if (Alat::withTrashed()->where('kode_alat', $alat['kode_alat'])->exists()) {
+                continue;
+            }
+
+            Alat::create($alat);
         }
     }
 }

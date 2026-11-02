@@ -35,6 +35,8 @@ class DashboardController extends Controller
             'denda_belum_lunas' => $totalDendaTertunggak,
             'denda_tercatat' => $dendaTercatatBelumLunas,
             'estimasi_denda_berjalan' => $estimasiDendaBerjalan,
+            // Sudah dibayar tetapi lewat batas pengambilan: menahan stok sampai sistem membatalkannya sebagai no-show
+            'pesanan_noshow' => Pesanan::where('status', StatusPesanan::Dibayar)->where('batas_ambil', '<', now())->count(),
             'total_alat' => Alat::count(),
             'total_pelanggan' => Pelanggan::count(),
         ];

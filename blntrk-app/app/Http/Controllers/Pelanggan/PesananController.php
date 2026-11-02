@@ -6,20 +6,25 @@ use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BatalRequest;
 use App\Http\Requests\PesananRequest;
+use App\Http\Requests\UbahJadwalRequest;
 use App\Models\Alat;
 use App\Models\Pelanggan;
 use App\Models\Pengaturan;
 use App\Models\Pesanan;
+use App\Services\BuktiTransferService;
 use App\Services\DendaService;
 use App\Services\KeranjangService;
 use App\Services\PaketBundlingService;
+use App\Services\PerubahanPesananService;
 use App\Services\PesananService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PesananController extends Controller
 {
@@ -256,5 +261,55 @@ class PesananController extends Controller
 
         return redirect()->route('pesanan.show', $pesanan->no_resi)
             ->with('status', 'Pesanan berhasil dibatalkan.');
+    }
+
+    /**
+     * Pelanggan mengunggah bukti transfer agar admin tinggal memverifikasi.
+     */
+    public function uploadBukti(Request $request, string $resi, BuktiTransferService $bukti): RedirectResponse
+    {
+        $pesanan = Pesanan::where('no_resi', $resi)->tampilkanUntuk(auth()->user())->firstOrFail();
+
+        $this->authorize('uploadBukti', $pesanan);
+
+        $request->validate([
+            'bukti' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:4096'],
+        ], [
+            'bukti.required' => 'Pilih berkas bukti transfer terlebih dahulu.',
+            'bukti.mimes' => 'Bukti transfer harus berupa gambar (JPG, PNG, WEBP) atau PDF.',
+            'bukti.max' => 'Ukuran bukti transfer maksimal 4 MB.',
+        ]);
+
+        $bukti->simpan($pesanan, $request->file('bukti'), auth()->user());
+
+        return redirect()->route('pesanan.show', $pesanan->no_resi)
+            ->with('status', 'Bukti transfer berhasil diunggah. Admin akan memverifikasi pembayaran Anda.');
+    }
+
+    /**
+     * Menampilkan bukti transfer milik pesanan sendiri.
+     */
+    public function bukti(string $resi, BuktiTransferService $bukti): StreamedResponse
+    {
+        $pesanan = Pesanan::where('no_resi', $resi)->tampilkanUntuk(auth()->user())->firstOrFail();
+
+        $this->authorize('view', $pesanan);
+
+        return $bukti->kirim($pesanan);
+    }
+
+    /**
+     * Pelanggan memindahkan jadwal pesanannya selama pembayaran belum dikonfirmasi.
+     */
+    public function ubahJadwal(UbahJadwalRequest $request, string $resi, PerubahanPesananService $service): RedirectResponse
+    {
+        $pesanan = Pesanan::where('no_resi', $resi)->tampilkanUntuk(auth()->user())->firstOrFail();
+
+        $this->authorize('ubahJadwal', $pesanan);
+
+        $service->ubahJadwal($pesanan, auth()->user(), Carbon::parse($request->input('tanggal_mulai')), Carbon::parse($request->input('tanggal_selesai')));
+
+        return redirect()->route('pesanan.show', $pesanan->no_resi)
+            ->with('status', 'Jadwal pesanan berhasil diubah. Total sewa dihitung ulang sesuai durasi baru.');
     }
 }

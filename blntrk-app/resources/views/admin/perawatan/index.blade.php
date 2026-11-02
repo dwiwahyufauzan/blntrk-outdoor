@@ -176,6 +176,51 @@
         </div>
     </div>
 
+
+    <div class="mt-6 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+            <h3 class="font-extrabold text-sm text-[#0e1b15]">Riwayat Perawatan</h3>
+            <p class="text-[11px] text-slate-400">Setiap unit masuk dan selesai diperbaiki tercatat beserta pelaku dan alasannya.</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Waktu</th>
+                        <th class="px-4 py-3">Alat</th>
+                        <th class="px-4 py-3">Kejadian</th>
+                        <th class="px-4 py-3 text-center">Unit</th>
+                        <th class="px-4 py-3">Keterangan</th>
+                        <th class="px-4 py-3">Petugas</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($riwayat as $r)
+                        <tr>
+                            <td class="px-4 py-3 font-mono text-[11px]">{{ $r->created_at->format('d/m/Y H:i') }}</td>
+                            <td class="px-4 py-3 font-bold">{{ $r->alat?->nama }}</td>
+                            <td class="px-4 py-3">
+                                @if($r->jenis === \App\Models\RiwayatPerawatan::MASUK)
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">MASUK PERAWATAN</span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">SELESAI DIPERBAIKI</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center font-black">{{ $r->jumlah }}</td>
+                            <td class="px-4 py-3 text-slate-500">{{ $r->keterangan }}</td>
+                            <td class="px-4 py-3">{{ $r->user?->nama ?? 'Sistem' }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Belum ada riwayat perawatan.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($riwayat->hasPages())
+            <div class="p-4 border-t border-slate-100">{{ $riwayat->links() }}</div>
+        @endif
+    </div>
+
     <script>
         function updateActionUrl(selectElem) {
             const selectedOption = selectElem.options[selectElem.selectedIndex];

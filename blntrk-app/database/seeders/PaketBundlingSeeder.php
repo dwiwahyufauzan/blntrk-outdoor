@@ -17,7 +17,7 @@ class PaketBundlingSeeder extends Seeder
         // -------------------------------------------------------------
         // PAKET 1: Paket Solo Explorer / Backpacker (1 Orang)
         // -------------------------------------------------------------
-        $p1 = PaketBundling::updateOrCreate(
+        $p1 = PaketBundling::firstOrCreate(
             ['kode_paket' => 'PKT-01'],
             [
                 'nomor_paket' => 1,
@@ -45,7 +45,7 @@ class PaketBundlingSeeder extends Seeder
         // -------------------------------------------------------------
         // PAKET 2: Paket Duo Mountain Adventure (2-3 Orang)
         // -------------------------------------------------------------
-        $p2 = PaketBundling::updateOrCreate(
+        $p2 = PaketBundling::firstOrCreate(
             ['kode_paket' => 'PKT-02'],
             [
                 'nomor_paket' => 2,
@@ -74,7 +74,7 @@ class PaketBundlingSeeder extends Seeder
         // -------------------------------------------------------------
         // PAKET 3: Paket Family & Regu Summit (4-6 Orang)
         // -------------------------------------------------------------
-        $p3 = PaketBundling::updateOrCreate(
+        $p3 = PaketBundling::firstOrCreate(
             ['kode_paket' => 'PKT-03'],
             [
                 'nomor_paket' => 3,
@@ -104,6 +104,11 @@ class PaketBundlingSeeder extends Seeder
 
     private function attachItems(PaketBundling $paket, array $alatQuantities): void
     {
+        // Seeder bersifat create-only: paket yang sudah ada (mungkin sudah diubah admin) tidak ditimpa
+        if (! $paket->wasRecentlyCreated) {
+            return;
+        }
+
         PaketBundlingDetail::where('paket_bundling_id', $paket->id)->delete();
 
         foreach ($alatQuantities as $kode => $qty) {

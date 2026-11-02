@@ -70,7 +70,7 @@
                             <td class="py-3.5 px-5">
                                 <div class="w-12 h-12 rounded-xl bg-stone-100 border border-stone-200 overflow-hidden flex items-center justify-center">
                                     @if($alat->foto)
-                                        <img src="{{ asset('storage/' . $alat->foto) }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
+                                        <img src="{{ $alat->foto_url }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
                                     @else
                                         <svg class="w-5 h-5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>
                                     @endif

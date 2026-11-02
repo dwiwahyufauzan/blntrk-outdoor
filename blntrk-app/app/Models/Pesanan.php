@@ -50,6 +50,10 @@ class Pesanan extends Model
         'dibatalkan_pada',
         'alasan_batal',
         'catatan',
+        'bukti_transfer',
+        'bukti_diunggah_pada',
+        'pengingat_kembali_pada',
+        'pengingat_terlambat_pada',
     ];
 
     protected function casts(): array
@@ -66,6 +70,9 @@ class Pesanan extends Model
             'diskon_paket' => 'decimal:2',
             'diambil_pada' => 'datetime',
             'dibatalkan_pada' => 'datetime',
+            'bukti_diunggah_pada' => 'datetime',
+            'pengingat_kembali_pada' => 'datetime',
+            'pengingat_terlambat_pada' => 'datetime',
         ];
     }
 

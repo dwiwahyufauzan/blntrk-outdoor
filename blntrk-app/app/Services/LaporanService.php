@@ -98,6 +98,65 @@ class LaporanService
     }
 
     /**
+     * Pendapatan sewa bersih pada rentang waktu: pembayaran pesanan yang tidak dibatalkan.
+     * Dipakai dashboard pemilik agar konsisten dengan laporan pendapatan.
+     */
+    public function pendapatanSewaBersih(Carbon $start, Carbon $end): float
+    {
+        return (float) Pembayaran::whereBetween('dibayar_pada', [$start, $end])
+            ->whereHas('pesanan', fn ($q) => $q->where('status', '!=', StatusPesanan::Dibatalkan->value))
+            ->sum('jumlah');
+    }
+
+    /**
+     * Tingkat okupansi per alat: unit-hari yang tersewa dibagi (stok_total x jumlah hari) pada rentang.
+     * Hanya pesanan yang sudah dibayar atau berjalan/selesai yang dihitung.
+     *
+     * @return Collection<int, array{alat: Alat, unit_hari: int, kapasitas_unit_hari: int, persen: float}>
+     */
+    public function okupansiPerAlat(Carbon $dari, Carbon $sampai, int $limit = 8): Collection
+    {
+        $mulai = $dari->copy()->startOfDay();
+        $akhir = $sampai->copy()->startOfDay()->addDay(); // eksklusif
+        $hari = max(1, (int) $mulai->diffInDays($akhir));
+
+        $baris = PesananDetail::query()
+            ->join('pesanan', 'pesanan.id', '=', 'pesanan_detail.pesanan_id')
+            ->whereIn('pesanan.status', [
+                StatusPesanan::Dibayar->value, StatusPesanan::Disewa->value,
+                StatusPesanan::Terlambat->value, StatusPesanan::Dikembalikan->value,
+            ])
+            ->whereNull('pesanan.deleted_at')
+            ->whereDate('pesanan.tanggal_mulai', '<', $akhir->toDateString())
+            ->whereDate('pesanan.tanggal_selesai', '>', $mulai->toDateString())
+            ->get(['pesanan_detail.alat_id', 'pesanan_detail.jumlah', 'pesanan.tanggal_mulai', 'pesanan.tanggal_selesai']);
+
+        $unitHari = [];
+        foreach ($baris as $b) {
+            $m = Carbon::parse($b->tanggal_mulai)->startOfDay()->max($mulai);
+            $s = Carbon::parse($b->tanggal_selesai)->startOfDay()->min($akhir);
+            $overlap = max(0, (int) $m->diffInDays($s));
+            $unitHari[$b->alat_id] = ($unitHari[$b->alat_id] ?? 0) + $overlap * (int) $b->jumlah;
+        }
+
+        return Alat::with('kategori')->where('is_aktif', true)->where('stok_total', '>', 0)->get()
+            ->map(function (Alat $alat) use ($unitHari, $hari) {
+                $kapasitas = (int) $alat->stok_total * $hari;
+                $terpakai = (int) ($unitHari[$alat->id] ?? 0);
+
+                return [
+                    'alat' => $alat,
+                    'unit_hari' => $terpakai,
+                    'kapasitas_unit_hari' => $kapasitas,
+                    'persen' => $kapasitas > 0 ? round(min(100, $terpakai / $kapasitas * 100), 1) : 0.0,
+                ];
+            })
+            ->sortByDesc('persen')
+            ->take($limit)
+            ->values();
+    }
+
+    /**
      * Laporan 3: Denda dan Ganti Rugi
      * Berisi catatan seluruh denda keterlambatan dan kerusakan alat.
      *

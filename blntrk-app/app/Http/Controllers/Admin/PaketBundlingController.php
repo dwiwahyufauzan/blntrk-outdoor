@@ -23,9 +23,9 @@ class PaketBundlingController extends Controller
 
         $paketList = PaketBundling::with(['items.alat'])
             ->when($q, function ($query, $q) {
-                $query->where('nama', 'like', "%{$q}%")
-                    ->orWhere('kode_paket', 'like', "%{$q}%")
-                    ->orWhere('deskripsi', 'like', "%{$q}%");
+                $query->where('nama', 'like', like_pattern($q))
+                    ->orWhere('kode_paket', 'like', like_pattern($q))
+                    ->orWhere('deskripsi', 'like', like_pattern($q));
             })
             ->urut()
             ->paginate(15)

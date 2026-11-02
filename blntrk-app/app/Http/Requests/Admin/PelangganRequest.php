@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\NomorHpIndonesia;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PelangganRequest extends FormRequest
@@ -15,7 +16,7 @@ class PelangganRequest extends FormRequest
     {
         return [
             'nama_lengkap' => ['required', 'string', 'max:100'],
-            'no_hp' => ['required', 'string', 'regex:/^[0-9+\s\-]{10,20}$/'],
+            'no_hp' => ['required', 'string', 'max:20', new NomorHpIndonesia],
             'alamat' => ['required', 'string', 'max:255'],
         ];
     }
@@ -25,7 +26,6 @@ class PelangganRequest extends FormRequest
         return [
             'nama_lengkap.required' => 'Nama lengkap pelanggan wajib diisi.',
             'no_hp.required' => 'Nomor HP/WhatsApp pelanggan wajib diisi.',
-            'no_hp.regex' => 'Format nomor HP tidak valid (10-20 digit angka).',
             'alamat.required' => 'Alamat pelanggan wajib diisi.',
         ];
     }

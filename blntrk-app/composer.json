@@ -9,10 +9,12 @@
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.17",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.13",
         "laravel/breeze": "^2.4",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
@@ -70,6 +72,12 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "analyse": [
+            "./vendor/bin/phpstan analyse --memory-limit=1G --no-progress"
+        ],
+        "lint": [
+            "./vendor/bin/pint --test"
         ]
     },
     "extra": {

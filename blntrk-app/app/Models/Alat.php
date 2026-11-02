@@ -51,6 +51,11 @@ class Alat extends Model
         return $this->hasMany(PesananDetail::class, 'alat_id');
     }
 
+    public function riwayatPerawatan(): HasMany
+    {
+        return $this->hasMany(RiwayatPerawatan::class, 'alat_id');
+    }
+
     public function scopeAktif(Builder $query): Builder
     {
         return $query->where('is_aktif', true);
@@ -130,7 +135,7 @@ class Alat extends Model
     public function getFotoUrlAttribute(): ?string
     {
         if ($this->foto) {
-            return asset('storage/'.$this->foto);
+            return foto_url($this->foto);
         }
 
         return null;

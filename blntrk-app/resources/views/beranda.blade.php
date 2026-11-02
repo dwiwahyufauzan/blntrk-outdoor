@@ -220,7 +220,7 @@
             @forelse($alatUnggulan as $alat)
                 @php
                     $imgSrc = $alat->foto 
-                        ? asset('storage/' . $alat->foto) 
+                        ? $alat->foto_url 
                         : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
                     $stokTersedia = $alat->stok_tersedia;
                 @endphp

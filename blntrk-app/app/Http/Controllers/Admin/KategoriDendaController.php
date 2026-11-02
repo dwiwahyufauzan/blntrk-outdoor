@@ -22,9 +22,9 @@ class KategoriDendaController extends Controller
         $kategoriList = KategoriDenda::withCount('denda')
             ->when($q, function ($query, $q) {
                 $query->where(function ($sub) use ($q) {
-                    $sub->where('nama', 'like', "%{$q}%")
-                        ->orWhere('kode', 'like', "%{$q}%")
-                        ->orWhere('deskripsi', 'like', "%{$q}%");
+                    $sub->where('nama', 'like', like_pattern($q))
+                        ->orWhere('kode', 'like', like_pattern($q))
+                        ->orWhere('deskripsi', 'like', like_pattern($q));
                 });
             })
             ->when($jenis, fn ($query, $j) => $query->where('jenis', $j))

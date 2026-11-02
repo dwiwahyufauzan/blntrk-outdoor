@@ -12,19 +12,31 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        $produksi = app()->environment('production');
+
         // Di produksi wajib menetapkan SEED_DEFAULT_PASSWORD; kata sandi bawaan 'password' hanya untuk lokal/testing.
         $sandi = env('SEED_DEFAULT_PASSWORD');
-        if (app()->environment('production') && blank($sandi)) {
+        if ($produksi && blank($sandi)) {
             throw new \RuntimeException('Set SEED_DEFAULT_PASSWORD pada .env sebelum menjalankan UserSeeder di production.');
         }
         $sandi = $sandi ?: 'password';
+
         $rolePemilik = Role::where('nama', 'pemilik')->firstOrFail();
         $roleAdmin = Role::where('nama', 'admin')->firstOrFail();
         $rolePelanggan = Role::where('nama', 'pelanggan')->firstOrFail();
 
-        // 1. Akun Pemilik
+        // Produksi: akun awal hanya dibuat pada instalasi pertama (tabel users kosong). Tanpa pengaman ini,
+        // setiap restart container akan menghidupkan kembali akun seeder (mis. bila email pemilik sudah diganti
+        // atau akun admin dihapus) dengan kata sandi bawaan.
+        if ($produksi && User::query()->exists()) {
+            return;
+        }
+
+        $demo = ! $produksi || filter_var(env('SEED_DEMO'), FILTER_VALIDATE_BOOLEAN);
+
+        // 1. Akun Pemilik (email dapat diatur lewat SEED_OWNER_EMAIL agar tidak memakai domain .test di produksi)
         User::firstOrCreate(
-            ['email' => 'pemilik@blntrk.test'],
+            ['email' => env('SEED_OWNER_EMAIL') ?: 'pemilik@blntrk.test'],
             [
                 'role_id' => $rolePemilik->id,
                 'nama' => 'Haji Dadan (Pemilik)',
@@ -35,7 +47,7 @@ class UserSeeder extends Seeder
 
         // 2. Akun Admin / Kasir Toko
         User::firstOrCreate(
-            ['email' => 'admin@blntrk.test'],
+            ['email' => env('SEED_ADMIN_EMAIL') ?: 'admin@blntrk.test'],
             [
                 'role_id' => $roleAdmin->id,
                 'nama' => 'Dwi Wahyu (Admin Toko)',
@@ -43,6 +55,11 @@ class UserSeeder extends Seeder
                 'is_aktif' => true,
             ]
         );
+
+        // Akun pelanggan contoh hanya untuk lokal/testing atau demo (SEED_DEMO=true)
+        if (! $demo) {
+            return;
+        }
 
         // 3. Akun Pelanggan Terdaftar 1
         $userPelanggan1 = User::firstOrCreate(

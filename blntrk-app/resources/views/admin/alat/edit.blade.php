@@ -60,6 +60,19 @@
                 @enderror
             </div>
 
+            <!-- Varian Alat -->
+            <div>
+                <label for="varian" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5">
+                    Varian / Kapasitas
+                </label>
+                <input type="text" id="varian" name="varian" value="{{ old('varian', $alat->varian) }}" maxlength="50"
+                    placeholder="Contoh: Kapasitas 4 Orang"
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                @error('varian')
+                    <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Tarif Sewa -->
                 <div>
@@ -121,7 +134,7 @@
                 <div class="flex items-start gap-4">
                     <div class="w-24 h-24 rounded-2xl bg-stone-100 border border-stone-200 overflow-hidden flex items-center justify-center shrink-0">
                         @if($alat->foto)
-                            <img id="preview-img" src="{{ asset('storage/' . $alat->foto) }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
+                            <img id="preview-img" src="{{ $alat->foto_url }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
                             <span id="preview-placeholder" class="text-stone-300 hidden">
                                 <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>
                             </span>

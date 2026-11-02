@@ -51,7 +51,7 @@ class KeranjangService
 
         $cart = $this->getRaw();
         $current = $cart[$alatId] ?? 0;
-        $maxStok = $alat->stok_tersedia;
+        $maxStok = $this->stokUntukJadwal($alat);
 
         if ($maxStok <= 0 || $current >= $maxStok) {
             return false;
@@ -66,6 +66,21 @@ class KeranjangService
         $this->saveRaw($cart);
 
         return true;
+    }
+
+    /**
+     * Stok yang benar-benar tersedia sepanjang jadwal sewa aktif di keranjang. Memakai ketersediaan per tanggal,
+     * bukan stok global, agar pesanan yang tanggalnya tidak bentrok tidak ikut mengurangi batas keranjang.
+     */
+    protected function stokUntukJadwal(Alat $alat): int
+    {
+        $jadwal = $this->getJadwal();
+
+        return $this->ketersediaan->tersedia(
+            $alat,
+            Carbon::parse($jadwal['mulai'])->startOfDay(),
+            Carbon::parse($jadwal['selesai'])->startOfDay()
+        );
     }
 
     /**
@@ -84,7 +99,7 @@ class KeranjangService
         foreach ($paket->items as $item) {
             $nama = $item->alat?->nama ?? 'Alat tidak tersedia';
 
-            if ($item->alat && $item->alat->is_aktif && $item->alat->stok_tersedia >= $item->jumlah
+            if ($item->alat && $item->alat->is_aktif && $this->stokUntukJadwal($item->alat) >= $item->jumlah
                 && $this->tambah($item->alat_id, $item->jumlah)) {
                 $ditambahkan++;
             } else {
@@ -107,10 +122,11 @@ class KeranjangService
         } else {
             $alat = Alat::where('is_aktif', true)->find($alatId);
             if ($alat) {
-                if ($alat->stok_tersedia <= 0) {
+                $stok = $this->stokUntukJadwal($alat);
+                if ($stok <= 0) {
                     unset($cart[$alatId]);
                 } else {
-                    $cart[$alatId] = min($alat->stok_tersedia, $jumlah);
+                    $cart[$alatId] = min($stok, $jumlah);
                 }
             }
         }
@@ -156,6 +172,8 @@ class KeranjangService
             ->get()
             ->keyBy('id');
 
+        $tersediaMap = $this->ketersediaan->tersediaBanyak($alatList, $mulai, $selesai);
+
         $result = collect();
 
         foreach ($cart as $alatId => $jumlah) {
@@ -164,7 +182,7 @@ class KeranjangService
                 continue;
             }
 
-            $stokTersedia = $this->ketersediaan->tersedia($alat, $mulai, $selesai);
+            $stokTersedia = $tersediaMap[$alat->id] ?? 0;
             $subtotalPerHari = (float) $alat->harga_per_hari * $jumlah;
             $subtotalTotal = $subtotalPerHari * $durasi;
 

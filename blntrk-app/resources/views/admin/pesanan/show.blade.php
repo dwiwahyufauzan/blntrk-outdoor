@@ -3,8 +3,10 @@
 
     <div x-data="{
         showModalBayar: {{ $errors->has('jumlah') || $errors->has('metode') ? 'true' : 'false' }},
-        showModalAmbil: {{ $errors->has('jenis_jaminan') || $errors->has('nomor_identitas') ? 'true' : 'false' }},
+        showModalAmbil: {{ $errors->has('jenis_jaminan') || $errors->has('nomor_identitas') || $errors->has('nominal_deposit') ? 'true' : 'false' }},
         showModalBatal: {{ $errors->has('alasan_batal') ? 'true' : 'false' }},
+        showModalJadwal: {{ $errors->has('tanggal_mulai') ? 'true' : 'false' }},
+        showModalPerpanjang: {{ $errors->has('tanggal_selesai') && $pesanan->status === \App\Enums\StatusPesanan::Disewa ? 'true' : 'false' }},
         showModalTambahDenda: {{ $errors->has('kategori_denda_id') ? 'true' : 'false' }},
         kategoriDendaId: '{{ old('kategori_denda_id', '') }}',
         jumlahDenda: '{{ old('jumlah', '') }}',
@@ -167,6 +169,22 @@
                         <span>Proses Pengembalian</span>
                     </a>
                 @endif
+
+                @can('perpanjang', $pesanan)
+                    <button type="button" @click="showModalPerpanjang = true"
+                            class="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span>Perpanjang Sewa</span>
+                    </button>
+                @endcan
+
+                @can('ubahJadwal', $pesanan)
+                    <button type="button" @click="showModalJadwal = true"
+                            class="px-3.5 py-2 rounded-xl bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200 text-xs font-bold transition inline-flex items-center gap-1 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Ubah Jadwal</span>
+                    </button>
+                @endcan
 
                 @can('batal', $pesanan)
                     <button type="button" @click="showModalBatal = true"
@@ -362,27 +380,28 @@
                             @endif
                         </div>
 
-                        @if($pembayaran)
+                        @if($pesanan->pembayaran->isNotEmpty())
+                            @php $totalDibayar = (float) $pesanan->pembayaran->sum('jumlah'); @endphp
                             <div class="space-y-2 text-xs">
-                                <div class="flex justify-between py-1 border-b border-stone-100">
-                                    <span class="text-stone-500">Nominal Lunas:</span>
-                                    <span class="font-bold text-stone-900 font-mono">Rp{{ number_format($pembayaran->jumlah, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-stone-100">
-                                    <span class="text-stone-500">Metode:</span>
-                                    <span class="font-bold text-stone-800">{{ $pembayaran->metode->label() }}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-stone-100">
-                                    <span class="text-stone-500">Waktu Bayar:</span>
-                                    <span class="font-mono text-stone-800">{{ $pembayaran->dibayar_pada->format('d/m/Y H:i') }} WIB</span>
-                                </div>
-                                <div class="flex justify-between py-1">
-                                    <span class="text-stone-500">Dicatat Oleh:</span>
-                                    <span class="font-bold text-[#14201a]">{{ $pembayaran->pencatat?->nama ?? 'Admin' }}</span>
-                                </div>
-                                @if($pembayaran->catatan)
-                                    <div class="pt-2 text-[11px] text-stone-500 italic">
-                                        Catatan: "{{ $pembayaran->catatan }}"
+                                @foreach($pesanan->pembayaran as $bayar)
+                                    <div class="py-1 border-b border-stone-100">
+                                        <div class="flex justify-between">
+                                            <span class="text-stone-500">{{ ($bayar->jenis ?? 'sewa') === 'perpanjangan' ? 'Perpanjangan' : 'Pembayaran Sewa' }}:</span>
+                                            <span class="font-bold text-stone-900 font-mono">Rp{{ number_format($bayar->jumlah, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="flex justify-between text-[11px] text-stone-500 mt-0.5">
+                                            <span>{{ $bayar->metode->label() }} &bull; {{ $bayar->dibayar_pada->format('d/m/Y H:i') }} WIB</span>
+                                            <span>{{ $bayar->pencatat?->nama ?? 'Admin' }}</span>
+                                        </div>
+                                        @if($bayar->catatan)
+                                            <div class="text-[11px] text-stone-500 italic">"{{ $bayar->catatan }}"</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                                @if($pesanan->pembayaran->count() > 1)
+                                    <div class="flex justify-between pt-1">
+                                        <span class="text-stone-500">Total Diterima:</span>
+                                        <span class="font-black text-stone-900 font-mono">Rp{{ number_format($totalDibayar, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -390,6 +409,16 @@
                             <div class="py-4 text-center text-xs text-stone-400">
                                 Pembayaran belum dicatat oleh kasir toko.
                             </div>
+                        @endif
+
+                        @if($pesanan->bukti_transfer)
+                            <div class="mt-3 p-3 rounded-xl bg-sky-50 border border-sky-200 text-[11px] text-sky-900 flex items-center justify-between gap-2">
+                                <span>Bukti transfer diunggah {{ $pesanan->bukti_diunggah_pada?->format('d/m/Y H:i') }} WIB</span>
+                                <a href="{{ route('admin.pesanan.bukti', $pesanan->id) }}" target="_blank" rel="noopener"
+                                   class="px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-bold">Lihat Bukti</a>
+                            </div>
+                        @elseif($pesanan->status === \App\Enums\StatusPesanan::Menunggu)
+                            <div class="mt-3 text-[11px] text-stone-400 text-center">Pelanggan belum mengunggah bukti transfer.</div>
                         @endif
                     </div>
 
@@ -431,12 +460,14 @@
                             <div class="space-y-2 text-xs">
                                 <div class="flex justify-between py-1 border-b border-stone-100">
                                     <span class="text-stone-500">Jenis Jaminan:</span>
-                                    <span class="font-bold text-stone-900">{{ $jaminan->jenis->label() }}</span>
+                                    <span class="font-bold text-stone-900">{{ $jaminan->label_jenis }}</span>
                                 </div>
+                                @unless($jaminan->is_deposit)
                                 <div class="flex justify-between py-1 border-b border-stone-100">
                                     <span class="text-stone-500">No. Identitas:</span>
                                     <span class="font-mono font-black text-stone-800 tracking-wider">{{ $jaminan->nomor_identitas_samar }}</span>
                                 </div>
+                                @endunless
                                 <div class="flex justify-between py-1 border-b border-stone-100">
                                     <span class="text-stone-500">Diterima Pada:</span>
                                     <span class="font-mono text-stone-800">{{ $jaminan->diterima_pada->format('d/m/Y H:i') }} WIB</span>
@@ -871,12 +902,13 @@
                     
                     <div>
                         <label class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-2">Jenis Kartu Identitas Fisik yang Dititipkan</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                             @foreach([
                                 'ktp' => 'KTP',
                                 'sim' => 'SIM',
                                 'kartu_pelajar' => 'K. Pelajar',
-                                'lainnya' => 'Lainnya'
+                                'lainnya' => 'Lainnya',
+                                'deposit' => 'Deposit Uang',
                             ] as $val => $lbl)
                                 <label class="border rounded-xl p-2.5 cursor-pointer flex flex-col items-center justify-center text-center transition"
                                        :class="jenisJaminan === '{{ $val }}' ? 'border-[#0e1b15] bg-[#5edd5b]/15 text-[#0e1b15] font-extrabold' : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'">
@@ -887,11 +919,21 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div x-show="jenisJaminan === 'deposit'" x-cloak>
+                        <label for="nominal_deposit" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">
+                            Nominal Deposit (Rp) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" id="nominal_deposit" name="nominal_deposit" min="1000" step="1000" :disabled="jenisJaminan !== 'deposit'" :required="jenisJaminan === 'deposit'"
+                               value="{{ old('nominal_deposit') }}" placeholder="Contoh: 200000"
+                               class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                        <p class="mt-1 text-[10px] text-stone-500">Uang dititipkan sebagai pengganti kartu identitas dan ditahan selama masih ada denda.</p>
+                    </div>
+
+                    <div x-show="jenisJaminan !== 'deposit'">
                         <label for="nomor_identitas" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">
                             Nomor Kartu Identitas Fisik <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" id="nomor_identitas" name="nomor_identitas" required placeholder="Contoh: 3204123456780001"
+                        <input type="text" id="nomor_identitas" name="nomor_identitas" :required="jenisJaminan !== 'deposit'" :disabled="jenisJaminan === 'deposit'" placeholder="Contoh: 3204123456780001"
                                class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
                         <div class="mt-1.5 p-2.5 rounded-xl bg-amber-50 border border-amber-200/70 text-[10px] text-amber-900 flex items-start gap-2">
                             <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -970,6 +1012,80 @@
                 </form>
             </div>
         </div>
+
+        <!-- =================== MODAL: UBAH JADWAL =================== -->
+        @can('ubahJadwal', $pesanan)
+        <div x-show="showModalJadwal" x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div @click.away="showModalJadwal = false"
+                 class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-stone-200/90 relative">
+                <h3 class="text-base font-extrabold text-[#14201a] bl-d">Ubah Jadwal Sewa</h3>
+                <span class="text-[11px] text-stone-500 block mb-4">Resi {{ $pesanan->no_resi }} &bull; ketersediaan stok dicek ulang untuk tanggal baru</span>
+                <form method="POST" action="{{ route('admin.pesanan.jadwal', $pesanan->id) }}" class="space-y-4">
+                    @csrf
+                    @method('PATCH')
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="jadwal_mulai" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">Tanggal Mulai</label>
+                            <input type="date" id="jadwal_mulai" name="tanggal_mulai" required min="{{ today()->toDateString() }}" value="{{ old('tanggal_mulai', $pesanan->tanggal_mulai->toDateString()) }}"
+                                   class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                        </div>
+                        <div>
+                            <label for="jadwal_selesai" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">Tanggal Selesai</label>
+                            <input type="date" id="jadwal_selesai" name="tanggal_selesai" required value="{{ old('tanggal_selesai', $pesanan->tanggal_selesai->toDateString()) }}"
+                                   class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                        </div>
+                    </div>
+                    @if($pesanan->status === \App\Enums\StatusPesanan::Dibayar)
+                        <p class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900">Pesanan sudah dibayar, sehingga durasi harus tetap {{ $pesanan->durasi_hari }} hari.</p>
+                    @else
+                        <p class="text-[11px] text-stone-500">Total sewa dihitung ulang sesuai durasi baru.</p>
+                    @endif
+                    <div class="pt-3 flex items-center justify-end gap-2 border-t border-stone-100">
+                        <button type="button" @click="showModalJadwal = false" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">Tutup</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-sm transition">Simpan Jadwal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endcan
+
+        <!-- =================== MODAL: PERPANJANG SEWA =================== -->
+        @can('perpanjang', $pesanan)
+        <div x-show="showModalPerpanjang" x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div @click.away="showModalPerpanjang = false"
+                 class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-stone-200/90 relative">
+                <h3 class="text-base font-extrabold text-[#14201a] bl-d">Perpanjang Sewa</h3>
+                <span class="text-[11px] text-stone-500 block mb-4">Resi {{ $pesanan->no_resi }} &bull; selesai saat ini {{ $pesanan->tanggal_selesai->format('d/m/Y') }}, tarif harian Rp{{ number_format($pesanan->tarif_harian, 0, ',', '.') }}</span>
+                <form method="POST" action="{{ route('admin.pesanan.perpanjang', $pesanan->id) }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label for="perpanjang_selesai" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">Tanggal Selesai Baru</label>
+                        <input type="date" id="perpanjang_selesai" name="tanggal_selesai" required min="{{ $pesanan->tanggal_selesai->copy()->addDay()->toDateString() }}" value="{{ old('tanggal_selesai') }}"
+                               class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                    </div>
+                    <div>
+                        <label for="perpanjang_metode" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">Pembayaran Tambahan</label>
+                        <select id="perpanjang_metode" name="metode" required class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                            <option value="tunai">Tunai di Toko</option>
+                            <option value="transfer">Transfer Bank Manual</option>
+                        </select>
+                        <p class="mt-1 text-[10px] text-stone-500">Selisih biaya dihitung otomatis (termasuk diskon paket) dan dicatat sebagai pembayaran perpanjangan. Stok dicek pada hari tambahan.</p>
+                    </div>
+                    <div>
+                        <label for="perpanjang_catatan" class="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">Catatan (Opsional)</label>
+                        <input type="text" id="perpanjang_catatan" name="catatan" maxlength="255" value="{{ old('catatan') }}"
+                               class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
+                    </div>
+                    <div class="pt-3 flex items-center justify-end gap-2 border-t border-stone-100">
+                        <button type="button" @click="showModalPerpanjang = false" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition">Tutup</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold shadow-sm transition">Perpanjang & Catat Pembayaran</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endcan
 
         <!-- =================== MODAL: TAMBAH DENDA MANUAL =================== -->
         <div x-show="showModalTambahDenda"

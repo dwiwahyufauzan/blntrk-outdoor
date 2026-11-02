@@ -17,6 +17,7 @@ class Pembayaran extends Model
         'pesanan_id',
         'jumlah',
         'metode',
+        'jenis',
         'dibayar_pada',
         'dicatat_oleh',
         'catatan',

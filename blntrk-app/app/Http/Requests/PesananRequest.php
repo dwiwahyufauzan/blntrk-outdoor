@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Pengaturan;
+use App\Rules\NomorHpIndonesia;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,7 +36,7 @@ class PesananRequest extends FormRequest
 
         // Pengguna tanpa profil pelanggan wajib melengkapi kontak (dipakai untuk pengingat WhatsApp)
         if (! $this->user()?->pelanggan) {
-            $rules['no_hp'] = ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]{8,20}$/'];
+            $rules['no_hp'] = ['required', 'string', 'max:20', new NomorHpIndonesia];
             $rules['alamat'] = ['required', 'string', 'max:500'];
         }
 
@@ -53,8 +55,10 @@ class PesananRequest extends FormRequest
                     $selesai = Carbon::parse($this->input('tanggal_selesai'))->startOfDay();
                     $durasi = $mulai->diffInDays($selesai);
 
-                    if ($durasi > 14) {
-                        $v->errors()->add('tanggal_selesai', 'Durasi sewa maksimal adalah 14 hari.');
+                    $maksDurasi = Pengaturan::maksDurasiHari();
+
+                    if ($durasi > $maksDurasi) {
+                        $v->errors()->add('tanggal_selesai', "Durasi sewa maksimal adalah {$maksDurasi} hari.");
                     }
                 } catch (\Exception) {
                     $v->errors()->add('tanggal_mulai', 'Format tanggal tidak valid.');
@@ -85,7 +89,6 @@ class PesananRequest extends FormRequest
             'items.*.jumlah.max' => 'Jumlah unit sewa maksimal 50 unit per baris.',
             'catatan.max' => 'Catatan pesanan maksimal 500 karakter.',
             'no_hp.required' => 'Nomor WhatsApp / HP wajib diisi untuk melengkapi profil pelanggan.',
-            'no_hp.regex' => 'Format nomor HP tidak valid.',
             'alamat.required' => 'Alamat wajib diisi untuk melengkapi profil pelanggan.',
         ];
     }

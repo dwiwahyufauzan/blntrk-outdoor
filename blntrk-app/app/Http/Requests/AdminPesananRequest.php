@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Pengaturan;
+use App\Rules\NomorHpIndonesia;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -37,7 +39,7 @@ class AdminPesananRequest extends FormRequest
             $rules['pelanggan_id'] = ['required', 'integer', 'exists:pelanggan,id'];
         } else {
             $rules['nama_lengkap'] = ['required', 'string', 'max:100'];
-            $rules['no_hp'] = ['required', 'string', 'max:20'];
+            $rules['no_hp'] = ['required', 'string', 'max:20', new NomorHpIndonesia];
             $rules['alamat'] = ['required', 'string', 'max:500'];
         }
 
@@ -56,8 +58,10 @@ class AdminPesananRequest extends FormRequest
                     $selesai = Carbon::parse($this->input('tanggal_selesai'))->startOfDay();
                     $durasi = $mulai->diffInDays($selesai);
 
-                    if ($durasi > 14) {
-                        $v->errors()->add('tanggal_selesai', 'Durasi sewa maksimal adalah 14 hari.');
+                    $maksDurasi = Pengaturan::maksDurasiHari();
+
+                    if ($durasi > $maksDurasi) {
+                        $v->errors()->add('tanggal_selesai', "Durasi sewa maksimal adalah {$maksDurasi} hari.");
                     }
                 } catch (\Exception) {
                     $v->errors()->add('tanggal_mulai', 'Format tanggal tidak valid.');

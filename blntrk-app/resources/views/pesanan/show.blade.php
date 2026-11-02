@@ -294,6 +294,53 @@
                             </div>
                         </div>
                     @endif
+
+                    @if($pesanan->status === \App\Enums\StatusPesanan::Menunggu)
+                        <div class="mt-3 p-4 sm:p-5 rounded-2xl bg-white border border-stone-200 text-xs text-stone-800">
+                            <span class="font-extrabold block mb-1">Bukti Transfer</span>
+                            @if($pesanan->bukti_transfer)
+                                <p class="text-[11px] text-stone-600 mb-2">
+                                    Terunggah {{ $pesanan->bukti_diunggah_pada?->format('d/m/Y H:i') }} WIB &mdash; menunggu verifikasi admin.
+                                    <a href="{{ route('pesanan.bukti', $pesanan->no_resi) }}" target="_blank" rel="noopener" class="font-bold underline">Lihat</a>
+                                </p>
+                            @else
+                                <p class="text-[11px] text-stone-600 mb-2">Bayar lewat transfer? Unggah bukti agar admin dapat memverifikasi lebih cepat (JPG/PNG/WEBP/PDF, maks. 4 MB).</p>
+                            @endif
+                            @can('uploadBukti', $pesanan)
+                                <form method="POST" action="{{ route('pesanan.bukti.upload', $pesanan->no_resi) }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-2">
+                                    @csrf
+                                    <input type="file" name="bukti" accept=".jpg,.jpeg,.png,.webp,.pdf" required
+                                           class="flex-1 text-xs rounded-xl border border-stone-300 bg-white file:mr-3 file:py-2 file:px-3 file:border-0 file:bg-stone-100 file:font-bold">
+                                    <button type="submit" class="px-4 py-2 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#5edd5b] text-xs font-black transition">
+                                        {{ $pesanan->bukti_transfer ? 'Ganti Bukti' : 'Unggah Bukti' }}
+                                    </button>
+                                </form>
+                            @endcan
+                        </div>
+                    @endif
+
+                    @can('ubahJadwal', $pesanan)
+                        <details class="mt-3 p-4 sm:p-5 rounded-2xl bg-white border border-stone-200 text-xs text-stone-800" {{ $errors->has('tanggal_mulai') || $errors->has('tanggal_selesai') ? 'open' : '' }}>
+                            <summary class="font-extrabold cursor-pointer">Ubah Jadwal Sewa</summary>
+                            <form method="POST" action="{{ route('pesanan.jadwal', $pesanan->no_resi) }}" class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+                                @csrf
+                                @method('PATCH')
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-500 uppercase mb-1" for="jadwal_mulai">Mulai</label>
+                                    <input type="date" id="jadwal_mulai" name="tanggal_mulai" required min="{{ today()->toDateString() }}" value="{{ old('tanggal_mulai', $pesanan->tanggal_mulai->toDateString()) }}"
+                                           class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15]">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-500 uppercase mb-1" for="jadwal_selesai">Selesai</label>
+                                    <input type="date" id="jadwal_selesai" name="tanggal_selesai" required value="{{ old('tanggal_selesai', $pesanan->tanggal_selesai->toDateString()) }}"
+                                           class="w-full text-xs rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15]">
+                                </div>
+                                <button type="submit" class="px-4 py-2.5 rounded-xl bg-[#0e1b15] hover:bg-[#1e3a2c] text-[#5edd5b] text-xs font-black transition">Simpan Jadwal</button>
+                                <p class="sm:col-span-3 text-[11px] text-stone-500">Total sewa dihitung ulang sesuai durasi baru dan ketersediaan alat dicek ulang.</p>
+                            </form>
+                        </details>
+                    @endcan
+
                 </div>
             </div>
 
@@ -320,7 +367,7 @@
                                     <div class="flex items-center gap-3.5">
                                         <div class="w-12 h-12 rounded-2xl bg-stone-100 border border-stone-200/80 flex items-center justify-center text-stone-500 shrink-0">
                                             @if($item->alat->foto)
-                                                <img src="{{ asset('storage/' . $item->alat->foto) }}" alt="{{ $item->alat->nama }}" class="w-full h-full object-cover rounded-2xl">
+                                                <img src="{{ $item->alat->foto_url }}" alt="{{ $item->alat->nama }}" class="w-full h-full object-cover rounded-2xl">
                                             @else
                                                 <svg class="w-6 h-6 text-stone-400" viewBox="0 0 24 24" fill="currentColor">
                                                     <path d="M14 6l4 8h-3l2 4H7l4-7 2 3 1-2v-6zm0-4L9 11l-3-5L1 18h22L14 2z"/>
@@ -431,7 +478,7 @@
                                         <div class="space-y-1 text-stone-600">
                                             <div class="flex justify-between">
                                                 <span class="text-stone-400">Jenis Kartu:</span>
-                                                <span class="font-bold text-stone-900">{{ is_string($pesanan->jaminan->jenis) ? strtoupper($pesanan->jaminan->jenis) : $pesanan->jaminan->jenis->label() }}</span>
+                                                <span class="font-bold text-stone-900">{{ $pesanan->jaminan->label_jenis }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-stone-400">No. Samar:</span>

@@ -30,7 +30,11 @@ class PesananService
      */
     public function buat(Pelanggan $pelanggan, User $pembuat, array $data): Pesanan
     {
-        return DB::transaction(function () use ($pelanggan, $pembuat, $data) {
+        // Dibaca sebelum transaksi: cache bertipe database menulis baris saat miss, dan itu tidak boleh
+        // terjadi di dalam bagian kritis yang memegang kunci baris alat.
+        $jamKembali = Pengaturan::ambil('jam_kembali', '12:00');
+
+        return DB::transaction(function () use ($pelanggan, $pembuat, $data, $jamKembali) {
             $mulai = Carbon::parse($data['tanggal_mulai'])->startOfDay();
             $selesai = Carbon::parse($data['tanggal_selesai'])->startOfDay();
             $durasi = max(1, (int) $mulai->diffInDays($selesai));
@@ -88,7 +92,6 @@ class PesananService
             $diskon = min((float) $diskonPaket['diskon'], (float) $total);
             $total -= $diskon;
 
-            $jamKembali = Pengaturan::ambil('jam_kembali', '12:00');
             $jatuhTempo = $selesai->copy()->setTimeFromTimeString($jamKembali);
             $batasAmbil = $mulai->copy()->setTime(23, 59, 59);
 
@@ -241,20 +244,35 @@ class PesananService
             $p = Pesanan::lockForUpdate()->findOrFail($p->id);
             $this->pastikan($p, [StatusPesanan::Dibayar]);
 
-            $rawNomor = preg_replace('/\D/', '', (string) ($d['nomor_identitas'] ?? ''));
-            if (strlen($rawNomor) < 4) {
-                throw ValidationException::withMessages([
-                    'nomor_identitas' => 'Nomor identitas harus memiliki minimal 4 digit angka.',
-                ]);
-            }
+            $deposit = ($d['jenis_jaminan'] ?? $d['jenis'] ?? null) === 'deposit';
+            $nominal = null;
 
-            $nomorSamar = '****'.substr($rawNomor, -4);
-            $jenis = $d['jenis_jaminan'] ?? $d['jenis'] ?? 'ktp';
+            if ($deposit) {
+                $nominal = round((float) ($d['nominal_deposit'] ?? 0), 2);
+                if ($nominal <= 0) {
+                    throw ValidationException::withMessages([
+                        'nominal_deposit' => 'Nominal deposit uang wajib diisi dan lebih dari nol.',
+                    ]);
+                }
+                $nomorSamar = 'DEPOSIT';
+                $jenis = 'lainnya';
+            } else {
+                $rawNomor = preg_replace('/\D/', '', (string) ($d['nomor_identitas'] ?? ''));
+                if (strlen($rawNomor) < 4) {
+                    throw ValidationException::withMessages([
+                        'nomor_identitas' => 'Nomor identitas harus memiliki minimal 4 digit angka.',
+                    ]);
+                }
+
+                $nomorSamar = '****'.substr($rawNomor, -4);
+                $jenis = $d['jenis_jaminan'] ?? $d['jenis'] ?? 'ktp';
+            }
 
             $p->jaminan()->create([
                 'jenis' => $jenis,
                 'nomor_identitas_samar' => $nomorSamar,
                 'keterangan' => $d['keterangan'] ?? null,
+                'nominal' => $nominal,
                 'status' => 'dititipkan',
                 'diterima_pada' => now(),
                 'diterima_oleh' => $admin->id,
@@ -269,7 +287,8 @@ class PesananService
             LogAktivitas::catat(
                 $admin,
                 'pesanan.ambil',
-                "Pengambilan barang / serah terima pesanan {$p->no_resi} dengan jaminan {$jenis} ({$nomorSamar})"
+                "Pengambilan barang / serah terima pesanan {$p->no_resi} dengan jaminan "
+                    .($deposit ? 'deposit uang Rp'.number_format($nominal, 0, ',', '.') : "{$jenis} ({$nomorSamar})")
             );
         });
     }
@@ -329,70 +348,20 @@ class PesananService
     }
 
     /**
-     * Memeriksa dan membatalkan pesanan yang melewati batas waktu pengambilan (batas_ambil).
-     * Sesuai BB-51 (Scheduler / Task).
+     * Memeriksa dan membatalkan pesanan menunggu yang melewati batas waktu pengambilan (batas_ambil).
+     * Sesuai BB-51 (Scheduler / Task). Logika sebenarnya ada di PesananStatusSyncService.
      */
     public function batalkanKadaluarsa(): int
     {
-        return $this->batalkanMenungguKadaluarsa(now());
+        return app(PesananStatusSyncService::class)->batalkanMenungguKadaluarsa(now());
     }
 
     /**
-     * Memperbarui status pesanan secara reaktif:
-     * - Pesanan disewa yang melewati jatuh_tempo + toleransi -> terlambat
-     * - Pesanan menunggu yang melewati batas_ambil -> dibatalkan
-     * Setiap perubahan dicatat pada log aktivitas (audit trail, pelaku: sistem).
+     * Menjalankan seluruh sinkronisasi status otomatis (terlambat, kedaluwarsa, no-show).
+     * Dipertahankan sebagai pintu masuk lama; implementasi ada di PesananStatusSyncService.
      */
     public function sinkronStatus(): int
     {
-        $now = now();
-        $toleransi = (int) Pengaturan::ambil('toleransi_menit', 60);
-        $batasTerlambat = $now->copy()->subMinutes($toleransi);
-
-        $terlambatCount = 0;
-        $kandidat = Pesanan::where('status', StatusPesanan::Disewa)
-            ->where('jatuh_tempo', '<', $batasTerlambat)
-            ->pluck('id');
-
-        foreach ($kandidat as $id) {
-            DB::transaction(function () use ($id, $batasTerlambat, &$terlambatCount) {
-                $p = Pesanan::lockForUpdate()->find($id);
-                if ($p && $p->status === StatusPesanan::Disewa && $p->jatuh_tempo < $batasTerlambat) {
-                    $p->update(['status' => StatusPesanan::Terlambat]);
-                    LogAktivitas::catat(null, 'pesanan.terlambat', "Pesanan [{$p->no_resi}] ditandai terlambat otomatis oleh sistem", 'pesanan', $p->id);
-                    $terlambatCount++;
-                }
-            });
-        }
-
-        return $terlambatCount + $this->batalkanMenungguKadaluarsa($now);
-    }
-
-    /**
-     * Membatalkan pesanan berstatus menunggu yang melewati batas_ambil, per baris dengan lock + log.
-     */
-    private function batalkanMenungguKadaluarsa(Carbon $now): int
-    {
-        $count = 0;
-        $kandidat = Pesanan::where('status', StatusPesanan::Menunggu)
-            ->where('batas_ambil', '<', $now)
-            ->pluck('id');
-
-        foreach ($kandidat as $id) {
-            DB::transaction(function () use ($id, $now, &$count) {
-                $p = Pesanan::lockForUpdate()->find($id);
-                if ($p && $p->status === StatusPesanan::Menunggu && $p->batas_ambil < $now) {
-                    $p->update([
-                        'status' => StatusPesanan::Dibatalkan,
-                        'dibatalkan_pada' => $now,
-                        'alasan_batal' => 'Dibatalkan otomatis oleh sistem: melewati batas waktu pengambilan',
-                    ]);
-                    LogAktivitas::catat(null, 'pesanan.batal', "Pesanan [{$p->no_resi}] dibatalkan otomatis oleh sistem (melewati batas pengambilan)", 'pesanan', $p->id);
-                    $count++;
-                }
-            });
-        }
-
-        return $count;
+        return app(PesananStatusSyncService::class)->sinkron();
     }
 }

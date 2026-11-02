@@ -24,7 +24,7 @@
                 <div class="bg-white rounded-3xl border border-stone-200/90 shadow-sm overflow-hidden relative group">
                     <div class="aspect-4/3 bg-stone-50 flex items-center justify-center p-6">
                         @if($alat->foto)
-                            <img src="{{ asset('storage/' . $alat->foto) }}" alt="{{ $alat->nama }}"
+                            <img src="{{ $alat->foto_url }}" alt="{{ $alat->nama }}"
                                 class="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition duration-300">
                         @else
                             @php
@@ -257,6 +257,46 @@
             </div>
         </div>
 
+        <!-- Kalender Ketersediaan 6 Minggu (Heatmap) -->
+        @if(!empty($kalender))
+            @php
+                $kapasitasKal = max(0, (int) $alat->stok_total - (int) $alat->stok_perawatan);
+                $offsetKal = \Carbon\Carbon::parse($kalender[0]['tanggal'])->dayOfWeekIso - 1; // Senin = 0
+            @endphp
+            <div class="mt-12 pt-10 border-t border-stone-200/80">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-[#14201a]">Kalender Ketersediaan</h3>
+                        <p class="text-xs text-stone-500 mt-0.5">Sisa unit {{ $alat->nama }} per hari untuk 6 minggu ke depan ({{ $kapasitasKal }} unit total siap sewa).</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-[10px] font-bold text-stone-500">
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-[#5edd5b]"></span>Banyak</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-300"></span>Terbatas</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-rose-300"></span>Habis</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1.5 sm:gap-2 max-w-3xl">
+                    @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $hari)
+                        <div class="text-center text-[10px] font-extrabold uppercase tracking-wider text-stone-400">{{ $hari }}</div>
+                    @endforeach
+                    @for($i = 0; $i < $offsetKal; $i++)
+                        <div></div>
+                    @endfor
+                    @foreach($kalender as $hariKal)
+                        @php
+                            $tgl = \Carbon\Carbon::parse($hariKal['tanggal']);
+                            $rasio = $kapasitasKal > 0 ? $hariKal['tersedia'] / $kapasitasKal : 0;
+                            $warna = $hariKal['tersedia'] <= 0 ? 'bg-rose-200 text-rose-900' : ($rasio <= 0.34 ? 'bg-amber-200 text-amber-900' : 'bg-[#5edd5b]/70 text-[#0e1b15]');
+                        @endphp
+                        <div class="rounded-lg sm:rounded-xl p-1.5 sm:p-2 text-center {{ $warna }}" title="{{ $tgl->translatedFormat('l, d F Y') }}: {{ $hariKal['tersedia'] }} dari {{ $kapasitasKal }} unit tersedia">
+                            <div class="text-[10px] font-bold opacity-70">{{ $tgl->format('d/m') }}</div>
+                            <div class="text-sm sm:text-base font-black leading-none mt-0.5">{{ $hariKal['tersedia'] }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <!-- Rekomendasi Perlengkapan Terkait -->
         @if($alatTerkait->count() > 0)
             <div class="mt-16 pt-10 border-t border-stone-200/80">
@@ -291,7 +331,7 @@
                             <div>
                                 <div class="aspect-square bg-stone-50 rounded-xl overflow-hidden mb-3 relative flex items-center justify-center p-2">
                                     @if($rel->foto)
-                                        <img src="{{ asset('storage/' . $rel->foto) }}" alt="{{ $rel->nama }}" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
+                                        <img src="{{ $rel->foto_url }}" alt="{{ $rel->nama }}" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
                                     @else
                                         <img src="{{ $relDummy }}" alt="{{ $rel->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 rounded-lg">
                                     @endif

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\NomorHpIndonesia;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,7 +31,7 @@ class UserRequest extends FormRequest
             'role' => ['required', 'string', 'in:admin,pelanggan'],
             'password' => [$isCreate ? 'required' : 'nullable', 'string', 'min:8'],
             'is_aktif' => ['nullable', 'boolean'],
-            'no_hp' => ['nullable', 'string', 'max:20'],
+            'no_hp' => ['nullable', 'string', 'max:20', new NomorHpIndonesia],
             'alamat' => ['nullable', 'string', 'max:255'],
         ];
     }

@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+    excludePaths:
+        - app/helpers.php
+    # Rute/Blade/dinamis Eloquent ditangani Larastan; sisanya dicatat di baseline agar CI hanya gagal untuk temuan baru
+    treatPhpDocTypesAsCertain: false

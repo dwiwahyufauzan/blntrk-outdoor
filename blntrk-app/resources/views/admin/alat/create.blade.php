@@ -61,6 +61,19 @@
                 @enderror
             </div>
 
+            <!-- Varian Alat -->
+            <div>
+                <label for="varian" class="block text-xs font-bold text-[#14201a] uppercase tracking-wider mb-1.5">
+                    Varian / Kapasitas
+                </label>
+                <input type="text" id="varian" name="varian" value="{{ old('varian') }}" maxlength="50"
+                    placeholder="Contoh: Kapasitas 4 Orang"
+                    class="w-full text-xs rounded-xl border-stone-300 focus:border-[#1e3a2c] focus:ring-[#1e3a2c] shadow-xs text-[#14201a]">
+                @error('varian')
+                    <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Tarif Sewa -->
                 <div>

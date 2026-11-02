@@ -232,7 +232,7 @@
                     <td style="width: {{ $adaBayar ? '50%' : '100%' }}; padding-left: {{ $adaBayar ? '5px' : '0' }};">
                         <div class="info-box" style="background-color: #ebf8ff; border-color: #90cdf4;">
                             <div class="info-label" style="color: #2a4365; border-color: #bee3f8;">JAMINAN IDENTITAS FISIK</div>
-                            <div>Jenis: <strong>{{ is_string($pesanan->jaminan->jenis) ? strtoupper($pesanan->jaminan->jenis) : $pesanan->jaminan->jenis->label() }}</strong> (Asli)</div>
+                            <div>Jenis: <strong>{{ $pesanan->jaminan->label_jenis }}</strong>{{ $pesanan->jaminan->is_deposit ? '' : ' (Asli)' }}</div>
                             <div style="font-size: 7.5pt; color: #4a5568; margin-top: 2px;">
                                 No: <span style="font-family: monospace; font-weight: bold;">{{ $pesanan->jaminan->nomor_identitas_samar ?? $pesanan->jaminan->nomor_identitas }}</span>
                                 &bull; Status: {{ $pesanan->jaminan->dikembalikan_pada ? 'Sudah Dikembalikan' : 'Disimpan di Kasir Toko' }}

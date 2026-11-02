@@ -17,6 +17,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Disk Foto Alat dan Bukti Transfer
+    |--------------------------------------------------------------------------
+    |
+    | foto_disk  : disk foto alat yang ditampilkan publik ("public" atau "s3").
+    | bukti_disk : disk bukti transfer pelanggan. Harus privat; diakses lewat rute
+    |              terautentikasi, tidak pernah lewat URL publik. Gunakan "s3"
+    |              (bucket privat) di hosting dengan disk sementara.
+    |
+    */
+
+    'foto_disk' => env('FOTO_DISK', 'public'),
+
+    'bukti_disk' => env('BUKTI_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

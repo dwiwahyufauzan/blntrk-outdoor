@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Token untuk pemicu penjadwalan dari luar (cron-job.org dsb). Kosong = endpoint dimatikan.
+    'cron' => [
+        'token' => env('CRON_TOKEN'),
+    ],
+
 ];

@@ -140,6 +140,30 @@
                     </div>
                 </div>
 
+                <div class="mt-6 pt-5 border-t border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Kebijakan No-show (Pesanan Dibayar Tidak Diambil)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Batalkan Otomatis</label>
+                            <select name="noshow_batal_otomatis" class="w-full text-sm font-semibold rounded-xl border-slate-200 focus:border-[#5edd5b] focus:ring-[#5edd5b]">
+                                <option value="1" @selected((string) old('noshow_batal_otomatis', $pengaturan['noshow_batal_otomatis']) === '1')>Aktif</option>
+                                <option value="0" @selected((string) old('noshow_batal_otomatis', $pengaturan['noshow_batal_otomatis']) === '0')>Nonaktif (batalkan manual)</option>
+                            </select>
+                            @error('noshow_batal_otomatis') <span class="text-xs text-rose-500 font-semibold">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Toleransi Setelah Batas Ambil</label>
+                            <div class="relative">
+                                <input type="number" name="noshow_toleransi_hari" value="{{ old('noshow_toleransi_hari', $pengaturan['noshow_toleransi_hari']) }}" min="0" max="30"
+                                       class="w-full text-sm font-semibold rounded-xl border-slate-200 focus:border-[#5edd5b] focus:ring-[#5edd5b] pr-12">
+                                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-bold text-slate-400">Hari</span>
+                            </div>
+                            @error('noshow_toleransi_hari') <span class="text-xs text-rose-500 font-semibold">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-2">Pesanan yang sudah dibayar tetapi tidak diambil hingga batas pengambilan + toleransi dibatalkan agar stok dilepas.</p>
+                </div>
+
                 <div class="mt-4 p-3.5 bg-amber-50 rounded-xl border border-amber-200/80 flex items-start gap-2.5">
                     <svg class="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>

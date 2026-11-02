@@ -11,6 +11,10 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <!-- Memerlukan RUN_CONCURRENCY_TESTS=1 dan database sungguhan; dilewati secara bawaan -->
+        <testsuite name="Concurrency">
+            <directory>tests/Concurrency</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -18,6 +22,8 @@
         </include>
     </source>
     <php>
+        <!-- Suite besar + render PDF dompdf melampaui 128M bawaan CLI -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

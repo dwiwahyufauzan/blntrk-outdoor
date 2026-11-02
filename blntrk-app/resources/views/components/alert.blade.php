@@ -26,6 +26,20 @@
     </div>
 @endif
 
+@if (session('peringatan'))
+    <div class="mb-5 p-4 rounded-2xl bg-amber-50/95 border border-amber-200 text-amber-950 flex items-center justify-between text-xs sm:text-sm shadow-xs" role="alert">
+        <div class="flex items-center space-x-3">
+            <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01"/></svg>
+            </span>
+            <span class="font-semibold">{{ session('peringatan') }}</span>
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" class="text-amber-700 hover:text-amber-950 p-1 transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+@endif
+
 @if ($errors->any())
     <div class="mb-5 p-4 rounded-2xl bg-amber-50/95 border border-amber-200 text-amber-950 text-xs sm:text-sm shadow-xs" role="alert">
         <div class="flex items-center space-x-3 font-bold mb-1.5 text-amber-900">

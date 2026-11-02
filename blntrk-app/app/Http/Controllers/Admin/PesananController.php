@@ -9,18 +9,24 @@ use App\Http\Requests\BatalRequest;
 use App\Http\Requests\PembayaranRequest;
 use App\Http\Requests\PengambilanRequest;
 use App\Http\Requests\PengembalianRequest;
+use App\Http\Requests\PerpanjanganRequest;
+use App\Http\Requests\UbahJadwalRequest;
 use App\Models\Alat;
 use App\Models\KategoriDenda;
 use App\Models\Pelanggan;
 use App\Models\Pesanan;
+use App\Services\BuktiTransferService;
 use App\Services\DendaService;
 use App\Services\PaketBundlingService;
 use App\Services\PengembalianService;
+use App\Services\PerubahanPesananService;
 use App\Services\PesananService;
 use App\Services\WhatsAppService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PesananController extends Controller
 {
@@ -37,8 +43,8 @@ class PesananController extends Controller
         $pesananList = Pesanan::with(['pelanggan', 'pembuat', 'detail.alat'])
             ->when($q, function ($query, $q) {
                 $query->where(function ($sub) use ($q) {
-                    $sub->where('no_resi', 'like', "%{$q}%")
-                        ->orWhereHas('pelanggan', fn ($p) => $p->where('nama_lengkap', 'like', "%{$q}%")->orWhere('no_hp', 'like', "%{$q}%"));
+                    $sub->where('no_resi', 'like', like_pattern($q))
+                        ->orWhereHas('pelanggan', fn ($p) => $p->where('nama_lengkap', 'like', like_pattern($q))->orWhere('no_hp', 'like', like_pattern($q)));
                 });
             })
             ->when($status, fn ($query, $s) => $query->where('status', $s))
@@ -204,5 +210,44 @@ class PesananController extends Controller
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
             ->with('status', "Pesanan {$pesanan->no_resi} berhasil dibatalkan.");
+    }
+
+    /**
+     * Mengubah jadwal sewa sebelum pengambilan.
+     */
+    public function ubahJadwal(UbahJadwalRequest $request, Pesanan $pesanan, PerubahanPesananService $service): RedirectResponse
+    {
+        $this->authorize('ubahJadwal', $pesanan);
+
+        $service->ubahJadwal($pesanan, auth()->user(), Carbon::parse($request->input('tanggal_mulai')), Carbon::parse($request->input('tanggal_selesai')));
+
+        return redirect()->route('admin.pesanan.show', $pesanan->id)
+            ->with('status', "Jadwal pesanan {$pesanan->no_resi} berhasil diubah.");
+    }
+
+    /**
+     * Memperpanjang sewa pesanan yang sedang disewa disertai pembayaran tambahan.
+     */
+    public function perpanjang(PerpanjanganRequest $request, Pesanan $pesanan, PerubahanPesananService $service): RedirectResponse
+    {
+        $this->authorize('perpanjang', $pesanan);
+
+        $tambahan = $service->perpanjang(
+            $pesanan,
+            auth()->user(),
+            Carbon::parse($request->input('tanggal_selesai')),
+            $request->safe()->only(['metode', 'catatan'])
+        );
+
+        return redirect()->route('admin.pesanan.show', $pesanan->id)
+            ->with('status', "Pesanan {$pesanan->no_resi} berhasil diperpanjang. Tambahan biaya sewa Rp ".number_format($tambahan, 0, ',', '.').' dicatat.');
+    }
+
+    /**
+     * Menampilkan bukti transfer yang diunggah pelanggan (disk privat, hanya lewat rute ini).
+     */
+    public function bukti(Pesanan $pesanan, BuktiTransferService $bukti): StreamedResponse
+    {
+        return $bukti->kirim($pesanan);
     }
 }

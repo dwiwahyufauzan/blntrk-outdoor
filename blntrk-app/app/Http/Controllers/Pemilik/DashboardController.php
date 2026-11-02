@@ -6,7 +6,7 @@ use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Models\Alat;
 use App\Models\Denda;
-use App\Models\Pembayaran;
+use App\Models\Pengaturan;
 use App\Models\Pesanan;
 use App\Services\LaporanService;
 use Illuminate\View\View;
@@ -20,9 +20,7 @@ class DashboardController extends Controller
         $endOfMonth = now()->endOfMonth();
 
         // 1. Pendapatan Hari Ini
-        $sewaHariIni = Pembayaran::whereDate('dibayar_pada', $today)
-            ->whereHas('pesanan', fn ($q) => $q->where('status', '!=', StatusPesanan::Dibatalkan->value))
-            ->sum('jumlah');
+        $sewaHariIni = $laporanService->pendapatanSewaBersih($today->copy()->startOfDay(), $today->copy()->endOfDay());
 
         $dendaHariIni = Denda::where('status_bayar', 'lunas')
             ->whereDate('dilunasi_pada', $today)
@@ -31,9 +29,7 @@ class DashboardController extends Controller
         $pendapatanHariIni = (float) ($sewaHariIni + $dendaHariIni);
 
         // 2. Pendapatan Bulan Ini
-        $sewaBulanIni = Pembayaran::whereBetween('dibayar_pada', [$startOfMonth, $endOfMonth])
-            ->whereHas('pesanan', fn ($q) => $q->where('status', '!=', StatusPesanan::Dibatalkan->value))
-            ->sum('jumlah');
+        $sewaBulanIni = $laporanService->pendapatanSewaBersih($startOfMonth, $endOfMonth);
 
         $dendaBulanIni = Denda::where('status_bayar', 'lunas')
             ->whereBetween('dilunasi_pada', [$startOfMonth, $endOfMonth])
@@ -53,7 +49,7 @@ class DashboardController extends Controller
 
         // 4. Alat Terlaris (Top 5) & Stok Kritis
         $alatTerlaris = $laporanService->laporanAlatTerlaris(now()->subMonths(6), now(), 5)['items'];
-        $stokKritis = $laporanService->laporanStokKritis(2);
+        $stokKritis = $laporanService->laporanStokKritis((int) Pengaturan::ambil('ambang_stok_kritis', 2));
 
         // 5. Grafik Pendapatan 6 Bulan Terakhir
         $chartLabels = [];
@@ -66,9 +62,7 @@ class DashboardController extends Controller
 
             $chartLabels[] = $bln->translatedFormat('M Y');
 
-            $revSewa = Pembayaran::whereBetween('dibayar_pada', [$start, $end])
-                ->whereHas('pesanan', fn ($q) => $q->where('status', '!=', StatusPesanan::Dibatalkan->value))
-                ->sum('jumlah');
+            $revSewa = $laporanService->pendapatanSewaBersih($start, $end);
 
             $revDenda = Denda::where('status_bayar', 'lunas')
                 ->where(function ($q) use ($start, $end) {
@@ -83,6 +77,27 @@ class DashboardController extends Controller
             $chartData[] = (float) ($revSewa + $revDenda);
         }
 
+        // 6. Analitik tambahan: perbandingan bulan lalu, rasio denda terhadap pendapatan, okupansi per alat
+        $awalBulanLalu = now()->subMonthNoOverflow()->startOfMonth();
+        $akhirBulanLalu = now()->subMonthNoOverflow()->endOfMonth();
+        $sewaBulanLalu = $laporanService->pendapatanSewaBersih($awalBulanLalu, $akhirBulanLalu);
+        $dendaBulanLalu = (float) Denda::where('status_bayar', 'lunas')->whereBetween('dilunasi_pada', [$awalBulanLalu, $akhirBulanLalu])->sum('jumlah');
+        $pendapatanBulanLalu = $sewaBulanLalu + $dendaBulanLalu;
+
+        $perbandingan = [
+            'bulan_lalu' => $pendapatanBulanLalu,
+            // null bila bulan lalu nol agar tidak menampilkan persen tak terhingga
+            'persen' => $pendapatanBulanLalu > 0 ? round(($pendapatanBulanIni - $pendapatanBulanLalu) / $pendapatanBulanLalu * 100, 1) : null,
+            'nama_bulan_lalu' => $awalBulanLalu->translatedFormat('F Y'),
+        ];
+
+        $rasioDenda = [
+            'denda' => (float) $dendaBulanIni,
+            'persen' => $pendapatanBulanIni > 0 ? round($dendaBulanIni / $pendapatanBulanIni * 100, 1) : null,
+        ];
+
+        $okupansi = $laporanService->okupansiPerAlat($startOfMonth, $endOfMonth, 8);
+
         $transaksiTerbaru = Pesanan::with(['pelanggan', 'pemroses'])
             ->latest()
             ->take(6)
@@ -94,6 +109,9 @@ class DashboardController extends Controller
             'stokKritis',
             'chartLabels',
             'chartData',
+            'perbandingan',
+            'rasioDenda',
+            'okupansi',
             'transaksiTerbaru'
         ));
     }

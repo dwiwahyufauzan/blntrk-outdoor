@@ -25,7 +25,7 @@
         <div class="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-xs flex flex-col items-center justify-center">
             <div class="w-full h-64 rounded-2xl bg-stone-100 overflow-hidden flex items-center justify-center border border-stone-200">
                 @if($alat->foto)
-                    <img src="{{ asset('storage/' . $alat->foto) }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
+                    <img src="{{ $alat->foto_url }}" alt="{{ $alat->nama }}" class="w-full h-full object-cover">
                 @else
                     <div class="text-center p-6 text-stone-300">
                         <svg class="w-16 h-16 mx-auto mb-2 text-stone-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></svg>

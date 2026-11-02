@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\KeranjangController;
+use App\Http\Controllers\OperasionalController;
 use App\Http\Controllers\PaketBundlingController;
 use App\Http\Controllers\Pelanggan\PesananController;
 use App\Http\Controllers\Pemilik;
@@ -17,6 +18,10 @@ use Illuminate\Support\Facades\Route;
 | Web Routes - BLNTRK Outdoor
 |--------------------------------------------------------------------------
 */
+
+// Operasional: health check (termasuk database) dan pemicu scheduler dari cron eksternal
+Route::get('/health', [OperasionalController::class, 'health'])->name('health');
+Route::get('/cron/jadwal', [OperasionalController::class, 'jadwal'])->middleware('throttle:30,1')->name('cron.jadwal');
 
 // Halaman Utama Publik
 Route::get('/', [BerandaController::class, 'index'])->name('beranda');
@@ -75,6 +80,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/pesanan/{resi}/resi', [PesananController::class, 'resi'])->name('pesanan.resi');
     Route::get('/pesanan/{resi}/pdf', [PesananController::class, 'cetakPdf'])->name('pesanan.pdf');
     Route::patch('/pesanan/{resi}/batal', [PesananController::class, 'batal'])->name('pesanan.batal');
+    Route::post('/pesanan/{resi}/bukti', [PesananController::class, 'uploadBukti'])->middleware('throttle:10,1')->name('pesanan.bukti.upload');
+    Route::get('/pesanan/{resi}/bukti', [PesananController::class, 'bukti'])->name('pesanan.bukti');
+    Route::patch('/pesanan/{resi}/jadwal', [PesananController::class, 'ubahJadwal'])->name('pesanan.jadwal');
 });
 
 // Area Khusus Admin
@@ -98,6 +106,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('pesanan/{pesanan}/bayar', [Admin\PesananController::class, 'bayar'])->name('pesanan.bayar');
     Route::post('pesanan/{pesanan}/ambil', [Admin\PesananController::class, 'ambil'])->name('pesanan.ambil');
     Route::patch('pesanan/{pesanan}/batal', [Admin\PesananController::class, 'batal'])->name('pesanan.batal');
+    Route::patch('pesanan/{pesanan}/jadwal', [Admin\PesananController::class, 'ubahJadwal'])->name('pesanan.jadwal');
+    Route::post('pesanan/{pesanan}/perpanjang', [Admin\PesananController::class, 'perpanjang'])->name('pesanan.perpanjang');
+    Route::get('pesanan/{pesanan}/bukti', [Admin\PesananController::class, 'bukti'])->name('pesanan.bukti');
     Route::patch('pesanan/{pesanan}/jaminan/kembali', [Admin\PesananController::class, 'kembalikanJaminan'])->name('pesanan.jaminan.kembali');
 
     // Pengembalian & Denda

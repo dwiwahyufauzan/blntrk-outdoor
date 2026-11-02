@@ -16,8 +16,9 @@ class PengambilanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_jaminan' => ['required', 'string', 'in:ktp,sim,kartu_pelajar,lainnya'],
-            'nomor_identitas' => ['required', 'string', 'regex:/\d{4,}/'],
+            'jenis_jaminan' => ['required', 'string', 'in:ktp,sim,kartu_pelajar,lainnya,deposit'],
+            'nomor_identitas' => ['required_unless:jenis_jaminan,deposit', 'nullable', 'string', 'regex:/\d{4,}/'],
+            'nominal_deposit' => ['required_if:jenis_jaminan,deposit', 'nullable', 'numeric', 'min:1000', 'max:50000000'],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -38,6 +39,8 @@ class PengambilanRequest extends FormRequest
             'jenis_jaminan.required' => 'Jenis jaminan kartu identitas wajib dipilih.',
             'jenis_jaminan.in' => 'Pilihan jenis jaminan tidak valid.',
             'nomor_identitas.required' => 'Nomor kartu identitas fisik wajib diisi.',
+            'nominal_deposit.required_if' => 'Nominal deposit uang wajib diisi.',
+            'nominal_deposit.min' => 'Nominal deposit minimal Rp 1.000.',
             'nomor_identitas.regex' => 'Nomor identitas harus berisi minimal 4 digit angka.',
         ];
     }

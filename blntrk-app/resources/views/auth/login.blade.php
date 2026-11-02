@@ -58,7 +58,7 @@
         <div>
             <div class="flex justify-between items-center mb-1">
                 <x-input-label for="password" value="Kata Sandi" class="!mb-0" />
-                @if (Route::has('password.request'))
+                @if (Route::has('password.request') && reset_sandi_tersedia())
                     <a class="text-[11px] font-bold text-stone-600 hover:text-black transition" href="{{ route('password.request') }}">
                         Lupa kata sandi?
                     </a>

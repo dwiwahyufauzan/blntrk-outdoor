@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Menandai pesanan terlambat dan membatalkan pesanan kedaluwarsa (tidak lagi dikerjakan saat halaman dibuka)
 Schedule::command('pesanan:perbarui-status')->everyFiveMinutes()->withoutOverlapping();
+
+// Pengingat jatuh tempo dan keterlambatan lewat email (aktif bila MAIL_MAILER bukan log)
+Schedule::command('pesanan:kirim-pengingat')->hourly()->withoutOverlapping();

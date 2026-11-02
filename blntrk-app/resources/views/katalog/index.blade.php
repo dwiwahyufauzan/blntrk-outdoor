@@ -218,7 +218,7 @@
                                 'selesai' => $tanggalSelesai?->format('Y-m-d')
                             ]));
                             $imgSrc = $alat->foto 
-                                ? asset('storage/' . $alat->foto) 
+                                ? $alat->foto_url 
                                 : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
                         @endphp
                         <div class="bg-white rounded-2xl border border-stone-200/80 p-4 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
@@ -303,7 +303,7 @@
                                     'selesai' => $tanggalSelesai?->format('Y-m-d')
                                 ]));
                                 $imgSrc = $alat->foto 
-                                    ? asset('storage/' . $alat->foto) 
+                                    ? $alat->foto_url 
                                     : ($catPhotos[$alat->kategori?->nama ?? ''] ?? 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=600&q=80');
                             @endphp
                             <div class="bg-stone-50/80 rounded-2xl border border-stone-200/70 p-4 sm:p-5 flex flex-col justify-between opacity-80 hover:opacity-100 transition group">

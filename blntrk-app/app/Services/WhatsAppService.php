@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Pengaturan;
 use App\Models\Pesanan;
 
 class WhatsAppService
@@ -77,8 +78,9 @@ class WhatsAppService
         $resi = $pesanan->no_resi;
         $rupiah = number_format($estimasiDenda, 0, ',', '.');
         $tglSelesai = $pesanan->tanggal_selesai?->translatedFormat('d F Y') ?? '-';
+        $jam = $pesanan->jatuh_tempo ? $pesanan->jatuh_tempo->format('H:i') : Pengaturan::ambil('jam_kembali', '12:00');
 
-        return "Halo Kak {$nama}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan dengan No Resi {$resi} telah melewati batas pengembalian ({$tglSelesai} pukul 12:00 WIB) dan saat ini terlambat {$hariTerlambat} hari. Estimasi denda keterlambatan berjalan sebesar Rp {$rupiah}. Mohon segera kembalikan perlengkapan ke toko hari ini untuk menghindari penambahan denda harian dan agar kartu identitas jaminan Anda dapat segera diserahkan kembali. Terima kasih!";
+        return "Halo Kak {$nama}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan dengan No Resi {$resi} telah melewati batas pengembalian ({$tglSelesai} pukul {$jam} WIB) dan saat ini terlambat {$hariTerlambat} hari. Estimasi denda keterlambatan berjalan sebesar Rp {$rupiah}. Mohon segera kembalikan perlengkapan ke toko hari ini untuk menghindari penambahan denda harian dan agar kartu identitas jaminan Anda dapat segera diserahkan kembali. Terima kasih!";
     }
 
     /**
