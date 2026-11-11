@@ -1,0 +1,10 @@
+# Akhir baris LF untuk berkas teks di seluruh repo (blntrk-app/.gitattributes berlaku khusus aplikasi)
+* text=auto eol=lf
+
+*.docx binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary

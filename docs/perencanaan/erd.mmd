@@ -8,6 +8,7 @@ erDiagram
     pesanan ||--|{ pesanan_detail : "terdiri_dari"
     alat ||--o{ pesanan_detail : "disewa_dalam"
     pesanan ||--o{ pembayaran : "dibayar_melalui"
+    pesanan ||--o{ refund : "dikembalikan_melalui"
     users ||--o{ pembayaran : "dicatat_oleh"
     pesanan ||--o| jaminan : "dijamin_dengan"
     pesanan ||--o| pengembalian : "diakhiri_dengan"
@@ -70,6 +71,7 @@ erDiagram
         smallint durasi_hari
         datetime jatuh_tempo
         datetime batas_ambil
+        datetime batas_bayar "null"
         enum status
         decimal total_sewa
         datetime diambil_pada
@@ -91,6 +93,14 @@ erDiagram
         decimal jumlah
         enum metode
         datetime dibayar_pada
+        bigint dicatat_oleh FK
+    }
+    refund {
+        bigint id PK
+        bigint pesanan_id FK
+        decimal jumlah
+        enum metode
+        datetime direfund_pada
         bigint dicatat_oleh FK
     }
     jaminan {

@@ -163,6 +163,7 @@ Format kolom: Atribut, Tipe, Panjang/Jenis, Constraint, Keterangan. PK = primary
 | durasi_hari | SMALLINT UNSIGNED | NN | Selisih hari |
 | jatuh_tempo | DATETIME | NN | Batas kembali |
 | batas_ambil | DATETIME | NN | Batas pengambilan |
+| batas_bayar | DATETIME | NULL | Batas pembayaran pesanan menunggu (sekian jam sejak dibuat, tidak melewati batas_ambil); lewat batas ini scheduler membatalkan pesanan |
 | status | ENUM | NN, default menunggu | menunggu, dibayar, disewa, terlambat, dikembalikan, dibatalkan |
 | total_sewa | DECIMAL(12,2) | NN | Total biaya sewa |
 | diambil_pada | DATETIME | NULL | Waktu pengambilan |
@@ -190,6 +191,18 @@ Format kolom: Atribut, Tipe, Panjang/Jenis, Constraint, Keterangan. PK = primary
 | jumlah | DECIMAL(12,2) | NN, > 0 | Nominal diterima |
 | metode | ENUM | NN, default tunai | tunai, transfer (manual) |
 | dibayar_pada | DATETIME | NN | Waktu diterima |
+| dicatat_oleh | BIGINT UNSIGNED | FK → users.id, NN | Admin |
+| catatan | VARCHAR(255) | NULL | Keterangan |
+| created_at, updated_at | DATETIME | NULL | Jejak waktu |
+
+### refund
+| Atribut | Tipe | Constraint | Keterangan |
+|---|---|---|---|
+| id | BIGINT UNSIGNED | PK, AI | ID refund |
+| pesanan_id | BIGINT UNSIGNED | FK → pesanan.id, NN | Pesanan dibatalkan yang sudah dibayar |
+| jumlah | DECIMAL(12,2) | NN, > 0 | Nominal dikembalikan; total refund ≤ total pembayaran. Selisihnya hangus (tetap pendapatan) |
+| metode | VARCHAR(20) | NN | tunai, transfer |
+| direfund_pada | DATETIME | NN | Waktu pengembalian dana |
 | dicatat_oleh | BIGINT UNSIGNED | FK → users.id, NN | Admin |
 | catatan | VARCHAR(255) | NULL | Keterangan |
 | created_at, updated_at | DATETIME | NULL | Jejak waktu |
@@ -243,6 +256,7 @@ Aturan: jumlah keempat kolom = `pesanan_detail.jumlah`.
 | keterangan | VARCHAR(255) | NULL | Rincian |
 | jumlah | DECIMAL(12,2) | NN, ≥ 0 | Nominal tagihan |
 | status_bayar | ENUM | NN, default belum_lunas | belum_lunas, lunas |
+| metode_bayar | VARCHAR(20) | NULL | tunai, transfer; diisi saat denda dilunasi |
 | dilunasi_pada / dilunasi_oleh | DATETIME / BIGINT | NULL / FK users | Pelunasan manual |
 | created_at, updated_at | DATETIME | NULL | Jejak waktu |
 

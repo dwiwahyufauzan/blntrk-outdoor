@@ -35,30 +35,32 @@ Sebelum pengambilan, jadwal dapat dipindah (**Ubah Jadwal**): pelanggan/admin sa
 ## Fitur
 
 **Pelanggan**
-- Beranda, katalog alat (stok tersedia real-time, alat habis dipisahkan), detail alat, dan cek ketersediaan per rentang tanggal.
+- Beranda, katalog alat (dipaginasi; stok hari ini, atau stok pada tanggal terpilih bila memakai filter tanggal; alat habis dipisahkan), detail alat, dan cek ketersediaan per rentang tanggal.
 - Keranjang sewa (tambah alat atau paket bundling, ubah jumlah, checkout) dan **paket bundling hemat**.
 - Reservasi sewa dengan durasi otomatis (maksimal 14 hari), nomor resi unik harian `BLN-yymmdd-####`, resi cetak dan PDF.
 - **Kalender ketersediaan** 6 minggu (heatmap) di halaman detail alat.
+- **Batas pembayaran**: pesanan `menunggu` harus dibayar dalam 24 jam sejak dibuat (dan sebelum tanggal ambil), atau dibatalkan otomatis dan stok dilepas; maksimal 3 pesanan menunggu per akun (keduanya dapat diatur pemilik; 0 = nonaktif).
 - Pantau pesanan (tab aktif / riwayat), batal mandiri sebelum dibayar, ubah jadwal sebelum dibayar, kelola profil dan sesi login.
 - **Unggah bukti transfer** (JPG/PNG/WEBP/PDF, maks. 4 MB) pada pesanan `menunggu`; berkas disimpan di disk privat dan hanya dibuka lewat rute terautentikasi milik pemesan/admin.
 - Email pengingat jatuh tempo (H-1) dan peringatan keterlambatan untuk pelanggan terdaftar (aktif bila SMTP dikonfigurasi).
 
 **Admin (kasir)**
 - Dashboard operasional dan manajemen pesanan, termasuk pesanan **walk-in**.
-- **Catat Pembayaran** (tunai / transfer, bukti transfer pelanggan terlihat di detail pesanan), **Serah Terima** dengan jaminan KTP / SIM / Kartu Pelajar (nomor disamarkan, hanya 4 digit terakhir yang disimpan) atau **deposit uang**, **Batalkan Pesanan**, **Perpanjang Sewa**, **Ubah Jadwal**.
+- **Catat Pembayaran** (tunai / transfer, bukti transfer pelanggan terlihat di detail pesanan), **Serah Terima** dengan jaminan KTP / SIM / Kartu Pelajar (nomor disamarkan, hanya 4 digit terakhir yang disimpan) atau **deposit uang**, **Batalkan Pesanan** (pesanan yang sudah dibayar wajib ditentukan dananya: **refund** penuh/sebagian atau hangus; refund juga dapat dicatat belakangan), **Perpanjang Sewa**, **Ubah Jadwal**.
 - **Peringatan Dashboard**: dashboard memberi peringatan pesanan dibayar yang tidak diambil (no-show).
 - **Pengembalian**: kondisi per unit (baik, rusak ringan, rusak berat, hilang), stok perawatan otomatis, unit hilang mengurangi stok total.
-- **Denda**: keterlambatan (tarif harian × hari × persen, dengan toleransi), kerusakan, kehilangan (sesuai harga beli), denda manual, dan tandai lunas. Jaminan **ditahan** selama ada denda belum lunas.
+- **Denda**: keterlambatan (tarif harian × hari × persen, dengan toleransi), kerusakan, kehilangan (sesuai harga beli), denda manual, dan tandai lunas dengan metode tunai/transfer (denda manual hanya untuk pesanan disewa, terlambat, atau sudah dikembalikan). Waktu pengembalian bawaannya waktu sistem; mengubahnya lebih dari 60 menit wajib disertai catatan dan tercatat di log. Jaminan **ditahan** selama ada denda belum lunas.
 - Master data: kategori, alat, paket bundling, kategori denda, pelanggan, pengguna. Menu perawatan alat dengan **riwayat perawatan** (unit masuk/selesai diperbaiki, siapa, kapan, mengapa), laporan, dan tautan WhatsApp (pengingat, tagihan denda, peringatan terlambat).
 
 **Pemilik**
 - Dashboard eksekutif: pendapatan dibanding bulan lalu, rasio denda terhadap pendapatan, okupansi per alat, grafik, dan laporan (penyewaan, pendapatan, denda, alat terlaris, stok kritis) dalam **PDF dan CSV**.
-- Pengaturan toko, aturan denda, dan kebijakan no-show; manajemen akun admin, **log aktivitas** (audit trail).
+- Laporan pendapatan berbasis kas: pembayaran masuk + denda lunas − refund (dana hangus dari pesanan dibatalkan tetap menjadi pendapatan).
+- Pengaturan toko, aturan denda, batas pembayaran, limit pesanan menunggu, dan kebijakan no-show; manajemen akun admin, **log aktivitas** (audit trail).
 
 **Integritas data**
 - Pemesanan atomik dengan `lockForUpdate` (anti double-booking) dan retry nomor resi saat bentrok.
 - Admin tidak dapat menghapus/menonaktifkan-tanpa-peringatan/mengurangi stok alat yang masih dibutuhkan pesanan aktif; keranjang memakai stok per tanggal, bukan stok global.
-- Pesanan milik orang lain dijawab 404 untuk pelanggan (resi tidak bisa ditebak), `PesananPolicy`, middleware `role`, throttle pada pembuatan pesanan.
+- Pesanan milik orang lain dijawab 404 untuk pelanggan (resi tidak bisa ditebak), `PesananPolicy`, middleware `role`, throttle pada pembuatan pesanan dan pendaftaran, token cron hanya lewat header, batas unggah bukti per pesanan.
 
 ---
 
@@ -115,7 +117,7 @@ php artisan db:seed --class=TransaksiDemoSeeder
 
 ### Penjadwalan status otomatis
 
-Perintah `pesanan:perbarui-status` berjalan **tiap 5 menit**. Perintah ini menandai pesanan terlambat, membatalkan pesanan `menunggu` yang kedaluwarsa, dan membatalkan pesanan `dibayar` yang tidak diambil (no-show). Perintah `pesanan:kirim-pengingat` (tiap jam) mengirim email pengingat jatuh tempo dan peringatan terlambat bila `MAIL_MAILER` bukan `log`. Selama pengembangan jalankan:
+Perintah `pesanan:perbarui-status` berjalan **tiap 5 menit**. Perintah ini menandai pesanan terlambat, membatalkan pesanan `menunggu` yang melewati batas pembayaran atau batas ambil, dan membatalkan pesanan `dibayar` yang tidak diambil (no-show). Perintah `pesanan:kirim-pengingat` (tiap jam) mengirim email pengingat jatuh tempo dan peringatan terlambat bila `MAIL_MAILER` bukan `log`. Selama pengembangan jalankan:
 
 ```bash
 php artisan schedule:work
@@ -159,12 +161,12 @@ Seeder juga membuat 8 kategori alat, 23 alat, 4 paket bundling, 4 kategori denda
 ## Pengujian
 
 ```bash
-php artisan test                                   # seluruh suite (246 test, 3 uji concurrency dilewati)
+php artisan test                                   # seluruh suite (280 test, 1100 assertion; 3 uji concurrency dilewati tanpa database sungguhan)
 php artisan test --filter=RevisiKlienTest          # regresi revisi klien
 php artisan test tests/Unit/KetersediaanServiceTest.php
 php artisan test tests/Feature/PengembalianDendaTest.php
 ./vendor/bin/pint --test                           # gaya kode
-./vendor/bin/phpstan analyse --memory-limit=1G     # Larastan level 5 (baseline: phpstan-baseline.neon)
+./vendor/bin/phpstan analyse --memory-limit=2G     # Larastan level 5 (baseline: phpstan-baseline.neon)
 ```
 
 **Uji concurrency** (bukti anti double-booking): 10 proses PHP terpisah memesan stok yang sama bersamaan terhadap database sungguhan. Tidak berjalan pada SQLite `:memory:`; CI menjalankannya pada PostgreSQL dan MySQL.
@@ -191,12 +193,12 @@ blntrk-outdoor/
 │   │   ├── Policies/             # PesananPolicy
 │   │   └── Services/             # Pesanan, Ketersediaan, Pengembalian, Denda, Keranjang,
 │   │                             # Laporan, LaporanExport, WhatsApp, Log
-│   ├── database/                 # 19 migrasi, seeder, factory
+│   ├── database/                 # 23 migrasi, seeder, factory
 │   ├── resources/views/          # Blade: admin, pemilik, pelanggan, publik, pdf
 │   ├── routes/                   # web.php, auth.php, console.php (scheduler)
 │   └── tests/                    # Unit dan Feature test
 ├── docs/perencanaan/             # Evaluasi kebutuhan, perancangan DB / Laravel / UI, ERD
-├── plan/                         # Rencana implementasi Plan 1–12 dan hasil pengujian
+├── plan/                         # Rencana implementasi Plan 1–14 dan hasil pengujian
 ├── dokumen skripsi/              # Draf dokumen skripsi
 └── PULL_REQUEST.md               # Ringkasan fitur PR terakhir
 ```

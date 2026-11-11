@@ -71,6 +71,7 @@ Table pesanan {
   durasi_hari smallint [not null]
   jatuh_tempo datetime [not null]
   batas_ambil datetime [not null]
+  batas_bayar datetime [note: 'batas pembayaran pesanan menunggu; null pada data lama']
   status enum('menunggu','dibayar','disewa','terlambat','dikembalikan','dibatalkan') [not null, default: 'menunggu']
   total_sewa decimal(12,2) [not null]
   diambil_pada datetime
@@ -107,6 +108,18 @@ Table pembayaran {
   jumlah decimal(12,2) [not null]
   metode enum('tunai','transfer') [not null, default: 'tunai']
   dibayar_pada datetime [not null]
+  dicatat_oleh bigint [not null, ref: > users.id]
+  catatan varchar(255)
+  created_at datetime
+  updated_at datetime
+}
+
+Table refund {
+  id bigint [pk, increment]
+  pesanan_id bigint [not null, ref: > pesanan.id]
+  jumlah decimal(12,2) [not null]
+  metode varchar(20) [not null, note: 'tunai | transfer']
+  direfund_pada datetime [not null]
   dicatat_oleh bigint [not null, ref: > users.id]
   catatan varchar(255)
   created_at datetime
@@ -159,6 +172,7 @@ Table denda {
   keterangan varchar(255)
   jumlah decimal(12,2) [not null]
   status_bayar enum('belum_lunas','lunas') [not null, default: 'belum_lunas']
+  metode_bayar varchar(20) [note: 'tunai | transfer, diisi saat dilunasi']
   dilunasi_pada datetime
   dilunasi_oleh bigint [ref: > users.id]
   created_at datetime

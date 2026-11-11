@@ -16,6 +16,8 @@ Folder ini berisi rencana teknis per tahap, dari instalasi sampai finalisasi. Do
 | 10 | [plan10-fitur-bersyarat.md](plan10-fitur-bersyarat.md) | Perawatan, Excel, WhatsApp, log aktivitas | 14–15 | P3 |
 | 11 | [plan11-pengujian.md](plan11-pengujian.md) | Uji otomatis, Black Box, SUS | 15–16 | P1 |
 | 12 | [plan12-finalisasi-dokumentasi.md](plan12-finalisasi-dokumentasi.md) | Data demo, backup, bahan skripsi | 16 | P1 |
+| 13 | [plan13-pengembangan-lanjutan.md](plan13-pengembangan-lanjutan.md) | Perbaikan dan pengembangan lanjutan | – | – |
+| 14 | [plan14-tindak-lanjut-review.md](plan14-tindak-lanjut-review.md) | Batas bayar, refund, hardening, view dan dokumen | – | – |
 
 ## Konvensi
 - Nama folder proyek Laravel: `blntrk-app` (di dalam folder ini atau repositori terpisah; lihat plan 1).

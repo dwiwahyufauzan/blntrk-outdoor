@@ -9,7 +9,7 @@ Dokumen ini memuat rekapitulasi pengujian komprehensif sistem persewaan alat out
 
 - **Total Skenario Uji Black Box:** 74 Kasus (BB-01 sampai BB-74)
 - **Status Hasil:** 74 Sesuai (100% Lulus)
-- **Pengujian Otomatis (PHPUnit/Pest):** 129 Uji Otomatis, 470+ Assertions, 0 Gagal (100% Pass)
+- **Pengujian Otomatis (PHPUnit/Pest):** 280 Uji Otomatis (277 lulus, 3 uji concurrency dilewati tanpa database sungguhan), 1.100 Assertions, 0 Gagal
 - **Cakupan Pengujian Otomatis Unit & Feature:**
   1. `tests/Unit/KetersediaanServiceTest.php`: 7 skenario ketersediaan multi-item & irisan tanggal (BB-28..32).
   2. `tests/Unit/HitungTotalTest.php`: Perhitungan durasi, subtotal, dan total sewa Rp 330.000 (BB-34).
@@ -18,6 +18,7 @@ Dokumen ini memuat rekapitulasi pengujian komprehensif sistem persewaan alat out
   5. `tests/Feature/PesananAlurTest.php`: Alur transaksi siklus lengkap (Reservasi → Pembayaran → Pengambilan/Jaminan → Pengembalian → Pelepasan Jaminan).
   6. `tests/Feature/TransisiStatusTest.php`: Penolakan transisi status tidak valid / invalid state machine (BB-45, BB-48, BB-50, BB-59).
   7. `tests/Feature/FiturBersyaratTest.php`: Fitur ekspor Excel/CSV, log aktivitas, konfigurasi toko, manajemen admin, dan perawatan alat rusak.
+  8. `tests/Feature/KebijakanFinansialTest.php`: Batas pembayaran dan limit pesanan menunggu, refund dan dana hangus, metode pelunasan denda, koreksi waktu pengembalian, stok per tanggal, throttle register, token cron, dan batas unggah bukti (Plan 14).
 
 ---
 
@@ -34,7 +35,7 @@ Dokumen ini memuat rekapitulasi pengujian komprehensif sistem persewaan alat out
 | **BB-07** | Logout | Keluar dari sistem | Klik tombol Logout | Sesi diakhiri dan diarahkan kembali ke halaman login | Sesi terhapus, dialihkan ke `/login` | **Sesuai** |
 | **BB-08** | Hak akses | Pelanggan membuka `/admin` | Akses URL `/admin` oleh pengguna ber-role pelanggan | HTTP 403 Forbidden | Ditampilkan halaman kesalahan 403 Forbidden | **Sesuai** |
 | **BB-09** | Hak akses | Admin membuka `/pemilik/pengaturan` | Akses URL `/pemilik/pengaturan` oleh admin | HTTP 403 Forbidden | Ditampilkan halaman kesalahan 403 Forbidden | **Sesuai** |
-| **BB-10** | Hak akses | Pelanggan membuka pesanan milik pelanggan lain | Akses URL `/pesanan/{resi_lain}` | HTTP 403 Forbidden | PesananPolicy menolak akses dengan status 403 Forbidden | **Sesuai** |
+| **BB-10** | Hak akses | Pelanggan membuka pesanan milik pelanggan lain | Akses URL `/pesanan/{resi_lain}` | HTTP 404 Not Found (resi orang lain diperlakukan seperti tidak ada agar tidak dapat ditebak) | Pesanan difilter `tampilkanUntuk()` sehingga dijawab 404 Not Found | **Sesuai** |
 | **BB-11** | Daftar akun | Pendaftaran valid | Nama lengkap, email unik, no HP, alamat, password | Akun pelanggan tersimpan dan diarahkan ke login | Record user & pelanggan tersimpan, notifikasi berhasil muncul | **Sesuai** |
 | **BB-12** | Daftar akun | Email sudah terdaftar | Mendaftar menggunakan email `budi@blntrk.test` | Ditolak dengan pesan email sudah digunakan | Pesan error validasi email terdaftar ditampilkan | **Sesuai** |
 | **BB-13** | Daftar akun | Konfirmasi password beda | Password: `secret123`, Konfirmasi: `secret456` | Ditolak dengan pesan konfirmasi password tidak cocok | Validasi menolak proses pendaftaran | **Sesuai** |
@@ -177,5 +178,5 @@ Pengujian kegunaan (*usability testing*) dilakukan menggunakan instrumen standar
 ## 5. Kesimpulan Pengujian
 
 1. Seluruh 74 skenario pengujian fungsional (*Black Box Testing*) telah diuji dan menghasilkan status **100% Sesuai**, membuktikan bahwa logika bisnis pemesanan, ketersediaan alat, perhitungan denda, alur serah terima jaminan, pelaporan, dan hak akses keamanan multi-peran berjalan dengan benar tanpa cacat fungsional.
-2. Pengujian otomatis yang mencakup 129 test case PHPUnit/Pest berhasil lulus secara menyeluruh tanpa kegagalan (0 failure), menjamin stabilitas sistem dari kemungkinan regresi.
+2. Pengujian otomatis yang mencakup 280 test case PHPUnit (277 lulus, 3 uji concurrency dilewati tanpa PostgreSQL/MySQL) berhasil tanpa kegagalan (0 failure), menjamin stabilitas sistem dari kemungkinan regresi.
 3. Pengujian kegunaan dengan skor rata-rata **SUS 81.88 (Grade A - Excellent)** mengonfirmasi bahwa antarmuka web BLNTRK Outdoor berbasis *Foresta Adventure Design System* memiliki tingkat kebergunaan yang tinggi, mudah dipahami pengguna awam, dan mempercepat alur kerja kasir serta pemilik rental.

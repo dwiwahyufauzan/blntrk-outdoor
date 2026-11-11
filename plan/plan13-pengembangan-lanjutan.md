@@ -45,5 +45,5 @@ Tindak lanjut hasil review proyek (skor 8/10). Seluruh butir di bawah sudah diim
 ## Belum / perlu keputusan
 
 - Menghapus branch remote `fix/revisi-klien-modal-pengembalian-paket-bundling` (sudah ter-merge ke `main`).
-- Baseline Larastan (140 temuan lama) dikurangi bertahap.
+- ~~Baseline Larastan dikurangi bertahap~~ (selesai di Plan 14: baseline kosong).
 - Hasil job PostgreSQL/concurrency di CI belum teramati (tidak ada PostgreSQL/MySQL lokal saat implementasi).
