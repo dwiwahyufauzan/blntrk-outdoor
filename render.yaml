@@ -6,7 +6,7 @@ services:
     dockerfilePath: Dockerfile
     plan: free
     region: singapore
-    healthCheckPath: /up
+    healthCheckPath: /health
     envVars:
       - key: APP_ENV
         value: production
@@ -32,6 +32,46 @@ services:
         value: database
       - key: QUEUE_CONNECTION
         value: database
+      # Email keluar (lupa kata sandi). Selama MAIL_MAILER=log, tautan "Lupa kata sandi" disembunyikan dan
+      # kata sandi direset oleh admin/pemilik. Untuk mengaktifkan: set MAIL_MAILER=smtp dan isi kredensial
+      # SMTP (Brevo / Mailgun / Resend SMTP) di dashboard Render.
+      - key: MAIL_MAILER
+        value: log
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      # Foto alat permanen: isi FOTO_DISK=s3 dan kredensial bucket S3-compatible (mis. Cloudflare R2).
+      # Bukti transfer pelanggan disimpan di BUKTI_DISK (bucket privat, tidak pernah dibuka untuk publik).
+      - key: FOTO_DISK
+        value: public
+      - key: BUKTI_DISK
+        value: local
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: auto
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_URL
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "true"
+      # Token pemicu scheduler dari cron eksternal (cron-job.org): GET /cron/jadwal dengan header
+      # "Authorization: Bearer <token>" tiap 5 menit. Menjaga status terlambat/no-show tetap berjalan
+      # walau service tidur. Isi dengan string acak panjang.
+      - key: CRON_TOKEN
+        sync: false
       # Kata sandi akun awal (pemilik/admin). Isi sendiri di dashboard Render.
       - key: SEED_DEFAULT_PASSWORD
         sync: false

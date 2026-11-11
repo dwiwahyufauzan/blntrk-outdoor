@@ -5,12 +5,18 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: blntrk-app
+
 jobs:
-  test:
+  # Gaya kode + analisis statis (Larastan) — cepat dan tidak memerlukan database
+  kualitas:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: blntrk-app
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +25,27 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, pdo_sqlite, gd, zip, bcmath, xml
           coverage: none
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Lint (Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Analisis statis (Larastan)
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+  # Test utama pada SQLite in-memory, sekaligus mengukur coverage (pcov)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, gd, zip, bcmath, xml
+          coverage: pcov
 
       - uses: actions/setup-node@v4
         with:
@@ -34,11 +61,122 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      - name: Lint (Pint)
-        run: ./vendor/bin/pint --test
-
       - name: Build aset
         run: npm ci && npm run build
 
-      - name: Jalankan test
+      - name: Jalankan test dengan coverage
+        run: |
+          php artisan test --coverage-text --coverage-clover=coverage.xml | tee coverage.txt
+          {
+            echo '### Coverage'
+            echo '```'
+            grep -E '^\s*(Lines|Methods|Classes):' coverage.txt || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: blntrk-app/coverage.xml
+
+  # Produksi memakai PostgreSQL: jalankan seluruh test pada engine yang sama (SQL mentah, tipe kolom, constraint)
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: blntrk
+          POSTGRES_PASSWORD: blntrk
+          POSTGRES_DB: blntrk_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U blntrk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: blntrk_test
+      DB_USERNAME: blntrk
+      DB_PASSWORD: blntrk
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_pgsql, pdo_sqlite, gd, zip, bcmath, xml
+          coverage: none
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Siapkan environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Jalankan test pada PostgreSQL
         run: php artisan test
+
+  # Bukti anti double-booking: banyak proses PHP memesan stok yang sama bersamaan terhadap database sungguhan
+  concurrency:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [pgsql, mysql]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: blntrk
+          POSTGRES_PASSWORD: blntrk
+          POSTGRES_DB: blntrk_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U blntrk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: blntrk
+          MYSQL_DATABASE: blntrk_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -pblntrk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      RUN_CONCURRENCY_TESTS: '1'
+      DB_CONNECTION: ${{ matrix.db }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ matrix.db == 'pgsql' && '5432' || '3306' }}
+      DB_DATABASE: blntrk_test
+      DB_USERNAME: ${{ matrix.db == 'pgsql' && 'blntrk' || 'root' }}
+      DB_PASSWORD: blntrk
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_pgsql, pdo_mysql, pdo_sqlite, gd, zip, bcmath, xml
+          coverage: none
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Siapkan environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Uji concurrency (${{ matrix.db }})
+        run: php artisan test --testsuite=Concurrency
