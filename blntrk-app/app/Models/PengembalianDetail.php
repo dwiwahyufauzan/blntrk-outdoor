@@ -35,16 +35,25 @@ class PengembalianDetail extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Pengembalian, $this>
+     */
     public function pengembalian(): BelongsTo
     {
         return $this->belongsTo(Pengembalian::class);
     }
 
+    /**
+     * @return BelongsTo<PesananDetail, $this>
+     */
     public function pesananDetail(): BelongsTo
     {
         return $this->belongsTo(PesananDetail::class);
     }
 
+    /**
+     * @return HasMany<Denda, $this>
+     */
     public function denda(): HasMany
     {
         return $this->hasMany(Denda::class, 'pengembalian_detail_id');

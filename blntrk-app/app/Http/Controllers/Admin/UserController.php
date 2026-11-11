@@ -110,8 +110,8 @@ class UserController extends Controller
                     ['user_id' => $user->id],
                     [
                         'nama_lengkap' => $request->nama,
-                        'no_hp' => $request->no_hp ?? ($user->pelanggan?->no_hp ?? '-'),
-                        'alamat' => $request->alamat ?? ($user->pelanggan?->alamat ?? '-'),
+                        'no_hp' => $request->no_hp ?? ($user->pelanggan->no_hp ?? '-'),
+                        'alamat' => $request->alamat ?? ($user->pelanggan->alamat ?? '-'),
                     ]
                 );
             }

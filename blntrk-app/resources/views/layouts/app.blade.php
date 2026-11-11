@@ -27,6 +27,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-full bg-[#f4f5f6] text-[#14201a] antialiased">
+    <a href="#konten-utama" class="skip-link">Lewati ke konten utama</a>
         <div class="min-h-screen">
             @include('layouts.navigation')
 
@@ -40,7 +41,7 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main id="konten-utama" tabindex="-1">
                 {{ $slot }}
             </main>
         </div>

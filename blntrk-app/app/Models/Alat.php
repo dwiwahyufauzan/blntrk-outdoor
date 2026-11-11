@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\KetersediaanService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $stok_tersedia_rentang Atribut transien: stok minimum sepanjang rentang tanggal yang dicari di katalog.
+ */
 class Alat extends Model
 {
     use HasFactory, SoftDeletes;
@@ -41,16 +45,25 @@ class Alat extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<KategoriAlat, $this>
+     */
     public function kategori(): BelongsTo
     {
         return $this->belongsTo(KategoriAlat::class, 'kategori_id');
     }
 
+    /**
+     * @return HasMany<PesananDetail, $this>
+     */
     public function pesananDetail(): HasMany
     {
         return $this->hasMany(PesananDetail::class, 'alat_id');
     }
 
+    /**
+     * @return HasMany<RiwayatPerawatan, $this>
+     */
     public function riwayatPerawatan(): HasMany
     {
         return $this->hasMany(RiwayatPerawatan::class, 'alat_id');
@@ -70,7 +83,9 @@ class Alat extends Model
     }
 
     /**
-     * Jumlah unit alat yang sedang ditahan oleh pesanan aktif (menunggu, dibayar, disewa, terlambat).
+     * Jumlah unit alat yang tidak ada di toko hari ini: pesanan aktif yang masa sewanya mencakup hari ini, ditambah unit
+     * berstatus disewa yang jatuh tempo hari ini tetapi belum dikembalikan. Pesanan untuk tanggal mendatang tidak
+     * dihitung; stok pada tanggal itu dilihat lewat rentang tanggal.
      */
     public function getStokDisewaAttribute(): int
     {
@@ -78,17 +93,12 @@ class Alat extends Model
             return (int) $this->attributes['stok_disewa'];
         }
 
-        return (int) PesananDetail::query()
-            ->join('pesanan', 'pesanan.id', '=', 'pesanan_detail.pesanan_id')
-            ->where('pesanan_detail.alat_id', $this->id)
-            ->whereIn('pesanan.status', KetersediaanService::STATUS_AKTIF)
-            ->whereNull('pesanan.deleted_at')
-            ->sum('pesanan_detail.jumlah');
+        return self::pemakaianHariIni([$this->id])[$this->id];
     }
 
     /**
-     * Sisa stok unit yang benar-benar siap disewa oleh pelanggan saat ini.
-     * Otomatis berkurang saat disewa, dan otomatis bertambah (restock) saat barang dikembalikan.
+     * Sisa stok unit yang siap disewa hari ini, atau pada rentang tanggal bila dimuat lewat muatStokTersedia().
+     * Otomatis bertambah (restock) saat barang dikembalikan.
      */
     public function getStokTersediaAttribute(): int
     {
@@ -101,11 +111,13 @@ class Alat extends Model
 
     /**
      * Helper static untuk memasang stok_tersedia dan stok_disewa secara massal (eager aggregation) tanpa N+1 query.
+     * Tanpa rentang, yang dihitung adalah stok hari ini; dengan rentang [mulai, selesai) yang dihitung adalah
+     * stok minimum sepanjang rentang itu, sama seperti pengecekan saat pesanan dibuat.
      *
      * @param  iterable<Alat>  $alatList
      * @return iterable<Alat>
      */
-    public static function muatStokTersedia(iterable $alatList): iterable
+    public static function muatStokTersedia(iterable $alatList, ?Carbon $mulai = null, ?Carbon $selesai = null): iterable
     {
         $alatCollection = collect($alatList);
         if ($alatCollection->isEmpty()) {
@@ -114,22 +126,65 @@ class Alat extends Model
 
         $ids = $alatCollection->pluck('id')->all();
 
-        $terpakaiMap = PesananDetail::query()
-            ->join('pesanan', 'pesanan.id', '=', 'pesanan_detail.pesanan_id')
-            ->whereIn('pesanan_detail.alat_id', $ids)
-            ->whereIn('pesanan.status', KetersediaanService::STATUS_AKTIF)
-            ->whereNull('pesanan.deleted_at')
-            ->groupBy('pesanan_detail.alat_id')
-            ->selectRaw('pesanan_detail.alat_id, SUM(pesanan_detail.jumlah) as total_terpakai')
-            ->pluck('total_terpakai', 'pesanan_detail.alat_id');
+        if ($mulai && $selesai && $selesai->gt($mulai)) {
+            $terpakaiMap = self::pemakaianMaksimum($ids, $mulai->copy()->startOfDay(), $selesai->copy()->startOfDay());
+        } else {
+            $terpakaiMap = self::pemakaianHariIni($ids);
+        }
 
         foreach ($alatCollection as $alat) {
-            $disewa = (int) ($terpakaiMap[$alat->id] ?? 0);
+            $disewa = $terpakaiMap[$alat->id] ?? 0;
             $alat->stok_disewa = $disewa;
             $alat->stok_tersedia = max(0, $alat->kapasitas_fisik - $disewa);
         }
 
         return $alatList;
+    }
+
+    /**
+     * Unit yang tidak ada di toko hari ini per alat.
+     *
+     * @param  array<int, int>  $alatIds
+     * @return array<int, int> Format: [alat_id => unit_terpakai]
+     */
+    private static function pemakaianHariIni(array $alatIds): array
+    {
+        $hasil = self::pemakaianMaksimum($alatIds, today(), today()->addDay());
+
+        // Hari kembali dipakai ulang oleh mesin ketersediaan, padahal unit baru benar-benar di toko setelah dikembalikan
+        $belumKembali = PesananDetail::query()
+            ->join('pesanan', 'pesanan.id', '=', 'pesanan_detail.pesanan_id')
+            ->whereIn('pesanan_detail.alat_id', $alatIds)
+            ->where('pesanan.status', 'disewa')
+            ->whereDate('pesanan.tanggal_selesai', '<=', today())
+            ->whereNull('pesanan.deleted_at')
+            ->groupBy('pesanan_detail.alat_id')
+            ->selectRaw('pesanan_detail.alat_id, SUM(pesanan_detail.jumlah) as total')
+            ->pluck('total', 'pesanan_detail.alat_id');
+
+        foreach ($belumKembali as $alatId => $total) {
+            $hasil[$alatId] = ($hasil[$alatId] ?? 0) + (int) $total;
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * Pemakaian unit tertinggi pada satu hari mana pun dalam rentang [mulai, selesai) untuk tiap alat.
+     *
+     * @param  array<int, int>  $alatIds
+     * @return array<int, int> Format: [alat_id => unit_terpakai]
+     */
+    private static function pemakaianMaksimum(array $alatIds, Carbon $mulai, Carbon $selesai): array
+    {
+        $perHari = app(KetersediaanService::class)->terpakaiPerHariBanyak($alatIds, $mulai, $selesai);
+
+        $hasil = [];
+        foreach ($alatIds as $id) {
+            $hasil[$id] = empty($perHari[$id]) ? 0 : max($perHari[$id]);
+        }
+
+        return $hasil;
     }
 
     public function getFotoUrlAttribute(): ?string

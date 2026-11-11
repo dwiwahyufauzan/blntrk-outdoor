@@ -4,15 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Alat;
 use App\Models\KategoriAlat;
-use App\Models\Pengaturan;
 use App\Services\KetersediaanService;
+use App\Support\PengaturanToko;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\View\View;
 
 class KatalogController extends Controller
 {
+    /** Jumlah alat per halaman katalog. */
+    private const PER_HALAMAN = 12;
+
     public function __construct(
         protected KetersediaanService $ketersediaanService
     ) {}
@@ -88,14 +93,27 @@ class KatalogController extends Controller
             }
         }
 
-        // Pisahkan produk yang stoknya tersedia di atas, dan yang out-of-stock di bawah
-        $alatTersedia = $alatList->filter(fn ($alat) => $alat->stok_tersedia > 0)->values();
-        $alatHabis = $alatList->filter(fn ($alat) => $alat->stok_tersedia <= 0)->values();
+        // Produk yang stoknya tersedia di atas, yang out-of-stock di bawah; lalu dipotong per halaman.
+        // Stok baru diketahui setelah dihitung (hari ini atau rentang tanggal), sehingga paginasi dilakukan di memori.
+        $tersedia = $alatList->filter(fn ($alat) => $alat->stok_tersedia > 0)->values();
+        $habis = $alatList->filter(fn ($alat) => $alat->stok_tersedia <= 0)->values();
+
+        $urut = $tersedia->concat($habis)->values();
+        $halaman = new LengthAwarePaginator(
+            $urut->forPage(Paginator::resolveCurrentPage(), self::PER_HALAMAN)->values(),
+            $urut->count(),
+            self::PER_HALAMAN,
+            Paginator::resolveCurrentPage(),
+            ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
 
         return view('katalog.index', [
             'alatList' => $alatList,
-            'alatTersedia' => $alatTersedia,
-            'alatHabis' => $alatHabis,
+            'halaman' => $halaman,
+            'alatTersedia' => $halaman->getCollection()->filter(fn ($alat) => $alat->stok_tersedia > 0)->values(),
+            'alatHabis' => $halaman->getCollection()->filter(fn ($alat) => $alat->stok_tersedia <= 0)->values(),
+            'jumlahTersedia' => $tersedia->count(),
+            'jumlahHabis' => $habis->count(),
             'kategoriList' => $kategoriList,
             'kategoriAktif' => $request->input('kategori'),
             'keyword' => $request->input('q'),
@@ -140,6 +158,28 @@ class KatalogController extends Controller
     }
 
     /**
+     * Endpoint API JSON ketersediaan seluruh alat aktif pada satu rentang tanggal (dipakai form pemesanan
+     * agar stok yang tampil mengikuti tanggal yang dipilih, bukan stok hari ini).
+     */
+    public function ketersediaanSemua(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'mulai' => ['required', 'date', 'after_or_equal:today'],
+            'selesai' => ['required', 'date', 'after:mulai'],
+        ]);
+
+        $mulai = Carbon::parse($validated['mulai'])->startOfDay();
+        $selesai = Carbon::parse($validated['selesai'])->startOfDay();
+
+        $alatList = Alat::where('is_aktif', true)->get();
+
+        return response()->json([
+            'sukses' => true,
+            'tersedia' => $this->ketersediaanService->tersediaBanyak($alatList, $mulai, $selesai),
+        ]);
+    }
+
+    /**
      * Endpoint API JSON untuk pengecekan ketersediaan stok alat per rentang tanggal.
      * Mengembalikan jumlah unit tersedia dan estimasi biaya sewa.
      */
@@ -162,7 +202,7 @@ class KatalogController extends Controller
 
         $durasiHari = (int) $mulai->diffInDays($selesai);
 
-        $maksDurasi = Pengaturan::maksDurasiHari();
+        $maksDurasi = PengaturanToko::maksDurasiHari();
 
         if ($durasiHari > $maksDurasi) {
             return response()->json([

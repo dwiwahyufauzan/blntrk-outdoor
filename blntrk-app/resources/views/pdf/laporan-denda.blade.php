@@ -139,7 +139,7 @@
                         <td style="vertical-align: middle;">
                             <div class="brand-title">{{ $toko }}</div>
                             <div class="brand-subtitle">{{ $alamat }}</div>
-                            <div class="brand-subtitle">WhatsApp Toko: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam</div>
+                            <div class="brand-subtitle">WhatsApp Toko: {{ \App\Support\PengaturanToko::noWa() }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam</div>
                         </td>
                     </tr>
                 </table>

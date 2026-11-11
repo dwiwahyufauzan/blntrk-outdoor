@@ -10,3 +10,5 @@ parameters:
         - app/helpers.php
     # Rute/Blade/dinamis Eloquent ditangani Larastan; sisanya dicatat di baseline agar CI hanya gagal untuk temuan baru
     treatPhpDocTypesAsCertain: false
+    # Larastan membaca metode casts() model (Laravel 11+) agar tipe enum/Carbon terbaca, bukan string dari skema migrasi
+    parseModelCastsMethod: true

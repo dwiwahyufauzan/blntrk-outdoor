@@ -123,11 +123,17 @@ class StokDanKetersediaanProdukTest extends TestCase
 
         $response->assertRedirect();
 
-        // Stok tersedia sekarang harus berkurang menjadi 2 unit
-        $this->assertEquals(2, $this->alatTenda->fresh()->stok_tersedia);
+        // Pesanan untuk besok tidak mengurangi stok hari ini
+        $this->assertEquals(5, $this->alatTenda->fresh()->stok_tersedia);
 
-        // Di katalog publik juga harus menampilkan sisa 2 unit
-        $responseKatalog = $this->get(route('katalog.index'));
+        // Pada rentang tanggal pesanan, stok berkurang menjadi 2 unit
+        $mulai = Carbon::tomorrow();
+        $selesai = Carbon::tomorrow()->addDays(2);
+        $alat = Alat::muatStokTersedia([$this->alatTenda->fresh()], $mulai, $selesai)[0];
+        $this->assertEquals(2, $alat->stok_tersedia);
+
+        // Katalog publik dengan filter tanggal yang sama juga menampilkan sisa 2 unit
+        $responseKatalog = $this->get(route('katalog.index', ['mulai' => $mulai->toDateString(), 'selesai' => $selesai->toDateString()]));
         $responseKatalog->assertSee('Tersedia 2');
     }
 
@@ -208,7 +214,10 @@ class StokDanKetersediaanProdukTest extends TestCase
             'subtotal' => 30000,
         ]);
 
-        $this->assertEquals(0, $this->alatKompor->fresh()->stok_tersedia);
+        // Stok hari ini masih penuh, tetapi pada tanggal pesanan (besok) seluruh unit sudah terpesan
+        $this->assertEquals(2, $this->alatKompor->fresh()->stok_tersedia);
+        $besok = Alat::muatStokTersedia([$this->alatKompor->fresh()], Carbon::tomorrow(), Carbon::tomorrow()->addDay())[0];
+        $this->assertEquals(0, $besok->stok_tersedia);
 
         // Pelanggan mencoba memesan kompor yang sudah habis
         $response = $this->actingAs($this->pelangganUser)->post(route('pesanan.store'), [

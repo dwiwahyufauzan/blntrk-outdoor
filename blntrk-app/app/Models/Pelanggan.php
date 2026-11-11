@@ -21,11 +21,17 @@ class Pelanggan extends Model
         'alamat',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<Pesanan, $this>
+     */
     public function pesanan(): HasMany
     {
         return $this->hasMany(Pesanan::class);

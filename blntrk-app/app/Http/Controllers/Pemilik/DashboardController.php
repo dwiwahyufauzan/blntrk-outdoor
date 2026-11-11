@@ -6,9 +6,9 @@ use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Models\Alat;
 use App\Models\Denda;
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
 use App\Services\LaporanService;
+use App\Support\PengaturanToko;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -44,12 +44,12 @@ class DashboardController extends Controller
             'total_transaksi' => Pesanan::where('status', '!=', StatusPesanan::Dibatalkan->value)->count(),
             'total_alat' => Alat::count(),
             'alat_dalam_perawatan' => Alat::where('stok_perawatan', '>', 0)->sum('stok_perawatan'),
-            'jumlah_terlambat' => Pesanan::where('status', StatusPesanan::Terlambat)->count(),
+            'jumlah_terlambat' => Pesanan::sedangTerlambat()->count(),
         ];
 
         // 4. Alat Terlaris (Top 5) & Stok Kritis
         $alatTerlaris = $laporanService->laporanAlatTerlaris(now()->subMonths(6), now(), 5)['items'];
-        $stokKritis = $laporanService->laporanStokKritis((int) Pengaturan::ambil('ambang_stok_kritis', 2));
+        $stokKritis = $laporanService->laporanStokKritis(PengaturanToko::ambangStokKritis());
 
         // 5. Grafik Pendapatan 6 Bulan Terakhir
         $chartLabels = [];

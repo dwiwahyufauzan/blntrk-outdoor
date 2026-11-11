@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Data\PesananBaru;
 use App\Enums\JenisDenda;
+use App\Enums\MetodePembayaran;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\Denda;
@@ -109,7 +111,7 @@ class PengembalianDendaTest extends TestCase
      */
     protected function createPesananDisewa(int $durasiHari = 2): Pesanan
     {
-        $pesanan = $this->pesananService->buat($this->pelanggan, $this->userPelanggan, [
+        $pesanan = $this->pesananService->buat($this->pelanggan, $this->userPelanggan, PesananBaru::dari([
             'tanggal_mulai' => Carbon::yesterday()->subDays($durasiHari)->toDateString(),
             'tanggal_selesai' => Carbon::yesterday()->toDateString(),
             'items' => [
@@ -117,7 +119,7 @@ class PengembalianDendaTest extends TestCase
                 ['alat_id' => $this->carrier->id, 'jumlah' => 1],
             ],
             'catatan' => 'Pesanan uji pengembalian',
-        ]);
+        ]));
 
         // Bayar
         $this->pesananService->bayar($pesanan, $this->admin, [
@@ -447,11 +449,12 @@ class PengembalianDendaTest extends TestCase
             'status_bayar' => 'belum_lunas',
         ]);
 
-        $response = $this->actingAs($this->admin)->patch(route('admin.denda.lunas', $denda->id));
+        $response = $this->actingAs($this->admin)->patch(route('admin.denda.lunas', $denda->id), ['metode_bayar' => 'transfer']);
         $response->assertSessionHas('status');
 
         $denda->refresh();
         $this->assertEquals('lunas', $denda->status_bayar);
+        $this->assertSame(MetodePembayaran::Transfer, $denda->metode_bayar);
         $this->assertNotNull($denda->dilunasi_pada);
         $this->assertEquals($this->admin->id, $denda->dilunasi_oleh);
     }
@@ -466,11 +469,11 @@ class PengembalianDendaTest extends TestCase
             'jatuh_tempo' => now()->subHours(2),
         ]);
 
-        $pesananMenunggu = $this->pesananService->buat($this->pelanggan, $this->userPelanggan, [
+        $pesananMenunggu = $this->pesananService->buat($this->pelanggan, $this->userPelanggan, PesananBaru::dari([
             'tanggal_mulai' => Carbon::tomorrow()->toDateString(),
             'tanggal_selesai' => Carbon::tomorrow()->addDay()->toDateString(),
             'items' => [['alat_id' => $this->tenda->id, 'jumlah' => 1]],
-        ]);
+        ]));
         $pesananMenunggu->update([
             'batas_ambil' => now()->subHours(3),
         ]);

@@ -122,12 +122,12 @@
                         <div class="flex flex-wrap items-center gap-3 mt-3 text-xs text-stone-500">
                             <span class="inline-flex items-center gap-1.5 font-bold {{ $alat->stok_tersedia > 0 ? 'text-emerald-800' : 'text-rose-600' }}">
                                 <span class="w-2.5 h-2.5 rounded-full {{ $alat->stok_tersedia > 0 ? 'bg-[#5edd5b]' : 'bg-rose-500' }}"></span>
-                                Stok Siap Sewa: <strong class="text-stone-900">{{ $alat->stok_tersedia }} unit</strong>
+                                Stok Hari Ini: <strong class="text-stone-900">{{ $alat->stok_tersedia }} unit</strong>
                             </span>
                             <span class="text-stone-300">|</span>
                             <span class="text-stone-500">Total Fisik: {{ $alat->stok_total }} unit</span>
                             @if($alat->stok_disewa > 0)
-                                <span class="text-stone-500">({{ $alat->stok_disewa }} sedang disewa)</span>
+                                <span class="text-stone-500">({{ $alat->stok_disewa }} sedang disewa hari ini)</span>
                             @endif
                             @if($alat->stok_perawatan > 0)
                                 <span class="text-amber-600 font-semibold">({{ $alat->stok_perawatan }} servis)</span>

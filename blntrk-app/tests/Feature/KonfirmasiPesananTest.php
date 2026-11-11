@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\PesananBaru;
 use App\Enums\MetodePembayaran;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
@@ -93,14 +94,14 @@ class KonfirmasiPesananTest extends TestCase
 
     protected function createPesananMenunggu(): Pesanan
     {
-        return $this->pesananService->buat($this->pelanggan, $this->userPelanggan, [
+        return $this->pesananService->buat($this->pelanggan, $this->userPelanggan, PesananBaru::dari([
             'tanggal_mulai' => Carbon::tomorrow()->toDateString(),
             'tanggal_selesai' => Carbon::tomorrow()->addDays(2)->toDateString(),
             'items' => [
                 ['alat_id' => $this->tenda->id, 'jumlah' => 1],
             ],
             'catatan' => 'Uji pesanan',
-        ]);
+        ]));
     }
 
     /**
@@ -297,6 +298,7 @@ class KonfirmasiPesananTest extends TestCase
 
         $response = $this->actingAs($this->admin)->patch(route('admin.pesanan.batal', $pesanan->id), [
             'alasan_batal' => 'Permintaan refund dari pelanggan via telepon darurat',
+            'penanganan_dana' => 'hangus',
         ]);
 
         $response->assertRedirect(route('admin.pesanan.show', $pesanan->id));

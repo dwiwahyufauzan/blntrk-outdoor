@@ -5,9 +5,9 @@ namespace App\Services;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\LogAktivitas;
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
 use App\Models\User;
+use App\Support\PengaturanToko;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -174,8 +174,8 @@ class PerubahanPesananService
      */
     private function panaskanPengaturan(): void
     {
-        Pengaturan::ambil('jam_kembali', '12:00');
-        Pengaturan::ambil('maks_durasi_hari', 14);
+        PengaturanToko::jamKembali();
+        PengaturanToko::maksDurasiHari();
     }
 
     /**
@@ -210,7 +210,7 @@ class PerubahanPesananService
             throw ValidationException::withMessages([$field => 'Tanggal selesai harus setelah tanggal mulai.']);
         }
 
-        $maks = Pengaturan::maksDurasiHari();
+        $maks = PengaturanToko::maksDurasiHari();
         if ($durasi > $maks) {
             throw ValidationException::withMessages([$field => "Durasi sewa maksimal adalah {$maks} hari."]);
         }
@@ -243,7 +243,7 @@ class PerubahanPesananService
             'tanggal_mulai' => $mulai,
             'tanggal_selesai' => $selesai,
             'durasi_hari' => $durasi,
-            'jatuh_tempo' => $selesai->copy()->setTimeFromTimeString(Pengaturan::ambil('jam_kembali', '12:00')),
+            'jatuh_tempo' => $selesai->copy()->setTimeFromTimeString(PengaturanToko::jamKembali()),
             'batas_ambil' => $mulai->copy()->setTime(23, 59, 59),
             'total_sewa' => $total - $diskon,
             'paket_bundling_id' => $diskon > 0 ? $diskonPaket['paket']?->id : null,

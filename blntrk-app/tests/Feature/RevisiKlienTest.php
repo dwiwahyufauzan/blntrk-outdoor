@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\PesananBaru;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\PaketBundling;
@@ -57,11 +58,11 @@ class RevisiKlienTest extends TestCase
 
     private function buatPesanan()
     {
-        return app(PesananService::class)->buat($this->pelanggan, $this->admin, [
+        return app(PesananService::class)->buat($this->pelanggan, $this->admin, PesananBaru::dari([
             'tanggal_mulai' => Carbon::today()->toDateString(),
             'tanggal_selesai' => Carbon::today()->addDays(2)->toDateString(),
             'items' => [['alat_id' => $this->alat->id, 'jumlah' => 1]],
-        ]);
+        ]));
     }
 
     /**

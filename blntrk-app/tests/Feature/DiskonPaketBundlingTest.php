@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\PesananBaru;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
@@ -76,11 +77,11 @@ class DiskonPaketBundlingTest extends TestCase
 
     private function buatPesanan(array $items, int $hari = 2): Pesanan
     {
-        return app(PesananService::class)->buat($this->pelanggan, $this->pelangganUser, [
+        return app(PesananService::class)->buat($this->pelanggan, $this->pelangganUser, PesananBaru::dari([
             'tanggal_mulai' => today()->toDateString(),
             'tanggal_selesai' => today()->addDays($hari)->toDateString(),
             'items' => $items,
-        ]);
+        ]));
     }
 
     public function test_pesanan_yang_memenuhi_paket_mendapat_diskon_otomatis(): void

@@ -1,6 +1,6 @@
 @php
     $user = auth()->user();
-    $noWa = \App\Models\Pengaturan::ambil('no_wa_toko', '6281234567890');
+    $noWa = \App\Support\PengaturanToko::noWa();
     $jmlPesananAktifNav = 0;
 
     $navLinks = [
@@ -78,6 +78,7 @@
     </style>
 </head>
 <body x-data="{ mobileOpen: false }" class="bg-[#f4f5f6] text-stone-900 antialiased flex flex-col min-h-screen">
+    <a href="#konten-utama" class="skip-link">Lewati ke konten utama</a>
 
     <!-- Top Contact Bar (Foresta Adventure Style) -->
     <div class="bg-[#0e1b15] text-stone-300 text-xs border-b border-[#1e3a2c]/60 print:hidden">
@@ -393,7 +394,7 @@
     </div>
 
     <!-- Main Content Body -->
-    <main class="flex-grow print:p-0 print:m-0">
+    <main id="konten-utama" tabindex="-1" class="flex-grow print:p-0 print:m-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 print:p-0 print:m-0 print:max-w-none">
             <div class="print:hidden">
                 <x-alert />

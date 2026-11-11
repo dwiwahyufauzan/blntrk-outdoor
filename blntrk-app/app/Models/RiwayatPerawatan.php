@@ -29,16 +29,25 @@ class RiwayatPerawatan extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Alat, $this>
+     */
     public function alat(): BelongsTo
     {
         return $this->belongsTo(Alat::class)->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<Pesanan, $this>
+     */
     public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

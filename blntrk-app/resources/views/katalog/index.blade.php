@@ -195,18 +195,26 @@
 
         @if($alatList->count() > 0)
             <!-- Section 1: Alat Siap Sewa (Stok Tersedia) -->
+            @if($alatTersedia->isNotEmpty() || $jumlahTersedia === 0)
             <div class="mb-4 flex items-center justify-between">
                 <div>
                     <h2 class="text-sm sm:text-base font-extrabold text-[#0e1b15] font-urbanist flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#5edd5b]"></span>
                         <span>Perlengkapan Siap Sewa</span>
                     </h2>
-                    <p class="text-[11px] text-stone-500">Unit tersedia dan dapat langsung dipesan untuk petualangan Anda.</p>
+                    <p class="text-[11px] text-stone-500">
+                        @if($tanggalMulai && $tanggalSelesai)
+                            Jumlah unit yang tersedia pada {{ $tanggalMulai->translatedFormat('d M Y') }} &ndash; {{ $tanggalSelesai->translatedFormat('d M Y') }}.
+                        @else
+                            Jumlah unit menunjukkan stok hari ini. Pilih tanggal sewa untuk melihat stok pada tanggal Anda.
+                        @endif
+                    </p>
                 </div>
                 <span class="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    {{ $alatTersedia->count() }} Alat Tersedia
+                    {{ $jumlahTersedia }} Alat Tersedia
                 </span>
             </div>
+            @endif
 
             @if($alatTersedia->isNotEmpty())
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
@@ -267,7 +275,7 @@
                         </div>
                     @endforeach
                 </div>
-            @else
+            @elseif($jumlahTersedia === 0)
                 <div class="p-8 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-center text-amber-900 mb-8">
                     <p class="text-xs font-bold">Saat ini seluruh perlengkapan outdoor pada filter ini sedang tersewa penuh.</p>
                 </div>
@@ -286,11 +294,15 @@
                                 <span>Perlengkapan Sedang Disewa (Out of Stock)</span>
                             </h3>
                             <p class="text-xs text-stone-500 mt-0.5">
-                                Alat di bawah ini sedang berada di tangan petualang lain. Stok akan <strong>otomatis terisi kembali (restock)</strong> segera setelah alat dikembalikan ke toko.
+                                @if($tanggalMulai && $tanggalSelesai)
+                                    Alat di bawah ini sudah terpesan penuh pada tanggal yang Anda pilih. Coba geser tanggal sewa untuk melihat jadwal lain yang masih kosong.
+                                @else
+                                    Alat di bawah ini sedang berada di tangan petualang lain hari ini. Stok akan <strong>otomatis terisi kembali (restock)</strong> segera setelah alat dikembalikan ke toko, dan mungkin tersedia di tanggal lain.
+                                @endif
                             </p>
                         </div>
                         <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-stone-100 text-stone-600 border border-stone-200 shrink-0">
-                            {{ $alatHabis->count() }} Alat Sedang Disewa
+                            {{ $jumlahHabis }} Alat Sedang Disewa
                         </span>
                     </div>
 
@@ -353,6 +365,12 @@
                             </div>
                         @endforeach
                     </div>
+                </div>
+            @endif
+
+            @if($halaman->hasPages())
+                <div class="mt-10">
+                    {{ $halaman->links() }}
                 </div>
             @endif
         @else

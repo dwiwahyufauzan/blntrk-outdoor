@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Data\PengembalianBaru;
 use App\Enums\JenisDenda;
+use App\Enums\MetodePembayaran;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\Denda;
@@ -13,12 +15,17 @@ use App\Models\Pengembalian;
 use App\Models\Pesanan;
 use App\Models\RiwayatPerawatan;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PengembalianService
 {
+    /**
+     * Selisih (menit) antara waktu pengembalian yang diketik admin dan waktu sistem yang masih dianggap wajar.
+     * Lebih dari itu dicatat sebagai koreksi manual pada log aktivitas dan wajib disertai catatan.
+     */
+    public const TOLERANSI_WAKTU_MANUAL_MENIT = 60;
+
     public function __construct(
         protected DendaService $dendaService
     ) {}
@@ -41,39 +48,43 @@ class PengembalianService
      * Memproses pengembalian alat sewa, mengecek kondisi unit, memperbarui stok,
      * serta mencatat denda keterlambatan dan kerusakan.
      *
-     * @param  array  $data  Format: ['dikembalikan_pada' => string, 'catatan' => ?string, 'baris' => [pesanan_detail_id => ['baik' => int, 'rusak_ringan' => int, 'rusak_berat' => int, 'hilang' => int, 'biaya' => ?float, 'catatan' => ?string]]]
+     * Waktu pengembalian bawaannya waktu sistem. Bila admin mengisi waktu yang berbeda lebih dari
+     * TOLERANSI_WAKTU_MANUAL_MENIT, koreksi itu tercatat pada log beserta waktu sistem sebenarnya.
      *
      * @throws ValidationException
      */
-    public function proses(Pesanan $pesanan, User $admin, array $data): Pengembalian
+    public function proses(Pesanan $pesanan, User $admin, PengembalianBaru $data): Pengembalian
     {
         return DB::transaction(function () use ($pesanan, $admin, $data) {
             $p = Pesanan::with('detail.alat')->lockForUpdate()->findOrFail($pesanan->id);
             $this->pastikan($p, [StatusPesanan::Disewa, StatusPesanan::Terlambat]);
 
-            $waktuKembali = Carbon::parse($data['dikembalikan_pada'] ?? now());
+            $sekarang = now();
+            $waktuKembali = $data->dikembalikanPada ?? $sekarang;
+            $selisihMenit = (int) abs($waktuKembali->diffInMinutes($sekarang));
+            $koreksiManual = $selisihMenit > self::TOLERANSI_WAKTU_MANUAL_MENIT;
 
             $kembali = Pengembalian::create([
                 'pesanan_id' => $p->id,
                 'dikembalikan_pada' => $waktuKembali,
                 'hari_terlambat' => 0,
                 'diterima_oleh' => $admin->id,
-                'catatan' => $data['catatan'] ?? null,
+                'catatan' => $data->catatan,
             ]);
 
             foreach ($p->detail as $det) {
-                $x = $data['baris'][$det->id] ?? null;
+                $x = $data->baris[$det->id] ?? null;
                 if (! $x) {
                     throw ValidationException::withMessages([
                         'baris' => "Data kondisi untuk alat {$det->alat->nama} wajib diisi.",
                     ]);
                 }
 
-                $baik = (int) ($x['baik'] ?? 0);
-                $rusakRingan = (int) ($x['rusak_ringan'] ?? 0);
-                $rusakBerat = (int) ($x['rusak_berat'] ?? 0);
-                $hilang = (int) ($x['hilang'] ?? 0);
-                $jumlahKondisi = $baik + $rusakRingan + $rusakBerat + $hilang;
+                $baik = $x->baik;
+                $rusakRingan = $x->rusakRingan;
+                $rusakBerat = $x->rusakBerat;
+                $hilang = $x->hilang;
+                $jumlahKondisi = $x->jumlahKondisi();
 
                 if ($jumlahKondisi !== $det->jumlah) {
                     throw ValidationException::withMessages([
@@ -87,7 +98,7 @@ class PengembalianService
                     'jml_rusak_ringan' => $rusakRingan,
                     'jml_rusak_berat' => $rusakBerat,
                     'jml_hilang' => $hilang,
-                    'catatan' => $x['catatan'] ?? null,
+                    'catatan' => $x->catatan,
                 ]);
 
                 // Update stok alat:
@@ -108,13 +119,13 @@ class PengembalianService
                 );
 
                 // Denda kerusakan atau penggantian unit hilang sesuai harga beli alat
-                $biaya = (float) ($x['biaya'] ?? 0);
+                $biaya = $x->biaya;
                 if ($hilang > 0 && $biaya <= 0 && (float) ($alat->harga_beli ?? 0) > 0) {
                     $biaya = (float) $alat->harga_beli * $hilang;
                 }
 
                 if ($biaya > 0) {
-                    $kategoriId = $x['kategori_denda_id'] ?? null;
+                    $kategoriId = $x->kategoriDendaId;
                     $jenisDenda = JenisDenda::Kerusakan;
 
                     if ($kategoriId) {
@@ -138,14 +149,14 @@ class PengembalianService
                     if ($hilang > 0) {
                         $keteranganDenda = "Ganti rugi kehilangan {$hilang} unit {$det->alat->nama}";
                         if ((float) ($alat->harga_beli ?? 0) > 0) {
-                            $keteranganDenda .= ' (Sesuai harga beli @ Rp'.number_format($alat->harga_beli, 0, ',', '.').')';
+                            $keteranganDenda .= ' (Sesuai harga beli @ Rp'.number_format((float) $alat->harga_beli, 0, ',', '.').')';
                         }
-                        if (! empty($x['catatan'])) {
-                            $keteranganDenda .= " - {$x['catatan']}";
+                        if ($x->catatan !== null) {
+                            $keteranganDenda .= " - {$x->catatan}";
                         }
                     } else {
-                        $keteranganDenda = ! empty($x['catatan'])
-                            ? "Biaya kerusakan alat: {$det->alat->nama} ({$x['catatan']})"
+                        $keteranganDenda = $x->catatan !== null
+                            ? "Biaya kerusakan alat: {$det->alat->nama} ({$x->catatan})"
                             : "Biaya kerusakan alat: {$det->alat->nama}";
                     }
 
@@ -184,10 +195,14 @@ class PengembalianService
                 'diproses_oleh' => $admin->id,
             ]);
 
+            $koreksi = $koreksiManual
+                ? " Waktu pengembalian diisi manual {$waktuKembali->format('d/m/Y H:i')} (waktu sistem {$sekarang->format('d/m/Y H:i')}, selisih {$selisihMenit} menit)."
+                : '';
+
             LogAktivitas::catat(
                 $admin,
                 'pengembalian.proses',
-                "Memproses pengembalian pesanan [{$p->no_resi}]. Status menjadi Selesai/Dikembalikan."
+                "Memproses pengembalian pesanan [{$p->no_resi}]. Status menjadi Selesai/Dikembalikan.{$koreksi}"
             );
 
             return $kembali->load(['detail.pesananDetail.alat', 'denda']);
@@ -239,11 +254,11 @@ class PengembalianService
     }
 
     /**
-     * Menandai denda keterlambatan / kerusakan telah dilunasi di kasir toko.
+     * Menandai denda keterlambatan / kerusakan telah dilunasi di kasir toko beserta metode bayarnya.
      */
-    public function lunaskanDenda(Denda $denda, User $admin): Denda
+    public function lunaskanDenda(Denda $denda, User $admin, MetodePembayaran $metode): Denda
     {
-        return DB::transaction(function () use ($denda, $admin) {
+        return DB::transaction(function () use ($denda, $admin, $metode) {
             $d = Denda::lockForUpdate()->findOrFail($denda->id);
 
             if ($d->status_bayar === 'lunas') {
@@ -254,6 +269,7 @@ class PengembalianService
 
             $d->update([
                 'status_bayar' => 'lunas',
+                'metode_bayar' => $metode,
                 'dilunasi_pada' => now(),
                 'dilunasi_oleh' => $admin->id,
             ]);
@@ -261,7 +277,7 @@ class PengembalianService
             LogAktivitas::catat(
                 $admin,
                 'denda.lunas',
-                "Menandai lunas denda #{$d->id} ({$d->jenis->label()}) sebesar Rp".number_format($d->jumlah, 0, ',', '.')." untuk pesanan [{$d->pesanan->no_resi}]."
+                "Menandai lunas denda #{$d->id} ({$d->jenis->label()}) sebesar Rp".number_format((float) $d->jumlah, 0, ',', '.')." untuk pesanan [{$d->pesanan->no_resi}] via {$metode->value}."
             );
 
             return $d;
@@ -275,6 +291,13 @@ class PengembalianService
     {
         return DB::transaction(function () use ($pesanan, $admin, $data) {
             $p = Pesanan::lockForUpdate()->findOrFail($pesanan->id);
+
+            // Denda hanya bermakna setelah alat keluar dari toko: pesanan menunggu/dibayar/dibatalkan tidak pernah disewa
+            if (! in_array($p->status, [StatusPesanan::Disewa, StatusPesanan::Terlambat, StatusPesanan::Dikembalikan], true)) {
+                throw ValidationException::withMessages([
+                    'status' => "Denda tidak dapat ditambahkan pada pesanan berstatus {$p->status->label()}. Denda hanya untuk pesanan yang sedang disewa, terlambat, atau sudah dikembalikan.",
+                ]);
+            }
 
             $kategori = null;
             if (! empty($data['kategori_denda_id'])) {
@@ -310,7 +333,7 @@ class PengembalianService
             LogAktivitas::catat(
                 $admin,
                 'denda.tambah',
-                "Menambahkan denda manual #{$denda->id} ({$denda->keterangan}) sebesar Rp".number_format($denda->jumlah, 0, ',', '.')." untuk pesanan [{$p->no_resi}]."
+                "Menambahkan denda manual #{$denda->id} ({$denda->keterangan}) sebesar Rp".number_format((float) $denda->jumlah, 0, ',', '.')." untuk pesanan [{$p->no_resi}]."
             );
 
             return $denda;

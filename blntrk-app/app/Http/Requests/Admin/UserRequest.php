@@ -15,7 +15,7 @@ class UserRequest extends FormRequest
 
     public function rules(): array
     {
-        $userId = $this->route('user')?->id ?? $this->route('user');
+        $userId = $this->route('user')->id ?? $this->route('user');
         $isCreate = $this->isMethod('post');
 
         return [

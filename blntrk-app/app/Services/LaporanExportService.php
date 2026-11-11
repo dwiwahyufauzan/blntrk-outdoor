@@ -49,8 +49,8 @@ class LaporanExportService
             fputcsv($handle, [
                 $index + 1,
                 $item->no_resi,
-                $item->pelanggan?->nama_lengkap ?? '-',
-                $item->pelanggan?->no_hp ?? '-',
+                $item->pelanggan->nama_lengkap ?? '-',
+                $item->pelanggan->no_hp ?? '-',
                 $item->tanggal_mulai?->format('d/m/Y'),
                 $item->tanggal_selesai?->format('d/m/Y'),
                 $item->durasi_hari,
@@ -68,6 +68,7 @@ class LaporanExportService
         fputcsv($handle, ['Periode:', $dari->format('d/m/Y').' s/d '.$sampai->format('d/m/Y')]);
         fputcsv($handle, ['Total Pendapatan Sewa:', 'Rp '.number_format($data['total_pendapatan_sewa'], 0, ',', '.')]);
         fputcsv($handle, ['Total Denda Lunas:', 'Rp '.number_format($data['total_pendapatan_denda'], 0, ',', '.')]);
+        fputcsv($handle, ['Total Refund Dikembalikan:', 'Rp '.number_format($data['total_refund'], 0, ',', '.')]);
         fputcsv($handle, ['Total Kas Masuk Bersih:', 'Rp '.number_format($data['total_pendapatan_bersih'], 0, ',', '.')]);
         fputcsv($handle, []);
 
@@ -78,25 +79,41 @@ class LaporanExportService
                 $idx + 1,
                 $bayar->dibayar_pada?->format('d/m/Y H:i'),
                 $bayar->pesanan?->no_resi,
-                $bayar->pesanan?->pelanggan?->nama_lengkap ?? '-',
+                $bayar->pesanan?->pelanggan->nama_lengkap ?? '-',
                 $bayar->metode->label(),
-                $bayar->pencatat?->nama ?? 'Admin',
+                $bayar->pencatat->nama ?? 'Admin',
                 (int) $bayar->jumlah,
             ]);
         }
 
         fputcsv($handle, []);
         fputcsv($handle, ['--- DENDA KETERLAMBATAN & KERUSAKAN LUNAS ---']);
-        fputcsv($handle, ['No', 'Waktu Pelunasan', 'No Resi', 'Nama Pelanggan', 'Jenis Denda', 'Petugas Kasir', 'Nominal (Rp)']);
+        fputcsv($handle, ['No', 'Waktu Pelunasan', 'No Resi', 'Nama Pelanggan', 'Jenis Denda', 'Metode Bayar', 'Petugas Kasir', 'Nominal (Rp)']);
         foreach ($data['denda_lunas'] as $idx => $denda) {
             fputcsv($handle, [
                 $idx + 1,
                 $denda->dilunasi_pada?->format('d/m/Y H:i') ?? $denda->created_at?->format('d/m/Y H:i'),
                 $denda->pesanan?->no_resi,
-                $denda->pesanan?->pelanggan?->nama_lengkap ?? '-',
+                $denda->pesanan?->pelanggan->nama_lengkap ?? '-',
                 $denda->jenis->label(),
-                $denda->petugasLunas?->nama ?? 'Admin',
+                $denda->metode_bayar?->label() ?? '-',
+                $denda->petugasLunas->nama ?? 'Admin',
                 (int) $denda->jumlah,
+            ]);
+        }
+
+        fputcsv($handle, []);
+        fputcsv($handle, ['--- REFUND PESANAN DIBATALKAN (KAS KELUAR) ---']);
+        fputcsv($handle, ['No', 'Waktu Refund', 'No Resi', 'Nama Pelanggan', 'Metode', 'Petugas Kasir', 'Nominal (Rp)']);
+        foreach ($data['refund'] as $idx => $refund) {
+            fputcsv($handle, [
+                $idx + 1,
+                $refund->direfund_pada?->format('d/m/Y H:i'),
+                $refund->pesanan?->no_resi,
+                $refund->pesanan?->pelanggan->nama_lengkap ?? '-',
+                $refund->metode->label(),
+                $refund->pencatat->nama ?? 'Admin',
+                (int) $refund->jumlah,
             ]);
         }
     }
@@ -118,7 +135,7 @@ class LaporanExportService
                 $idx + 1,
                 $denda->created_at->format('d/m/Y H:i'),
                 $denda->pesanan?->no_resi,
-                $denda->pesanan?->pelanggan?->nama_lengkap ?? '-',
+                $denda->pesanan?->pelanggan->nama_lengkap ?? '-',
                 $denda->jenis->label(),
                 $denda->keterangan ?? '-',
                 strtoupper($denda->status_bayar),
@@ -142,9 +159,9 @@ class LaporanExportService
         foreach ($data['items'] as $idx => $row) {
             fputcsv($handle, [
                 $idx + 1,
-                $row->alat?->kode_alat ?? '-',
-                $row->alat?->nama ?? 'Alat Dihapus',
-                $row->alat?->kategori?->nama ?? '-',
+                $row->alat->kode_alat ?? '-',
+                $row->alat->nama ?? 'Alat Dihapus',
+                $row->alat?->kategori->nama ?? '-',
                 (int) $row->total_disewa,
                 (int) $row->total_transaksi,
                 (int) $row->total_pendapatan,

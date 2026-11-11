@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Data\PesananBaru;
 use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminPesananRequest;
@@ -10,6 +11,7 @@ use App\Http\Requests\PembayaranRequest;
 use App\Http\Requests\PengambilanRequest;
 use App\Http\Requests\PengembalianRequest;
 use App\Http\Requests\PerpanjanganRequest;
+use App\Http\Requests\RefundRequest;
 use App\Http\Requests\UbahJadwalRequest;
 use App\Models\Alat;
 use App\Models\KategoriDenda;
@@ -100,7 +102,7 @@ class PesananController extends Controller
             ]);
         }
 
-        $pesanan = $service->buat($pelanggan, auth()->user(), $request->validated());
+        $pesanan = $service->buat($pelanggan, auth()->user(), PesananBaru::dari($request->validated()));
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
             ->with('status', "Pesanan walk-in berhasil dibuat dengan no resi {$pesanan->no_resi}.");
@@ -142,6 +144,8 @@ class PesananController extends Controller
      */
     public function tambahDenda(Request $request, Pesanan $pesanan, PengembalianService $service): RedirectResponse
     {
+        $this->authorize('tambahDenda', $pesanan);
+
         $validated = $request->validate([
             'kategori_denda_id' => ['nullable', 'exists:kategori_denda,id'],
             'jumlah' => ['required', 'numeric', 'min:1000', 'max:'.PengembalianRequest::BIAYA_MAKS],
@@ -156,7 +160,7 @@ class PesananController extends Controller
         $denda = $service->tambahDendaManual($pesanan, auth()->user(), $validated);
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
-            ->with('status', 'Denda baru sebesar Rp '.number_format($denda->jumlah, 0, ',', '.')." berhasil ditambahkan ke pesanan {$pesanan->no_resi}. Jaminan fisik ditahan sampai seluruh denda dilunasi.");
+            ->with('status', 'Denda baru sebesar Rp '.number_format((float) $denda->jumlah, 0, ',', '.')." berhasil ditambahkan ke pesanan {$pesanan->no_resi}. Jaminan fisik ditahan sampai seluruh denda dilunasi.");
     }
 
     /**
@@ -170,7 +174,7 @@ class PesananController extends Controller
         $service->bayar($pesanan, auth()->user(), $request->validated());
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
-            ->with('status', "Pembayaran pesanan {$pesanan->no_resi} sebesar Rp ".number_format($pesanan->total_sewa, 0, ',', '.').' berhasil dikonfirmasi. Status pesanan: Sudah Dibayar.');
+            ->with('status', "Pembayaran pesanan {$pesanan->no_resi} sebesar Rp ".number_format((float) $pesanan->total_sewa, 0, ',', '.').' berhasil dikonfirmasi. Status pesanan: Sudah Dibayar.');
     }
 
     /**
@@ -192,6 +196,8 @@ class PesananController extends Controller
      */
     public function kembalikanJaminan(Pesanan $pesanan, PengembalianService $service): RedirectResponse
     {
+        $this->authorize('kembalikanJaminan', $pesanan);
+
         $service->kembalikanJaminan($pesanan, auth()->user());
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
@@ -200,16 +206,30 @@ class PesananController extends Controller
 
     /**
      * Pembatalan pesanan oleh Admin dengan alasan wajib (F05c).
-     * Berlaku untuk pesanan berstatus Menunggu atau Dibayar.
+     * Berlaku untuk pesanan berstatus Menunggu atau Dibayar; pesanan yang sudah dibayar wajib menentukan
+     * apakah dananya dikembalikan (refund) atau hangus.
      */
     public function batal(BatalRequest $request, Pesanan $pesanan, PesananService $service): RedirectResponse
     {
         $this->authorize('batal', $pesanan);
 
-        $service->batal($pesanan, auth()->user(), $request->validated()['alasan_batal']);
+        $service->batal($pesanan, auth()->user(), $request->validated()['alasan_batal'], $request->refund());
 
         return redirect()->route('admin.pesanan.show', $pesanan->id)
             ->with('status', "Pesanan {$pesanan->no_resi} berhasil dibatalkan.");
+    }
+
+    /**
+     * Mencatat pengembalian dana (refund) pada pesanan yang sudah dibatalkan.
+     */
+    public function catatRefund(RefundRequest $request, Pesanan $pesanan, PesananService $service): RedirectResponse
+    {
+        $this->authorize('catatRefund', $pesanan);
+
+        $refund = $service->catatRefund($pesanan, auth()->user(), $request->refund());
+
+        return redirect()->route('admin.pesanan.show', $pesanan->id)
+            ->with('status', 'Refund sebesar Rp '.number_format((float) $refund->jumlah, 0, ',', '.')." untuk pesanan {$pesanan->no_resi} berhasil dicatat.");
     }
 
     /**
@@ -248,6 +268,8 @@ class PesananController extends Controller
      */
     public function bukti(Pesanan $pesanan, BuktiTransferService $bukti): StreamedResponse
     {
+        $this->authorize('lihatBukti', $pesanan);
+
         return $bukti->kirim($pesanan);
     }
 }

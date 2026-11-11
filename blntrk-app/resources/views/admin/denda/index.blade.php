@@ -313,7 +313,7 @@
                                         Lunas
                                     </span>
                                     <div class="text-[9px] text-stone-400 font-mono mt-0.5">
-                                        {{ $d->dilunasi_pada?->format('d/m/Y H:i') }}
+                                        {{ $d->dilunasi_pada?->format('d/m/Y H:i') }}{{ $d->metode_bayar ? ' · '.$d->metode_bayar->value : '' }}
                                     </div>
                                 @else
                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100 text-rose-900 border border-rose-300">
@@ -325,12 +325,20 @@
                                 <div class="flex items-center justify-end gap-2">
                                     @if($d->status_bayar !== 'lunas')
                                         <form method="POST" action="{{ route('admin.denda.lunas', $d->id) }}"
+                                              class="flex items-center gap-1.5"
                                               data-konfirmasi="primary"
                                               data-judul="Konfirmasi Pelunasan Denda"
                                               data-pesan="Tandai lunas denda Rp{{ number_format($d->jumlah, 0, ',', '.') }} untuk pesanan [{{ $d->pesanan->no_resi }}]?"
                                               data-tombol="Ya, Tandai Lunas">
                                             @csrf
                                             @method('PATCH')
+                                            <label for="metode_bayar_{{ $d->id }}" class="sr-only">Metode pembayaran denda</label>
+                                            <select id="metode_bayar_{{ $d->id }}" name="metode_bayar" required
+                                                    class="text-xs rounded-lg border-stone-300 py-1.5 pr-7 focus:border-[#0e1b15] focus:ring-[#0e1b15]">
+                                                @foreach(\App\Enums\MetodePembayaran::cases() as $m)
+                                                    <option value="{{ $m->value }}">{{ $m->value === 'tunai' ? 'Tunai' : 'Transfer' }}</option>
+                                                @endforeach
+                                            </select>
                                             <button type="submit" class="px-3 py-1.5 rounded-xl bg-[#5edd5b] hover:bg-[#4ed04b] text-black text-xs font-extrabold transition shadow-2xs cursor-pointer inline-flex items-center gap-1">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                                 <span>Tandai Lunas</span>

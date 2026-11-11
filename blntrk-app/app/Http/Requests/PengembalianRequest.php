@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\StatusPesanan;
+use App\Models\Pesanan;
+use App\Services\PengembalianService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -20,7 +22,7 @@ class PengembalianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dikembalikan_pada' => ['required', 'date'],
+            'dikembalikan_pada' => ['nullable', 'date'],
             'catatan' => ['nullable', 'string', 'max:500'],
             'baris' => ['required', 'array'],
             'baris.*.baik' => ['required', 'integer', 'min:0'],
@@ -44,10 +46,7 @@ class PengembalianRequest extends FormRequest
                     return;
                 }
 
-                $waktuKembali = Carbon::parse($this->input('dikembalikan_pada'));
-                if ($waktuKembali->lt($pesanan->tanggal_mulai->startOfDay())) {
-                    $validator->errors()->add('dikembalikan_pada', 'Waktu pengembalian tidak boleh mendahului tanggal mulai sewa.');
-                }
+                $this->periksaWaktuKembali($validator, $pesanan);
 
                 $barisInput = $this->input('baris', []);
                 foreach ($pesanan->detail as $det) {
@@ -74,10 +73,39 @@ class PengembalianRequest extends FormRequest
         });
     }
 
+    /**
+     * Waktu pengembalian bawaannya waktu sistem. Mengubahnya jauh dari waktu sekarang (mis. memundurkan agar
+     * denda terlambat hilang) wajib disertai catatan, dan selisihnya direkam pada log aktivitas.
+     */
+    private function periksaWaktuKembali(Validator $validator, Pesanan $pesanan): void
+    {
+        if (! $this->filled('dikembalikan_pada') || $validator->errors()->has('dikembalikan_pada')) {
+            return;
+        }
+
+        $waktuKembali = Carbon::parse($this->input('dikembalikan_pada'));
+
+        if ($waktuKembali->lt($pesanan->tanggal_mulai->copy()->startOfDay())) {
+            $validator->errors()->add('dikembalikan_pada', 'Waktu pengembalian tidak boleh mendahului tanggal mulai sewa.');
+
+            return;
+        }
+
+        if ($waktuKembali->gt(now()->addMinutes(5))) {
+            $validator->errors()->add('dikembalikan_pada', 'Waktu pengembalian tidak boleh di masa depan.');
+
+            return;
+        }
+
+        $selisih = (int) abs($waktuKembali->diffInMinutes(now()));
+        if ($selisih > PengembalianService::TOLERANSI_WAKTU_MANUAL_MENIT && ! filled($this->input('catatan'))) {
+            $validator->errors()->add('catatan', 'Catatan wajib diisi bila waktu pengembalian berbeda lebih dari '.PengembalianService::TOLERANSI_WAKTU_MANUAL_MENIT.' menit dari waktu sekarang (jelaskan alasan koreksi waktu).');
+        }
+    }
+
     public function messages(): array
     {
         return [
-            'dikembalikan_pada.required' => 'Waktu pengembalian alat wajib diisi.',
             'dikembalikan_pada.date' => 'Format waktu pengembalian tidak valid.',
             'baris.required' => 'Rincian kondisi alat yang dikembalikan wajib diisi.',
         ];

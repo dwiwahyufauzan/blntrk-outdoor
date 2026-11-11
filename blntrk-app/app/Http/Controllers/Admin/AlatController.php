@@ -10,7 +10,9 @@ use App\Models\RiwayatPerawatan;
 use App\Services\KetersediaanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AlatController extends Controller
@@ -83,38 +85,44 @@ class AlatController extends Controller
         $data = $request->validated();
         $data['is_aktif'] = $request->boolean('is_aktif', true);
 
-        // Kapasitas efektif baru tidak boleh lebih kecil dari pemakaian tertinggi pesanan aktif (menunggu s/d terlambat)
-        $kapasitasBaru = max(0, (int) $data['stok_total'] - (int) $data['stok_perawatan']);
-        $puncak = $this->ketersediaan->puncakTerpakai($alat->id);
-        if ($kapasitasBaru < $puncak) {
-            return back()->withInput()->withErrors([
-                'stok_total' => "Stok tersedia tidak boleh di bawah {$puncak} unit karena masih dibutuhkan pesanan aktif. "
-                    .'Selesaikan atau batalkan pesanan terkait terlebih dahulu.',
-            ]);
-        }
+        // Baris alat dikunci seperti saat pemesanan (PesananService) agar pengurangan stok tidak berpapasan
+        // dengan pesanan yang sedang masuk: salah satunya menunggu, lalu memeriksa ulang kondisi terbaru.
+        DB::transaction(function () use ($request, $alat, $data) {
+            $alat = Alat::lockForUpdate()->findOrFail($alat->id);
 
-        $perawatanLama = (int) $alat->stok_perawatan;
-
-        if ($request->hasFile('foto')) {
-            if ($alat->foto && Storage::disk(foto_disk())->exists($alat->foto)) {
-                Storage::disk(foto_disk())->delete($alat->foto);
+            // Kapasitas efektif baru tidak boleh lebih kecil dari pemakaian tertinggi pesanan aktif (menunggu s/d terlambat)
+            $kapasitasBaru = max(0, (int) $data['stok_total'] - (int) $data['stok_perawatan']);
+            $puncak = $this->ketersediaan->puncakTerpakai($alat->id);
+            if ($kapasitasBaru < $puncak) {
+                throw ValidationException::withMessages([
+                    'stok_total' => "Stok tersedia tidak boleh di bawah {$puncak} unit karena masih dibutuhkan pesanan aktif. "
+                        .'Selesaikan atau batalkan pesanan terkait terlebih dahulu.',
+                ]);
             }
-            $data['foto'] = $request->file('foto')->store('alat', foto_disk());
-        }
 
-        $alat->update($data);
+            $perawatanLama = (int) $alat->stok_perawatan;
 
-        // Perubahan stok perawatan lewat form edit tetap meninggalkan jejak di riwayat perawatan
-        $selisih = (int) $alat->stok_perawatan - $perawatanLama;
-        if ($selisih !== 0) {
-            RiwayatPerawatan::catat(
-                $alat,
-                $selisih > 0 ? RiwayatPerawatan::MASUK : RiwayatPerawatan::SELESAI,
-                abs($selisih),
-                'Penyesuaian stok perawatan lewat form edit alat',
-                auth()->user()
-            );
-        }
+            if ($request->hasFile('foto')) {
+                if ($alat->foto && Storage::disk(foto_disk())->exists($alat->foto)) {
+                    Storage::disk(foto_disk())->delete($alat->foto);
+                }
+                $data['foto'] = $request->file('foto')->store('alat', foto_disk());
+            }
+
+            $alat->update($data);
+
+            // Perubahan stok perawatan lewat form edit tetap meninggalkan jejak di riwayat perawatan
+            $selisih = (int) $alat->stok_perawatan - $perawatanLama;
+            if ($selisih !== 0) {
+                RiwayatPerawatan::catat(
+                    $alat,
+                    $selisih > 0 ? RiwayatPerawatan::MASUK : RiwayatPerawatan::SELESAI,
+                    abs($selisih),
+                    'Penyesuaian stok perawatan lewat form edit alat',
+                    auth()->user()
+                );
+            }
+        });
 
         return redirect()->route('admin.alat.index')
             ->with('sukses', 'Data alat outdoor berhasil diperbarui.');
@@ -138,13 +146,24 @@ class AlatController extends Controller
 
     public function destroy(Alat $alat): RedirectResponse
     {
-        if ($this->ketersediaan->puncakTerpakai($alat->id) > 0) {
+        $dipakai = DB::transaction(function () use ($alat) {
+            $alat = Alat::lockForUpdate()->findOrFail($alat->id);
+
+            if ($this->ketersediaan->puncakTerpakai($alat->id) > 0) {
+                return true;
+            }
+
+            $alat->delete();
+
+            return false;
+        });
+
+        if ($dipakai) {
             return redirect()->route('admin.alat.index')
                 ->with('error', "Alat \"{$alat->nama}\" tidak dapat dihapus karena masih dipakai pesanan aktif. Nonaktifkan alat atau selesaikan pesanan terkait terlebih dahulu.");
         }
 
         $namaAlat = $alat->nama;
-        $alat->delete();
 
         return redirect()->route('admin.alat.index')
             ->with('sukses', "Alat \"{$namaAlat}\" berhasil dihapus (riwayat transaksi tetap terjaga).");

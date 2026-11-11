@@ -138,7 +138,7 @@
                             </div>
                             <div>
                                 <h2 class="text-base sm:text-lg font-black text-[#0e1b15] font-urbanist">2. Daftar Alat Outdoor</h2>
-                                <p class="text-xs text-stone-500">Pilih alat dan tentukan jumlah unit yang dibutuhkan</p>
+                                <p class="text-xs text-stone-500">Pilih alat dan tentukan jumlah unit. Stok yang tampil mengikuti tanggal sewa di atas.</p>
                             </div>
                         </div>
 
@@ -252,7 +252,14 @@
                     <!-- Banner Info Bayar Toko -->
                     <div class="mt-6 pt-5 border-t border-[#1e3a2c] flex items-center gap-3 text-xs text-stone-300">
                         <svg class="w-5 h-5 text-[#5edd5b] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        <span>Sistem pembayaran dilakukan secara tunai/transfer langsung saat serah terima barang di toko fisik BLNTRK Outdoor. Wajib membawa kartu identitas (KTP/SIM) asli sebagai jaminan.</span>
+                        <span>
+                            @if(\App\Support\PengaturanToko::batasBayarJam() > 0)
+                                Pesanan harus dibayar paling lambat {{ \App\Support\PengaturanToko::batasBayarJam() }} jam setelah dibuat (dan sebelum tanggal pengambilan) dengan transfer lalu unggah bukti, atau tunai di toko. Pesanan yang belum dibayar akan dibatalkan otomatis dan stok dilepas.
+                            @else
+                                Pesanan yang belum dibayar akan dibatalkan otomatis setelah batas waktu pengambilan.
+                            @endif
+                            Wajib membawa kartu identitas (KTP/SIM) asli sebagai jaminan saat serah terima di toko BLNTRK Outdoor.
+                        </span>
                     </div>
                 </div>
             </form>
@@ -289,11 +296,33 @@
                 durasiHari: 1,
                 items: startingItems,
 
+                muatStokTimer: null,
+
                 init() {
                     this.hitungDurasi();
                     this.items.forEach((item, idx) => {
                         this.updateItemHarga(idx);
                     });
+                    // Stok yang tampil selalu untuk tanggal terpilih, bukan stok hari ini
+                    this.$watch('tanggalMulai', () => this.jadwalkanMuatStok());
+                    this.$watch('tanggalSelesai', () => this.jadwalkanMuatStok());
+                },
+
+                jadwalkanMuatStok() {
+                    clearTimeout(this.muatStokTimer);
+                    this.muatStokTimer = setTimeout(() => this.muatStok(), 300);
+                },
+
+                async muatStok() {
+                    if (!this.tanggalMulai || !this.tanggalSelesai || this.tanggalSelesai <= this.tanggalMulai) return;
+                    try {
+                        const res = await fetch(`{{ route('katalog.ketersediaan-semua') }}?mulai=${this.tanggalMulai}&selesai=${this.tanggalSelesai}`, { headers: { 'Accept': 'application/json' } });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        this.daftarAlat = this.daftarAlat.map(a => ({ ...a, stok_tersedia: data.tersedia[a.id] ?? a.stok_tersedia }));
+                    } catch (e) {
+                        // Gagal memuat: stok terakhir tetap dipakai, server tetap memeriksa ulang saat pesanan dibuat
+                    }
                 },
 
                 hitungDurasi() {

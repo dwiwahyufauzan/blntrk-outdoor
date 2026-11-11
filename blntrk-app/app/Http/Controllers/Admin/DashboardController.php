@@ -17,7 +17,7 @@ class DashboardController extends Controller
     {
         // Satu query untuk seluruh pesanan terlambat; denda berjalan dihitung sekali per pesanan
         $semuaTerlambat = Pesanan::with(['pelanggan', 'detail.alat'])
-            ->where('status', StatusPesanan::Terlambat)
+            ->sedangTerlambat()
             ->latest('jatuh_tempo')
             ->get()
             ->each(fn ($p) => $p->kalkulasi_telat = $dendaService->hitungKeterlambatan($p, now()));
@@ -30,7 +30,7 @@ class DashboardController extends Controller
         $statistik = [
             'pesanan_menunggu' => Pesanan::where('status', StatusPesanan::Menunggu)->count(),
             'perlu_diambil_hari_ini' => Pesanan::where('status', StatusPesanan::Dibayar)->whereDate('tanggal_mulai', today())->count(),
-            'pesanan_disewa' => Pesanan::where('status', StatusPesanan::Disewa)->count(),
+            'pesanan_disewa' => Pesanan::where('status', StatusPesanan::Disewa)->count() - $semuaTerlambat->where('status', StatusPesanan::Disewa)->count(),
             'pesanan_terlambat' => $semuaTerlambat->count(),
             'denda_belum_lunas' => $totalDendaTertunggak,
             'denda_tercatat' => $dendaTercatatBelumLunas,

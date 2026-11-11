@@ -44,17 +44,9 @@ class Pengaturan extends Model
     }
 
     /**
-     * Batas maksimum durasi sewa (hari) sesuai pengaturan toko; minimal 1.
-     */
-    public static function maksDurasiHari(): int
-    {
-        return max(1, (int) static::ambil('maks_durasi_hari', 14));
-    }
-
-    /**
      * Simpan atau perbarui nilai pengaturan dan reset cache.
      */
-    public static function setel(string $kunci, string $nilai, ?string $keterangan = null): static
+    public static function setel(string $kunci, string $nilai, ?string $keterangan = null): self
     {
         $data = ['nilai' => $nilai];
         if ($keterangan !== null) {

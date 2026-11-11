@@ -97,7 +97,7 @@ class KeranjangService
         $dilewati = [];
 
         foreach ($paket->items as $item) {
-            $nama = $item->alat?->nama ?? 'Alat tidak tersedia';
+            $nama = $item->alat->nama ?? 'Alat tidak tersedia';
 
             if ($item->alat && $item->alat->is_aktif && $this->stokUntukJadwal($item->alat) >= $item->jumlah
                 && $this->tambah($item->alat_id, $item->jumlah)) {
@@ -192,7 +192,7 @@ class KeranjangService
                 'nama' => $alat->nama,
                 'varian' => $alat->varian,
                 'foto_url' => $alat->foto_url,
-                'kategori' => $alat->kategori?->nama ?? 'Perlengkapan',
+                'kategori' => $alat->kategori->nama ?? 'Perlengkapan',
                 'harga_per_hari' => (float) $alat->harga_per_hari,
                 'jumlah' => $jumlah,
                 'subtotal_per_hari' => $subtotalPerHari,

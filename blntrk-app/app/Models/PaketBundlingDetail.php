@@ -25,11 +25,17 @@ class PaketBundlingDetail extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<PaketBundling, $this>
+     */
     public function paket(): BelongsTo
     {
         return $this->belongsTo(PaketBundling::class, 'paket_bundling_id');
     }
 
+    /**
+     * @return BelongsTo<Alat, $this>
+     */
     public function alat(): BelongsTo
     {
         return $this->belongsTo(Alat::class, 'alat_id');

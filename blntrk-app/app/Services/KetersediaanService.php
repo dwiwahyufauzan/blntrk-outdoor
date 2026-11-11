@@ -52,6 +52,7 @@ class KetersediaanService
                 $q->where('pesanan.tanggal_selesai', '>', $mulai)
                     ->orWhere('pesanan.status', 'terlambat');
             })
+            ->toBase()
             ->get([
                 'pesanan_detail.alat_id',
                 'pesanan.tanggal_mulai',

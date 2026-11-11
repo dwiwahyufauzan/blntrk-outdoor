@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
+use App\Support\PengaturanToko;
 
 class WhatsAppService
 {
@@ -48,7 +48,7 @@ class WhatsAppService
      */
     public static function pesanPengingatJatuhTempo(Pesanan $pesanan): string
     {
-        $nama = $pesanan->pelanggan?->nama_lengkap ?? 'Pelanggan';
+        $nama = $pesanan->pelanggan->nama_lengkap ?? 'Pelanggan';
         $resi = $pesanan->no_resi;
         $tgl = $pesanan->tanggal_selesai?->translatedFormat('d F Y') ?? '-';
         $jam = $pesanan->jatuh_tempo ? $pesanan->jatuh_tempo->format('H:i').' WIB' : '12:00 WIB';
@@ -61,7 +61,7 @@ class WhatsAppService
      */
     public static function pesanTagihanDenda(Pesanan $pesanan, float $nominalDenda, ?string $alasan = null): string
     {
-        $nama = $pesanan->pelanggan?->nama_lengkap ?? 'Pelanggan';
+        $nama = $pesanan->pelanggan->nama_lengkap ?? 'Pelanggan';
         $resi = $pesanan->no_resi;
         $rupiah = number_format($nominalDenda, 0, ',', '.');
         $rincian = $alasan ? " ({$alasan})" : '';
@@ -74,11 +74,11 @@ class WhatsAppService
      */
     public static function pesanPeringatanTerlambat(Pesanan $pesanan, int $hariTerlambat, float $estimasiDenda): string
     {
-        $nama = $pesanan->pelanggan?->nama_lengkap ?? 'Pelanggan';
+        $nama = $pesanan->pelanggan->nama_lengkap ?? 'Pelanggan';
         $resi = $pesanan->no_resi;
         $rupiah = number_format($estimasiDenda, 0, ',', '.');
         $tglSelesai = $pesanan->tanggal_selesai?->translatedFormat('d F Y') ?? '-';
-        $jam = $pesanan->jatuh_tempo ? $pesanan->jatuh_tempo->format('H:i') : Pengaturan::ambil('jam_kembali', '12:00');
+        $jam = $pesanan->jatuh_tempo ? $pesanan->jatuh_tempo->format('H:i') : PengaturanToko::jamKembali();
 
         return "Halo Kak {$nama}, kami dari BLNTRK Outdoor menginformasikan bahwa sewa perlengkapan dengan No Resi {$resi} telah melewati batas pengembalian ({$tglSelesai} pukul {$jam} WIB) dan saat ini terlambat {$hariTerlambat} hari. Estimasi denda keterlambatan berjalan sebesar Rp {$rupiah}. Mohon segera kembalikan perlengkapan ke toko hari ini untuk menghindari penambahan denda harian dan agar kartu identitas jaminan Anda dapat segera diserahkan kembali. Terima kasih!";
     }
@@ -88,10 +88,10 @@ class WhatsAppService
      */
     public static function pesanKonfirmasiBooking(Pesanan $pesanan): string
     {
-        $nama = $pesanan->pelanggan?->nama_lengkap ?? 'Pelanggan';
+        $nama = $pesanan->pelanggan->nama_lengkap ?? 'Pelanggan';
         $resi = $pesanan->no_resi;
         $tglMulai = $pesanan->tanggal_mulai?->translatedFormat('d F Y') ?? '-';
-        $total = number_format($pesanan->total_sewa, 0, ',', '.');
+        $total = number_format((float) $pesanan->total_sewa, 0, ',', '.');
 
         return "Halo Kak {$nama}, reservasi booking perlengkapan outdoor Anda di BLNTRK telah terdaftar dengan No Resi {$resi}. Tanggal mulai sewa: {$tglMulai}, Total sewa: Rp {$total}. Silakan lakukan pembayaran dan pengambilan barang di toko. Terima kasih!";
     }

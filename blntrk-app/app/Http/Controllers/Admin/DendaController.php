@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\StatusPesanan;
+use App\Enums\MetodePembayaran;
 use App\Http\Controllers\Controller;
 use App\Models\Denda;
 use App\Models\Pesanan;
@@ -10,6 +10,7 @@ use App\Services\DendaService;
 use App\Services\PengembalianService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class DendaController extends Controller
@@ -21,7 +22,7 @@ class DendaController extends Controller
     {
         // 1. Ambil seluruh pesanan yang saat ini sedang terlambat (denda berjalan aktif)
         $pesananTerlambatList = Pesanan::with(['pelanggan', 'detail.alat'])
-            ->where('status', StatusPesanan::Terlambat)
+            ->sedangTerlambat()
             ->latest('jatuh_tempo')
             ->get()
             ->map(function ($p) use ($dendaService) {
@@ -87,10 +88,18 @@ class DendaController extends Controller
     /**
      * Menandai denda telah dilunasi di kasir toko.
      */
-    public function lunas(Denda $denda, PengembalianService $service): RedirectResponse
+    public function lunas(Request $request, Denda $denda, PengembalianService $service): RedirectResponse
     {
-        $service->lunaskanDenda($denda, auth()->user());
+        $this->authorize('lunaskan', $denda);
 
-        return back()->with('status', 'Denda sebesar Rp '.number_format($denda->jumlah, 0, ',', '.').' berhasil ditandai lunas.');
+        $validated = $request->validate([
+            'metode_bayar' => ['required', Rule::enum(MetodePembayaran::class)],
+        ], [
+            'metode_bayar.required' => 'Pilih metode pembayaran denda (tunai atau transfer).',
+        ]);
+
+        $service->lunaskanDenda($denda, auth()->user(), MetodePembayaran::from($validated['metode_bayar']));
+
+        return back()->with('status', 'Denda sebesar Rp '.number_format((float) $denda->jumlah, 0, ',', '.').' berhasil ditandai lunas.');
     }
 }

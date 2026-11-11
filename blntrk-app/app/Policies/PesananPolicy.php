@@ -101,4 +101,39 @@ class PesananPolicy
     {
         return $user->punyaRole('admin') && $pesanan->status === StatusPesanan::Disewa;
     }
+
+    /**
+     * Pengembalian jaminan kartu identitas ke penyewa dilakukan admin di kasir.
+     */
+    public function kembalikanJaminan(User $user, Pesanan $pesanan): bool
+    {
+        return $user->punyaRole('admin');
+    }
+
+    /**
+     * Denda hanya dapat ditambahkan setelah alat keluar dari toko: disewa, terlambat, atau sudah dikembalikan.
+     */
+    public function tambahDenda(User $user, Pesanan $pesanan): bool
+    {
+        return $user->punyaRole('admin')
+            && in_array($pesanan->status, [StatusPesanan::Disewa, StatusPesanan::Terlambat, StatusPesanan::Dikembalikan], true);
+    }
+
+    /**
+     * Refund dicatat admin untuk pesanan dibatalkan yang masih menyisakan dana yang belum dikembalikan.
+     */
+    public function catatRefund(User $user, Pesanan $pesanan): bool
+    {
+        return $user->punyaRole('admin')
+            && $pesanan->status === StatusPesanan::Dibatalkan
+            && $pesanan->dana_hangus > 0;
+    }
+
+    /**
+     * Bukti transfer pelanggan dibuka admin lewat rute terautentikasi.
+     */
+    public function lihatBukti(User $user, Pesanan $pesanan): bool
+    {
+        return $user->punyaRole('admin', 'pemilik');
+    }
 }

@@ -32,6 +32,9 @@ class KategoriDenda extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Denda, $this>
+     */
     public function denda(): HasMany
     {
         return $this->hasMany(Denda::class, 'kategori_denda_id');

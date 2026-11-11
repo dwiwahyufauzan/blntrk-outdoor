@@ -30,6 +30,7 @@ Route::get('/', [BerandaController::class, 'index'])->name('beranda');
 Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog.index');
 Route::get('/katalog/{alat}', [KatalogController::class, 'show'])->name('katalog.show');
 Route::get('/katalog/{alat}/ketersediaan', [KatalogController::class, 'ketersediaan'])->name('katalog.ketersediaan');
+Route::get('/ketersediaan-alat', [KatalogController::class, 'ketersediaanSemua'])->middleware('throttle:60,1')->name('katalog.ketersediaan-semua');
 
 // Alias URL /alat (sesuai dokumen skripsi) dialihkan permanen ke rute kanonis /katalog
 Route::permanentRedirect('/alat', '/katalog');
@@ -106,6 +107,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('pesanan/{pesanan}/bayar', [Admin\PesananController::class, 'bayar'])->name('pesanan.bayar');
     Route::post('pesanan/{pesanan}/ambil', [Admin\PesananController::class, 'ambil'])->name('pesanan.ambil');
     Route::patch('pesanan/{pesanan}/batal', [Admin\PesananController::class, 'batal'])->name('pesanan.batal');
+    Route::post('pesanan/{pesanan}/refund', [Admin\PesananController::class, 'catatRefund'])->name('pesanan.refund');
     Route::patch('pesanan/{pesanan}/jadwal', [Admin\PesananController::class, 'ubahJadwal'])->name('pesanan.jadwal');
     Route::post('pesanan/{pesanan}/perpanjang', [Admin\PesananController::class, 'perpanjang'])->name('pesanan.perpanjang');
     Route::get('pesanan/{pesanan}/bukti', [Admin\PesananController::class, 'bukti'])->name('pesanan.bukti');

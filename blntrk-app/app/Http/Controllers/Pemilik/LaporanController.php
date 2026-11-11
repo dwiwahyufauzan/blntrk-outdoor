@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Pemilik;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pengaturan;
 use App\Services\LaporanExportService;
 use App\Services\LaporanService;
+use App\Support\PengaturanToko;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -58,8 +58,8 @@ class LaporanController extends Controller
             default => $laporanService->laporanPenyewaan($dari, $sampai, $status),
         };
 
-        $toko = Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor');
-        $alamat = Pengaturan::ambil('alamat_toko', 'Desa Kumpay, Kec. Jalancagak, Kab. Subang');
+        $toko = PengaturanToko::namaToko();
+        $alamat = PengaturanToko::alamatToko();
         $petugas = auth()->user()->nama.' (Pemilik)';
         $tanggalCetak = now()->translatedFormat('d F Y H:i');
 

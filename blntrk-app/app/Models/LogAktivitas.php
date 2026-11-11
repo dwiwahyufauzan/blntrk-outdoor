@@ -31,6 +31,9 @@ class LogAktivitas extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -39,7 +42,7 @@ class LogAktivitas extends Model
     /**
      * Helper static untuk mencatat log aktivitas pengguna.
      */
-    public static function catat(?User $user, string $aksi, ?string $deskripsi = null, ?string $modul = null, ?int $refId = null): ?static
+    public static function catat(?User $user, string $aksi, ?string $deskripsi = null, ?string $modul = null, ?int $refId = null): ?self
     {
         try {
             return static::create([

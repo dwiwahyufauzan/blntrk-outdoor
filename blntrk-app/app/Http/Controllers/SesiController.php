@@ -59,7 +59,7 @@ class SesiController extends Controller
             $browser = 'Google Chrome';
         } elseif (str_contains($userAgent, 'Firefox')) {
             $browser = 'Mozilla Firefox';
-        } elseif (str_contains($userAgent, 'Safari') && ! str_contains($userAgent, 'Chrome')) {
+        } elseif (str_contains($userAgent, 'Safari')) {
             $browser = 'Apple Safari';
         }
 

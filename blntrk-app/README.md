@@ -9,8 +9,8 @@ Dokumentasi lengkap, instalasi, akun bawaan, dan alur penggunaan ada di [`../REA
 php artisan serve                 # jalankan server lokal
 php artisan migrate --seed        # migrasi + data awal
 php artisan schedule:work         # scheduler (status terlambat / kedaluwarsa)
-php artisan test                  # 246 test
-./vendor/bin/phpstan analyse --memory-limit=1G   # Larastan
+php artisan test                  # 280 test
+./vendor/bin/phpstan analyse --memory-limit=2G   # Larastan
 ./vendor/bin/pint                 # format kode
 npm run dev                       # hot reload aset (atau npm run build)
 

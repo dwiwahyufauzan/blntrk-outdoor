@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\PesananBaru;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
@@ -24,8 +25,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -79,11 +78,11 @@ class FiturPengembanganTest extends TestCase
     private function pesanan(StatusPesanan $status, int $mulaiOffset = 1, int $durasi = 2, int $jumlah = 1, ?Pelanggan $pelanggan = null): Pesanan
     {
         $mulai = today()->addDays($mulaiOffset);
-        $p = app(PesananService::class)->buat($pelanggan ?? $this->pelanggan, $this->admin, [
+        $p = app(PesananService::class)->buat($pelanggan ?? $this->pelanggan, $this->admin, PesananBaru::dari([
             'tanggal_mulai' => $mulai->toDateString(),
             'tanggal_selesai' => $mulai->copy()->addDays($durasi)->toDateString(),
             'items' => [['alat_id' => $this->alat->id, 'jumlah' => $jumlah]],
-        ]);
+        ]));
 
         if ($status !== StatusPesanan::Menunggu) {
             $p->update(['status' => $status]);
@@ -169,26 +168,25 @@ class FiturPengembanganTest extends TestCase
         // tetapi yang tumpang tindih hari ini harus bebas setelah no-show dibatalkan
         $this->artisan('pesanan:perbarui-status');
 
-        $baru = app(PesananService::class)->buat($this->pelanggan, $this->admin, [
+        $baru = app(PesananService::class)->buat($this->pelanggan, $this->admin, PesananBaru::dari([
             'tanggal_mulai' => today()->toDateString(),
             'tanggal_selesai' => today()->addDay()->toDateString(),
             'items' => [['alat_id' => $this->alat->id, 'jumlah' => 3]],
-        ]);
+        ]));
         $this->assertSame(StatusPesanan::Menunggu, $baru->status);
     }
 
-    public function test_admin_membatalkan_pesanan_dibayar_tanpa_fitur_pengembalian_dana(): void
+    public function test_admin_membatalkan_pesanan_dibayar_dengan_dana_hangus(): void
     {
         $p = $this->pesanan(StatusPesanan::Dibayar, 2, 2);
 
         $this->actingAs($this->admin)
-            ->patch(route('admin.pesanan.batal', $p->id), ['alasan_batal' => 'Cuaca buruk'])
+            ->patch(route('admin.pesanan.batal', $p->id), ['alasan_batal' => 'Cuaca buruk', 'penanganan_dana' => 'hangus'])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
         $this->assertSame(StatusPesanan::Dibatalkan, $p->fresh()->status);
-        $this->assertFalse(Route::has('admin.refund.index'));
-        $this->assertFalse(Schema::hasTable('refund'));
+        $this->assertDatabaseCount('refund', 0);
     }
 
     public function test_dashboard_admin_menandai_pesanan_dibayar_lewat_batas_ambil(): void
@@ -625,19 +623,29 @@ class FiturPengembanganTest extends TestCase
         ]);
     }
 
-    public function test_pendapatan_tidak_menghitung_pesanan_yang_dibatalkan(): void
+    public function test_pendapatan_pesanan_dibatalkan_mengikuti_kebijakan_dana_refund_atau_hangus(): void
     {
         $laporan = app(LaporanService::class);
         $awal = now()->startOfDay();
         $akhir = now()->endOfDay();
 
-        $batal = $this->pesanan(StatusPesanan::Dibayar, 3, 2); // 80.000
+        $direfund = $this->pesanan(StatusPesanan::Dibayar, 3, 2); // 80.000, dikembalikan penuh
+        $hangus = $this->pesanan(StatusPesanan::Dibayar, 4, 2); // 80.000, hangus
         $this->pesanan(StatusPesanan::Dibayar, 30, 2); // 80.000, tetap aktif
 
-        $this->actingAs($this->admin)->patch(route('admin.pesanan.batal', $batal->id), ['alasan_batal' => 'x']);
+        $this->actingAs($this->admin)->patch(route('admin.pesanan.batal', $direfund->id), [
+            'alasan_batal' => 'x', 'penanganan_dana' => 'refund', 'jumlah_refund' => 80000, 'metode_refund' => 'tunai',
+        ])->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->patch(route('admin.pesanan.batal', $hangus->id), [
+            'alasan_batal' => 'x', 'penanganan_dana' => 'hangus',
+        ])->assertSessionHasNoErrors();
 
-        $this->assertEqualsWithDelta(80000, $laporan->pendapatanSewaBersih($awal, $akhir), 0.01);
-        $this->assertEqualsWithDelta(80000, $laporan->laporanPendapatan(today(), today())['total_pendapatan_sewa'], 0.01);
+        // Kas: 3 pembayaran masuk (240.000) dikurangi 1 refund (80.000); dana hangus tetap menjadi pendapatan
+        $this->assertEqualsWithDelta(160000, $laporan->pendapatanSewaBersih($awal, $akhir), 0.01);
+        $hasil = $laporan->laporanPendapatan(today(), today());
+        $this->assertEqualsWithDelta(240000, $hasil['total_pendapatan_sewa'], 0.01);
+        $this->assertEqualsWithDelta(80000, $hasil['total_refund'], 0.01);
+        $this->assertEqualsWithDelta(160000, $hasil['total_pendapatan_bersih'], 0.01);
     }
 
     public function test_okupansi_per_alat_menghitung_unit_hari_pada_rentang(): void

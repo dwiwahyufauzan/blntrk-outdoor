@@ -12,6 +12,7 @@ use App\Models\Pelanggan;
 use App\Models\Pembayaran;
 use App\Models\Pengembalian;
 use App\Models\Pesanan;
+use App\Models\Refund;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\LaporanService;
@@ -259,7 +260,7 @@ class LaporanDashboardTest extends TestCase
      * BB-66: Akurasi Formula Pendapatan - Hanya menghitung kas masuk riil
      * (pembayaran.dibayar_pada), denda berstatus lunas, dan mengabaikan pesanan dibatalkan.
      */
-    public function test_bb_66_formula_pendapatan_hanya_kas_masuk_dan_denda_lunas_dan_abaikan_dibatalkan(): void
+    public function test_bb_66_formula_pendapatan_kas_masuk_denda_lunas_dikurangi_refund(): void
     {
         $bulanMeiMulai = Carbon::parse('2026-05-01');
         $bulanMeiSelesai = Carbon::parse('2026-05-31');
@@ -301,13 +302,20 @@ class LaporanDashboardTest extends TestCase
             'dibatalkan_pada' => Carbon::parse('2026-05-05 10:00:00'),
         ]);
 
-        // Walau ada pembayaran tercatat sebelum dibatalkan, filter 'status != dibatalkan' harus mengecualikannya
+        // Pesanan dibatalkan setelah dibayar: uang sudah masuk, 100.000 dikembalikan lewat refund, sisanya hangus
         Pembayaran::create([
             'pesanan_id' => $pesananBatal->id,
             'jumlah' => 250000,
             'metode' => MetodePembayaran::Transfer,
             'dicatat_oleh' => $this->admin->id,
             'dibayar_pada' => Carbon::parse('2026-05-05 08:00:00'),
+        ]);
+        Refund::create([
+            'pesanan_id' => $pesananBatal->id,
+            'jumlah' => 100000,
+            'metode' => MetodePembayaran::Transfer,
+            'direfund_pada' => Carbon::parse('2026-05-05 12:00:00'),
+            'dicatat_oleh' => $this->admin->id,
         ]);
 
         // Buat Pengembalian untuk pesanan sukses
@@ -348,12 +356,14 @@ class LaporanDashboardTest extends TestCase
         $hasil = $service->laporanPendapatan($bulanMeiMulai, $bulanMeiSelesai);
 
         // Verifikasi:
-        // Sewa riil: hanya 160.000 (pesanan batal 250.000 diabaikan)
-        $this->assertEquals(160000, $hasil['total_pendapatan_sewa']);
+        // Sewa riil: 160.000 + 250.000 (pesanan batal tetap dihitung karena uangnya sudah diterima)
+        $this->assertEquals(410000, $hasil['total_pendapatan_sewa']);
+        // Refund yang dikembalikan ke pelanggan dikurangkan
+        $this->assertEquals(100000, $hasil['total_refund']);
         // Denda riil: hanya 80.000 (denda belum lunas 50.000 diabaikan)
         $this->assertEquals(80000, $hasil['total_pendapatan_denda']);
-        // Pendapatan bersih = 160.000 + 80.000 = 240.000
-        $this->assertEquals(240000, $hasil['total_pendapatan_bersih']);
+        // Pendapatan bersih = 410.000 + 80.000 - 100.000 = 390.000
+        $this->assertEquals(390000, $hasil['total_pendapatan_bersih']);
     }
 
     /**

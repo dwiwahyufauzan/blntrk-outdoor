@@ -28,12 +28,13 @@ class OperasionalController extends Controller
     /**
      * Pemicu penjadwalan dari layanan cron eksternal. Hosting yang tidur saat sepi (Render free) membuat
      * loop scheduler di dalam kontainer ikut berhenti, sehingga status terlambat/no-show perlu dipicu dari luar.
-     * Dilindungi token melalui header `Authorization: Bearer <token>`, `X-Cron-Token`, atau parameter `token`.
+     * Dilindungi token melalui header `Authorization: Bearer <token>` atau `X-Cron-Token`. Token tidak diterima lewat
+     * query string karena URL tercatat di log akses server dan proxy.
      */
     public function jadwal(Request $request): JsonResponse
     {
         $token = (string) config('services.cron.token');
-        $diberikan = (string) ($request->bearerToken() ?? $request->header('X-Cron-Token') ?? $request->query('token', ''));
+        $diberikan = (string) ($request->bearerToken() ?? $request->header('X-Cron-Token', ''));
 
         abort_if($token === '' || ! hash_equals($token, $diberikan), 404);
 

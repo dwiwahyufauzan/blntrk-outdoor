@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Pelanggan;
 
+use App\Data\PesananBaru;
 use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BatalRequest;
@@ -9,7 +10,6 @@ use App\Http\Requests\PesananRequest;
 use App\Http\Requests\UbahJadwalRequest;
 use App\Models\Alat;
 use App\Models\Pelanggan;
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
 use App\Services\BuktiTransferService;
 use App\Services\DendaService;
@@ -17,12 +17,12 @@ use App\Services\KeranjangService;
 use App\Services\PaketBundlingService;
 use App\Services\PerubahanPesananService;
 use App\Services\PesananService;
+use App\Support\PengaturanToko;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Arr;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -112,7 +112,6 @@ class PesananController extends Controller
             ->where('is_aktif', true)
             ->orderBy('nama')
             ->get();
-        Alat::muatStokTersedia($alatList);
 
         $checkoutFromCart = session()->get('checkout_from_cart');
         $initialItems = [];
@@ -140,6 +139,13 @@ class PesananController extends Controller
                     'jumlah' => $initialJumlah,
                 ];
             }
+        }
+
+        // Stok awal mengikuti rentang tanggal yang terpilih; form memperbaruinya sendiri saat tanggal diubah
+        try {
+            Alat::muatStokTersedia($alatList, Carbon::parse($initialMulai), Carbon::parse($initialSelesai));
+        } catch (\Throwable) {
+            Alat::muatStokTersedia($alatList);
         }
 
         $initialAlatId = ! empty($initialItems) ? $initialItems[0]['alat_id'] : (int) $request->query('alat_id', 0);
@@ -174,7 +180,7 @@ class PesananController extends Controller
             ]);
         }
 
-        $pesanan = $service->buat($pelanggan, $user, Arr::except($request->validated(), ['no_hp', 'alamat']));
+        $pesanan = $service->buat($pelanggan, $user, PesananBaru::dari($request->validated()));
 
         // Bersihkan snapshot checkout dan keranjang belanja
         session()->forget('checkout_from_cart');
@@ -216,10 +222,10 @@ class PesananController extends Controller
 
         $this->authorize('view', $pesanan);
 
-        $toko = Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor');
-        $alamat = Pengaturan::ambil('alamat_toko', 'Desa Kumpay, Kec. Jalancagak, Kab. Subang');
-        $noWa = Pengaturan::ambil('no_wa_toko', '6281234567890');
-        $petugas = $pesanan->pemroses?->nama ?? (auth()->user()?->nama ?? 'Kasir BLNTRK Outdoor');
+        $toko = PengaturanToko::namaToko();
+        $alamat = PengaturanToko::alamatToko();
+        $noWa = PengaturanToko::noWa();
+        $petugas = $pesanan->pemroses->nama ?? (auth()->user()->nama ?? 'Kasir BLNTRK Outdoor');
         $tanggalCetak = now()->translatedFormat('d F Y H:i');
 
         return view('pesanan.resi', compact('pesanan', 'toko', 'alamat', 'noWa', 'petugas', 'tanggalCetak'));
@@ -237,9 +243,9 @@ class PesananController extends Controller
 
         $this->authorize('view', $pesanan);
 
-        $toko = Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor');
-        $alamat = Pengaturan::ambil('alamat_toko', 'Desa Kumpay, Kec. Jalancagak, Kab. Subang');
-        $petugas = $pesanan->pemroses?->nama ?? (auth()->user()?->nama ?? 'Kasir BLNTRK Outdoor');
+        $toko = PengaturanToko::namaToko();
+        $alamat = PengaturanToko::alamatToko();
+        $petugas = $pesanan->pemroses->nama ?? (auth()->user()->nama ?? 'Kasir BLNTRK Outdoor');
         $tanggalCetak = now()->translatedFormat('d F Y H:i');
 
         $pdf = Pdf::loadView('pdf.resi', compact('pesanan', 'toko', 'alamat', 'petugas', 'tanggalCetak'))

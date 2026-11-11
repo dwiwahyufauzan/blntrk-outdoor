@@ -29,21 +29,33 @@ class Pengembalian extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Pesanan, $this>
+     */
     public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function penerima(): BelongsTo
     {
         return $this->belongsTo(User::class, 'diterima_oleh');
     }
 
+    /**
+     * @return HasMany<PengembalianDetail, $this>
+     */
     public function detail(): HasMany
     {
         return $this->hasMany(PengembalianDetail::class, 'pengembalian_id');
     }
 
+    /**
+     * @return HasMany<Denda, $this>
+     */
     public function denda(): HasMany
     {
         return $this->hasMany(Denda::class, 'pengembalian_id');

@@ -26,7 +26,7 @@
                     </a>
 
                     @php
-                        $waToko = preg_replace('/\D/', '', \App\Models\Pengaturan::ambil('no_wa_toko', '6281234567890'));
+                        $waToko = \App\Support\PengaturanToko::noWaDigit();
                         $pesanWa = rawurlencode("Halo BLNTRK Outdoor, saya ingin konfirmasi pesanan sewa dengan nomor resi " . $pesanan->no_resi . " atas nama " . $pesanan->pelanggan->nama_lengkap . ".");
                     @endphp
                     <a href="https://wa.me/{{ $waToko }}?text={{ $pesanWa }}" target="_blank"
@@ -61,13 +61,13 @@
                         <img src="{{ asset('images/logo.png') }}" alt="BLNTRK Outdoor Logo" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover shrink-0 shadow-xs ring-1 ring-black/10">
                         <div>
                             <div class="text-xl sm:text-2xl font-black text-[#0e1b15] tracking-tight uppercase font-urbanist">
-                                {{ \App\Models\Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor') }}
+                                {{ \App\Support\PengaturanToko::namaToko() }}
                             </div>
                             <div class="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
-                                {{ \App\Models\Pengaturan::ambil('alamat_toko', 'Jl. Raya Jalancagak No. 12, Subang, Jawa Barat') }}
+                                {{ \App\Support\PengaturanToko::alamatToko() }}
                             </div>
                             <div class="text-[11px] text-stone-500 mt-0.5">
-                                WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
+                                WhatsApp: {{ \App\Support\PengaturanToko::noWa() }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
                             </div>
                         </div>
                     </div>
@@ -269,7 +269,7 @@
                                             </td>
                                             <td class="py-2 px-3 text-stone-600 border-r border-rose-100 leading-relaxed">{{ $d->keterangan ?? '-' }}</td>
                                             <td class="py-2 px-3 text-center border-r border-rose-100">
-                                                @if($d->status->value === 'lunas')
+                                                @if($d->is_lunas)
                                                     <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">LUNAS</span>
                                                 @else
                                                     <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-300">BELUM LUNAS</span>

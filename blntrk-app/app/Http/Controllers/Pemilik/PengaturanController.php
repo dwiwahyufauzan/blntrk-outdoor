@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pemilik;
 use App\Http\Controllers\Controller;
 use App\Models\Pengaturan;
 use App\Services\LogService;
+use App\Support\PengaturanToko;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,18 +17,7 @@ class PengaturanController extends Controller
      */
     public function index(): View
     {
-        $pengaturan = [
-            'nama_toko' => Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor'),
-            'alamat_toko' => Pengaturan::ambil('alamat_toko', 'Desa Kumpay, Kec. Jalancagak, Kab. Subang, Jawa Barat'),
-            'no_wa_toko' => Pengaturan::ambil('no_wa_toko', '6281234567890'),
-            'jam_kembali' => Pengaturan::ambil('jam_kembali', '12:00'),
-            'toleransi_menit' => (int) Pengaturan::ambil('toleransi_menit', 60),
-            'persen_denda_harian' => (float) Pengaturan::ambil('persen_denda_harian', 100),
-            'maks_durasi_hari' => (int) Pengaturan::ambil('maks_durasi_hari', 14),
-            'ambang_stok_kritis' => (int) Pengaturan::ambil('ambang_stok_kritis', 2),
-            'noshow_batal_otomatis' => (int) Pengaturan::ambil('noshow_batal_otomatis', 1),
-            'noshow_toleransi_hari' => (int) Pengaturan::ambil('noshow_toleransi_hari', 1),
-        ];
+        $pengaturan = PengaturanToko::semua();
 
         return view('pemilik.pengaturan.index', compact('pengaturan'));
     }
@@ -48,6 +38,8 @@ class PengaturanController extends Controller
             'ambang_stok_kritis' => ['required', 'integer', 'min:0', 'max:50'],
             'noshow_batal_otomatis' => ['sometimes', 'required', 'in:0,1'],
             'noshow_toleransi_hari' => ['sometimes', 'required', 'integer', 'min:0', 'max:30'],
+            'batas_bayar_jam' => ['sometimes', 'required', 'integer', 'min:0', 'max:720'],
+            'maks_pesanan_menunggu' => ['sometimes', 'required', 'integer', 'min:0', 'max:50'],
         ], [
             'nama_toko.required' => 'Nama toko wajib diisi.',
             'alamat_toko.required' => 'Alamat toko wajib diisi.',
@@ -59,23 +51,14 @@ class PengaturanController extends Controller
             'ambang_stok_kritis.required' => 'Ambang batas stok kritis wajib diisi.',
             'noshow_batal_otomatis.required' => 'Pilihan pembatalan otomatis no-show wajib dipilih.',
             'noshow_toleransi_hari.required' => 'Toleransi hari no-show wajib diisi.',
+            'batas_bayar_jam.required' => 'Batas waktu pembayaran wajib diisi (0 = hanya dibatasi batas pengambilan).',
+            'maks_pesanan_menunggu.required' => 'Batas pesanan menunggu per pelanggan wajib diisi (0 = tanpa batas).',
         ]);
 
-        $deskripsi = [
-            'nama_toko' => 'Nama toko yang dicetak pada resi dan laporan resmi',
-            'alamat_toko' => 'Alamat lokasi fisik operasional toko',
-            'no_wa_toko' => 'Nomor WhatsApp kontak toko untuk konfirmasi pesanan',
-            'jam_kembali' => 'Jam batas waktu pengembalian alat (format HH:mm WIB)',
-            'toleransi_menit' => 'Waktu toleransi pengembalian sebelum denda dihitung (menit)',
-            'persen_denda_harian' => 'Persentase tarif harian alat untuk denda per hari keterlambatan (%)',
-            'maks_durasi_hari' => 'Batas maksimum durasi peminjaman yang diizinkan (hari)',
-            'ambang_stok_kritis' => 'Batas minimum unit alat untuk peringatan stok kritis',
-            'noshow_batal_otomatis' => 'Batalkan otomatis pesanan sudah dibayar yang tidak diambil (1 = aktif, 0 = nonaktif)',
-            'noshow_toleransi_hari' => 'Toleransi hari setelah batas pengambilan sebelum pesanan dibayar dianggap tidak diambil (no-show)',
-        ];
+        $bawaan = PengaturanToko::bawaan();
 
         foreach ($validated as $kunci => $nilai) {
-            Pengaturan::setel($kunci, (string) $nilai, $deskripsi[$kunci] ?? null);
+            Pengaturan::setel($kunci, (string) $nilai, $bawaan[$kunci]['keterangan'] ?? null);
         }
 
         LogService::catat(

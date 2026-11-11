@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Data\PengembalianBaru;
 use App\Enums\StatusPesanan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PengembalianRequest;
@@ -42,7 +43,7 @@ class PengembalianController extends Controller
      */
     public function store(PengembalianRequest $request, Pesanan $pesanan, PengembalianService $service): RedirectResponse
     {
-        $kembali = $service->proses($pesanan, auth()->user(), $request->validated());
+        $kembali = $service->proses($pesanan, auth()->user(), PengembalianBaru::dari($request->validated()));
 
         $pesan = "Pengembalian pesanan {$pesanan->no_resi} berhasil diproses.";
         if ($kembali->denda()->exists()) {

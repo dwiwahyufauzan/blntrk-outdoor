@@ -164,6 +164,32 @@
                     <p class="text-[11px] text-slate-500 mt-2">Pesanan yang sudah dibayar tetapi tidak diambil hingga batas pengambilan + toleransi dibatalkan agar stok dilepas.</p>
                 </div>
 
+                <div class="mt-6 pt-5 border-t border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Batas Pembayaran Pesanan Menunggu</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="batas_bayar_jam" class="block text-xs font-bold text-slate-700 mb-1">Batas Waktu Pembayaran</label>
+                            <div class="relative">
+                                <input type="number" id="batas_bayar_jam" name="batas_bayar_jam" value="{{ old('batas_bayar_jam', $pengaturan['batas_bayar_jam']) }}" min="0" max="720"
+                                       class="w-full text-sm font-semibold rounded-xl border-slate-200 focus:border-[#5edd5b] focus:ring-[#5edd5b] pr-14">
+                                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-bold text-slate-400">Jam</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">Dihitung sejak pesanan dibuat, tidak pernah melewati batas pengambilan. 0 = hanya dibatasi batas pengambilan. Pesanan dengan bukti transfer terunggah menunggu konfirmasi admin dan tidak dibatalkan otomatis.</p>
+                            @error('batas_bayar_jam') <span class="text-xs text-rose-500 font-semibold">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label for="maks_pesanan_menunggu" class="block text-xs font-bold text-slate-700 mb-1">Maks. Pesanan Menunggu per Pelanggan</label>
+                            <div class="relative">
+                                <input type="number" id="maks_pesanan_menunggu" name="maks_pesanan_menunggu" value="{{ old('maks_pesanan_menunggu', $pengaturan['maks_pesanan_menunggu']) }}" min="0" max="50"
+                                       class="w-full text-sm font-semibold rounded-xl border-slate-200 focus:border-[#5edd5b] focus:ring-[#5edd5b] pr-16">
+                                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs font-bold text-slate-400">Pesanan</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">Mencegah penimbunan stok lewat banyak pesanan yang belum dibayar. 0 = tanpa batas. Pesanan walk-in oleh admin tidak dibatasi.</p>
+                            @error('maks_pesanan_menunggu') <span class="text-xs text-rose-500 font-semibold">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-4 p-3.5 bg-amber-50 rounded-xl border border-amber-200/80 flex items-start gap-2.5">
                     <svg class="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>

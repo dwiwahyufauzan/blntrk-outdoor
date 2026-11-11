@@ -32,16 +32,25 @@ class PesananDetail extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Pesanan, $this>
+     */
     public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class);
     }
 
+    /**
+     * @return BelongsTo<Alat, $this>
+     */
     public function alat(): BelongsTo
     {
         return $this->belongsTo(Alat::class)->withTrashed();
     }
 
+    /**
+     * @return HasOne<PengembalianDetail, $this>
+     */
     public function pengembalianDetail(): HasOne
     {
         return $this->hasOne(PengembalianDetail::class, 'pesanan_detail_id');

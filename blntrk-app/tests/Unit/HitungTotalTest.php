@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Data\PesananBaru;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\Pelanggan;
@@ -82,7 +83,7 @@ class HitungTotalTest extends TestCase
             ],
         ];
 
-        $pesanan = $this->service->buat($this->pelanggan, $this->user, $data);
+        $pesanan = $this->service->buat($this->pelanggan, $this->user, PesananBaru::dari($data));
 
         // 1. Verifikasi durasi hari sewa
         $this->assertEquals(3, $pesanan->durasi_hari);

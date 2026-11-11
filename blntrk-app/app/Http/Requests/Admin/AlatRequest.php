@@ -14,7 +14,7 @@ class AlatRequest extends FormRequest
 
     public function rules(): array
     {
-        $alatId = $this->route('alat')?->id ?? $this->route('alat');
+        $alatId = $this->route('alat')->id ?? $this->route('alat');
 
         return [
             'kategori_id' => ['required', 'exists:kategori_alat,id'],

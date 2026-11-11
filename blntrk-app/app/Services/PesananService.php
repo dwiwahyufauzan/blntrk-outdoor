@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
+use App\Data\PesananBaru;
+use App\Data\RefundBaru;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\LogAktivitas;
 use App\Models\Pelanggan;
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
+use App\Models\Refund;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Support\PengaturanToko;
+use Carbon\CarbonInterface;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -24,23 +27,25 @@ class PesananService
     /**
      * Membuat pesanan baru secara atomic dengan penguncian baris alat (lockForUpdate).
      *
-     * @param  array  $data  Format: ['tanggal_mulai' => string, 'tanggal_selesai' => string, 'items' => [['alat_id' => int, 'jumlah' => int]], 'catatan' => ?string]
-     *
      * @throws ValidationException
      */
-    public function buat(Pelanggan $pelanggan, User $pembuat, array $data): Pesanan
+    public function buat(Pelanggan $pelanggan, User $pembuat, PesananBaru $data): Pesanan
     {
         // Dibaca sebelum transaksi: cache bertipe database menulis baris saat miss, dan itu tidak boleh
         // terjadi di dalam bagian kritis yang memegang kunci baris alat.
-        $jamKembali = Pengaturan::ambil('jam_kembali', '12:00');
+        $jamKembali = PengaturanToko::jamKembali();
+        $batasBayarJam = PengaturanToko::batasBayarJam();
+        $maksMenunggu = PengaturanToko::maksPesananMenunggu();
 
-        return DB::transaction(function () use ($pelanggan, $pembuat, $data, $jamKembali) {
-            $mulai = Carbon::parse($data['tanggal_mulai'])->startOfDay();
-            $selesai = Carbon::parse($data['tanggal_selesai'])->startOfDay();
+        return DB::transaction(function () use ($pelanggan, $pembuat, $data, $jamKembali, $batasBayarJam, $maksMenunggu) {
+            $mulai = $data->tanggalMulai->copy()->startOfDay();
+            $selesai = $data->tanggalSelesai->copy()->startOfDay();
             $durasi = max(1, (int) $mulai->diffInDays($selesai));
 
+            $this->batasiPesananMenunggu($pelanggan, $pembuat, $maksMenunggu);
+
             // Kunci baris alat terurut berdasarkan ID agar pemesanan paralel dieksekusi berurutan tanpa deadlock
-            $alatIds = collect($data['items'])->pluck('alat_id')->map(fn ($id) => (int) $id)->sort()->values();
+            $alatIds = collect($data->items)->pluck('alatId')->sort()->values();
             $alatList = Alat::whereIn('id', $alatIds)
                 ->where('is_aktif', true)
                 ->orderBy('id')
@@ -52,9 +57,9 @@ class PesananService
             $detail = [];
             $kuantitas = [];
 
-            foreach ($data['items'] as $index => $item) {
-                $alatId = (int) $item['alat_id'];
-                $jumlah = (int) $item['jumlah'];
+            foreach ($data->items as $index => $item) {
+                $alatId = $item->alatId;
+                $jumlah = $item->jumlah;
 
                 $alat = $alatList[$alatId] ?? null;
                 if (! $alat) {
@@ -94,6 +99,7 @@ class PesananService
 
             $jatuhTempo = $selesai->copy()->setTimeFromTimeString($jamKembali);
             $batasAmbil = $mulai->copy()->setTime(23, 59, 59);
+            $batasBayar = $this->hitungBatasBayar($batasBayarJam, $batasAmbil);
 
             $pesanan = $this->simpanDenganResi([
                 'pelanggan_id' => $pelanggan->id,
@@ -103,12 +109,13 @@ class PesananService
                 'durasi_hari' => $durasi,
                 'jatuh_tempo' => $jatuhTempo,
                 'batas_ambil' => $batasAmbil,
+                'batas_bayar' => $batasBayar,
                 'status' => StatusPesanan::Menunggu,
                 'total_sewa' => $total,
                 'paket_bundling_id' => $diskon > 0 ? $diskonPaket['paket']?->id : null,
                 'jumlah_paket' => $diskon > 0 ? $diskonPaket['jumlah_paket'] : 0,
                 'diskon_paket' => $diskon,
-                'catatan' => $data['catatan'] ?? null,
+                'catatan' => $data->catatan,
             ]);
 
             $pesanan->detail()->createMany($detail);
@@ -122,6 +129,47 @@ class PesananService
 
             return $pesanan->load(['detail.alat.kategori', 'pelanggan', 'pembuat']);
         });
+    }
+
+    /**
+     * Batas pembayaran: sekian jam sejak dibuat, tetapi tidak pernah melewati batas pengambilan.
+     * Pengaturan 0 jam berarti pesanan hanya dibatasi batas pengambilan.
+     */
+    public function hitungBatasBayar(int $batasBayarJam, CarbonInterface $batasAmbil): CarbonInterface
+    {
+        if ($batasBayarJam <= 0) {
+            return $batasAmbil->copy();
+        }
+
+        $batas = now()->addHours($batasBayarJam);
+
+        return $batas->lt($batasAmbil) ? $batas : $batasAmbil->copy();
+    }
+
+    /**
+     * Mencegah satu pelanggan menimbun stok lewat banyak pesanan menunggu. Hanya berlaku untuk pesanan
+     * yang dibuat pelanggan sendiri; admin (walk-in) tidak dibatasi. Baris pelanggan dikunci agar dua
+     * permintaan bersamaan tidak sama-sama lolos.
+     *
+     * @throws ValidationException
+     */
+    private function batasiPesananMenunggu(Pelanggan $pelanggan, User $pembuat, int $maks): void
+    {
+        if ($maks <= 0 || $pembuat->punyaRole('admin', 'pemilik')) {
+            return;
+        }
+
+        Pelanggan::whereKey($pelanggan->id)->lockForUpdate()->first();
+
+        $menunggu = Pesanan::where('pelanggan_id', $pelanggan->id)
+            ->where('status', StatusPesanan::Menunggu)
+            ->count();
+
+        if ($menunggu >= $maks) {
+            throw ValidationException::withMessages([
+                'pesanan' => "Anda masih memiliki {$menunggu} pesanan yang belum dibayar (batas {$maks}). Selesaikan pembayaran atau batalkan salah satunya sebelum membuat pesanan baru.",
+            ]);
+        }
     }
 
     /**
@@ -229,7 +277,7 @@ class PesananService
             LogAktivitas::catat(
                 $admin,
                 'pesanan.bayar',
-                "Pembayaran {$p->no_resi} diterima sebesar Rp".number_format($p->total_sewa, 0, ',', '.')." ({$d['metode']})"
+                "Pembayaran {$p->no_resi} diterima sebesar Rp".number_format((float) $p->total_sewa, 0, ',', '.')." ({$d['metode']})"
             );
         });
     }
@@ -298,10 +346,13 @@ class PesananService
      * Admin: dari status menunggu atau dibayar. Alasan wajib.
      * Pelanggan: dari status menunggu, pesanan miliknya sendiri.
      * Status disewa/terlambat/dikembalikan/dibatalkan: ditolak.
+     *
+     * Pesanan yang sudah dibayar harus ditutup dengan salah satu kebijakan dana: dikembalikan ($refund diisi,
+     * penuh atau sebagian) atau hangus ($refund null). Selisih yang tidak dikembalikan tetap menjadi pendapatan.
      */
-    public function batal(Pesanan $p, User $pelaku, string $alasan): void
+    public function batal(Pesanan $p, User $pelaku, string $alasan, ?RefundBaru $refund = null): void
     {
-        DB::transaction(function () use ($p, $pelaku, $alasan) {
+        DB::transaction(function () use ($p, $pelaku, $alasan, $refund) {
             $p = Pesanan::lockForUpdate()->findOrFail($p->id);
 
             $isAdmin = $pelaku->punyaRole('admin');
@@ -321,6 +372,11 @@ class PesananService
                 ]);
             }
 
+            $dibayar = $p->total_dibayar;
+            if ($refund) {
+                $this->pastikanRefundWajar($dibayar, 0.0, $refund);
+            }
+
             $p->update([
                 'status' => StatusPesanan::Dibatalkan,
                 'dibatalkan_pada' => now(),
@@ -328,12 +384,90 @@ class PesananService
                 'diproses_oleh' => $pelaku->id,
             ]);
 
+            $keteranganDana = '';
+            if ($dibayar > 0) {
+                if ($refund) {
+                    $this->simpanRefund($p, $pelaku, $refund);
+                    $hangus = round($dibayar - $refund->jumlah, 2);
+                    $keteranganDana = ' [Dana dikembalikan Rp'.number_format($refund->jumlah, 0, ',', '.')." ({$refund->metode->value})"
+                        .($hangus > 0 ? ', hangus Rp'.number_format($hangus, 0, ',', '.') : '').']';
+                } else {
+                    $keteranganDana = ' [Dana Rp'.number_format($dibayar, 0, ',', '.').' hangus, tidak dikembalikan]';
+                }
+            }
+
             LogAktivitas::catat(
                 $pelaku,
                 'pesanan.batal',
-                "Membatalkan pesanan [{$p->no_resi}] dengan alasan: {$alasan}"
+                "Membatalkan pesanan [{$p->no_resi}] dengan alasan: {$alasan}{$keteranganDana}"
             );
         });
+    }
+
+    /**
+     * Mencatat refund pada pesanan yang sudah dibatalkan, misalnya pesanan no-show yang dibatalkan sistem
+     * dengan dana hangus lalu diputuskan pemilik/admin untuk dikembalikan.
+     *
+     * @throws ValidationException
+     */
+    public function catatRefund(Pesanan $p, User $admin, RefundBaru $refund): Refund
+    {
+        return DB::transaction(function () use ($p, $admin, $refund) {
+            $p = Pesanan::lockForUpdate()->findOrFail($p->id);
+
+            if ($p->status !== StatusPesanan::Dibatalkan) {
+                throw ValidationException::withMessages([
+                    'status' => 'Refund hanya dapat dicatat untuk pesanan yang sudah dibatalkan.',
+                ]);
+            }
+
+            $this->pastikanRefundWajar($p->total_dibayar, $p->total_refund, $refund);
+
+            return $this->simpanRefund($p, $admin, $refund);
+        });
+    }
+
+    /**
+     * Refund tidak boleh melebihi uang yang pernah diterima dikurangi refund sebelumnya.
+     *
+     * @throws ValidationException
+     */
+    private function pastikanRefundWajar(float $dibayar, float $sudahDirefund, RefundBaru $refund): void
+    {
+        $sisa = round($dibayar - $sudahDirefund, 2);
+
+        if ($dibayar <= 0) {
+            throw ValidationException::withMessages([
+                'jumlah_refund' => 'Pesanan ini belum memiliki pembayaran sehingga tidak ada dana yang dapat dikembalikan.',
+            ]);
+        }
+
+        if ($refund->jumlah <= 0 || $refund->jumlah - $sisa > 0.001) {
+            throw ValidationException::withMessages([
+                'jumlah_refund' => 'Jumlah refund harus lebih dari nol dan tidak boleh melebihi sisa dana Rp'.number_format(max(0, $sisa), 0, ',', '.').'.',
+            ]);
+        }
+    }
+
+    private function simpanRefund(Pesanan $p, User $pencatat, RefundBaru $refund): Refund
+    {
+        $baris = $p->refund()->create([
+            'jumlah' => $refund->jumlah,
+            'metode' => $refund->metode,
+            'direfund_pada' => now(),
+            'dicatat_oleh' => $pencatat->id,
+            'catatan' => $refund->catatan,
+        ]);
+
+        LogAktivitas::catat(
+            $pencatat,
+            'pesanan.refund',
+            "Mencatat refund pesanan [{$p->no_resi}] sebesar Rp".number_format($refund->jumlah, 0, ',', '.')." ({$refund->metode->value})",
+            'pesanan',
+            $p->id
+        );
+
+        return $baris;
     }
 
     /**

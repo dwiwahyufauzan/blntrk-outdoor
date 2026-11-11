@@ -157,7 +157,7 @@
                             <div class="brand-title">{{ $toko }}</div>
                             <div class="brand-subtitle">{{ $alamat }}</div>
                             <div class="brand-subtitle">
-                                WhatsApp: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
+                                WhatsApp: {{ \App\Support\PengaturanToko::noWa() }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam
                             </div>
                         </td>
                     </tr>
@@ -319,7 +319,7 @@
                         </td>
                         <td>{{ $d->keterangan ?? '-' }}</td>
                         <td class="text-center">
-                            @if($d->status->value === 'lunas')
+                            @if($d->is_lunas)
                                 <span style="color: #22543d; font-weight: bold;">Lunas</span>
                             @else
                                 <span style="color: #742a2a; font-weight: bold;">Belum Lunas</span>

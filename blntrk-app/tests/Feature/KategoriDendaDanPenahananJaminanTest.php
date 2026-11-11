@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\PesananBaru;
 use App\Enums\StatusPesanan;
 use App\Models\Alat;
 use App\Models\Denda;
@@ -109,14 +110,14 @@ class KategoriDendaDanPenahananJaminanTest extends TestCase
     protected function bikinPesananDisewa(string $catatan = 'Uji denda'): Pesanan
     {
         $pesananService = app(PesananService::class);
-        $pesanan = $pesananService->buat($this->pelanggan, $this->userPelanggan, [
+        $pesanan = $pesananService->buat($this->pelanggan, $this->userPelanggan, PesananBaru::dari([
             'tanggal_mulai' => Carbon::today()->subDays(2)->toDateString(),
             'tanggal_selesai' => Carbon::yesterday()->toDateString(),
             'items' => [
                 ['alat_id' => $this->alat->id, 'jumlah' => 1],
             ],
             'catatan' => $catatan,
-        ]);
+        ]));
 
         $pesananService->bayar($pesanan, $this->admin, [
             'jumlah' => $pesanan->total_sewa,
@@ -199,7 +200,7 @@ class KategoriDendaDanPenahananJaminanTest extends TestCase
 
         // Lunasi denda
         $this->actingAs($this->admin)
-            ->patch(route('admin.denda.lunas', $denda->id));
+            ->patch(route('admin.denda.lunas', $denda->id), ['metode_bayar' => 'tunai']);
 
         $this->assertEquals('lunas', $denda->fresh()->status_bayar);
 

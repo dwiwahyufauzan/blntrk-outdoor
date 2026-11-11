@@ -41,16 +41,25 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return BelongsTo<Role, $this>
+     */
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }
 
+    /**
+     * @return HasOne<Pelanggan, $this>
+     */
     public function pelanggan(): HasOne
     {
         return $this->hasOne(Pelanggan::class);
     }
 
+    /**
+     * @return HasMany<LogAktivitas, $this>
+     */
     public function logAktivitas(): HasMany
     {
         return $this->hasMany(LogAktivitas::class);

@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
+use App\Support\PengaturanToko;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -30,10 +30,10 @@ class PengingatPesanan extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $p = $this->pesanan;
-        $toko = Pengaturan::ambil('nama_toko', 'BLNTRK Outdoor');
+        $toko = PengaturanToko::namaToko();
         $jatuhTempo = $p->jatuh_tempo?->translatedFormat('d F Y, H:i') ?? $p->tanggal_selesai->translatedFormat('d F Y');
 
-        $mail = (new MailMessage)->greeting('Halo '.($p->pelanggan?->nama_lengkap ?? 'Kak').',');
+        $mail = (new MailMessage)->greeting('Halo '.($p->pelanggan->nama_lengkap ?? 'Kak').',');
 
         if ($this->jenis === self::TERLAMBAT) {
             return $mail

@@ -32,11 +32,17 @@ class Pembayaran extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Pesanan, $this>
+     */
     public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function pencatat(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dicatat_oleh');

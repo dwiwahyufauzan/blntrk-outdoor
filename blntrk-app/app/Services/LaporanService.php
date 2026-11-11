@@ -8,6 +8,7 @@ use App\Models\Denda;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\PesananDetail;
+use App\Models\Refund;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -47,15 +48,18 @@ class LaporanService
 
     /**
      * Laporan 2: Pendapatan Finansial Riil (Kas Masuk)
-     * Dihitung berdasarkan pembayaran.dibayar_pada yang jatuh tempo pada periode,
-     * ditambah denda yang berstatus lunas pada periode tersebut.
-     * Pesanan dibatalkan tidak dihitung.
+     * Dihitung berdasarkan pembayaran.dibayar_pada pada periode, ditambah denda yang lunas pada periode,
+     * dikurangi refund yang dikembalikan pada periode. Pembayaran dari pesanan yang dibatalkan tetap
+     * dihitung (uang sudah diterima); bagian yang dikembalikan keluar lewat refund, sisanya hangus
+     * sebagai pendapatan toko, sehingga laporan selalu sama dengan kas.
      *
      * @return array{
      *     pembayaran_sewa: Collection,
      *     denda_lunas: Collection,
+     *     refund: Collection,
      *     total_pendapatan_sewa: float,
      *     total_pendapatan_denda: float,
+     *     total_refund: float,
      *     total_pendapatan_bersih: float
      * }
      */
@@ -67,7 +71,6 @@ class LaporanService
         // 1. Kas masuk dari sewa alat (Pembayaran riil)
         $pembayaranSewa = Pembayaran::with(['pesanan.pelanggan', 'pencatat'])
             ->whereBetween('dibayar_pada', [$start, $end])
-            ->whereHas('pesanan', fn ($q) => $q->where('status', '!=', StatusPesanan::Dibatalkan->value))
             ->orderBy('dibayar_pada')
             ->get();
 
@@ -84,28 +87,37 @@ class LaporanService
             ->orderBy('dilunasi_pada')
             ->get();
 
+        // 3. Kas keluar: dana yang dikembalikan kepada pelanggan atas pesanan dibatalkan
+        $refund = Refund::with(['pesanan.pelanggan', 'pencatat'])
+            ->whereBetween('direfund_pada', [$start, $end])
+            ->orderBy('direfund_pada')
+            ->get();
+
         $totalSewa = (float) $pembayaranSewa->sum('jumlah');
         $totalDenda = (float) $dendaLunas->sum('jumlah');
-        $totalBersih = $totalSewa + $totalDenda;
+        $totalRefund = (float) $refund->sum('jumlah');
 
         return [
             'pembayaran_sewa' => $pembayaranSewa,
             'denda_lunas' => $dendaLunas,
+            'refund' => $refund,
             'total_pendapatan_sewa' => $totalSewa,
             'total_pendapatan_denda' => $totalDenda,
-            'total_pendapatan_bersih' => $totalBersih,
+            'total_refund' => $totalRefund,
+            'total_pendapatan_bersih' => $totalSewa + $totalDenda - $totalRefund,
         ];
     }
 
     /**
-     * Pendapatan sewa bersih pada rentang waktu: pembayaran pesanan yang tidak dibatalkan.
+     * Pendapatan sewa bersih pada rentang waktu: pembayaran yang diterima dikurangi refund yang dikembalikan.
      * Dipakai dashboard pemilik agar konsisten dengan laporan pendapatan.
      */
     public function pendapatanSewaBersih(Carbon $start, Carbon $end): float
     {
-        return (float) Pembayaran::whereBetween('dibayar_pada', [$start, $end])
-            ->whereHas('pesanan', fn ($q) => $q->where('status', '!=', StatusPesanan::Dibatalkan->value))
-            ->sum('jumlah');
+        $masuk = (float) Pembayaran::whereBetween('dibayar_pada', [$start, $end])->sum('jumlah');
+        $keluar = (float) Refund::whereBetween('direfund_pada', [$start, $end])->sum('jumlah');
+
+        return $masuk - $keluar;
     }
 
     /**
@@ -129,6 +141,7 @@ class LaporanService
             ->whereNull('pesanan.deleted_at')
             ->whereDate('pesanan.tanggal_mulai', '<', $akhir->toDateString())
             ->whereDate('pesanan.tanggal_selesai', '>', $mulai->toDateString())
+            ->toBase()
             ->get(['pesanan_detail.alat_id', 'pesanan_detail.jumlah', 'pesanan.tanggal_mulai', 'pesanan.tanggal_selesai']);
 
         $unitHari = [];

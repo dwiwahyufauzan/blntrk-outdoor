@@ -1,3 +1,61 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Aksesibilitas
+ * - Fokus keyboard selalu terlihat pada tombol, tautan, dan kontrol formulir (beberapa komponen memakai focus:outline-none).
+ * - Teks stone-400 (kontras 2,5:1 di latar terang) digelapkan ke stone-500 (4,8:1, lolos WCAG AA) kecuali di dalam
+ *   kontainer gelap, tempat warna aslinya (7:1) sudah memadai.
+ */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[role='button']:focus-visible,
+[tabindex]:not([tabindex='-1']):focus-visible {
+    outline: 2px solid #5edd5b !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px #0e1b15;
+}
+
+.text-stone-400 {
+    color: #78716c;
+}
+
+:is(
+    .bg-\[\#0e1b15\],
+    .bg-\[\#14201a\],
+    .bg-\[\#14251e\],
+    .bg-\[\#1e3a2c\],
+    .bg-\[\#1a2e24\],
+    .bg-\[\#1a3026\],
+    .bg-\[\#1b3329\],
+    .bg-\[\#161615\],
+    .bg-\[\#0a0a0a\],
+    .bg-stone-800,
+    .bg-stone-900,
+    .bg-black
+) .text-stone-400 {
+    color: #a8a29e;
+}
+
+.skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: -4rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    background: #5edd5b;
+    color: #000;
+    font-weight: 800;
+    font-size: 0.75rem;
+}
+
+.skip-link:focus {
+    top: 0.75rem;
+}
+
+main:focus {
+    outline: none;
+}

@@ -36,16 +36,25 @@ class Jaminan extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Pesanan, $this>
+     */
     public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function penerima(): BelongsTo
     {
         return $this->belongsTo(User::class, 'diterima_oleh');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function pengembali(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dikembalikan_oleh');

@@ -207,7 +207,7 @@
     <!-- ============================================== -->
     @elseif($jenis === 'pendapatan')
         <!-- Kartu Finansial 3 Kolom -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-xs">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">Pendapatan Sewa Riil</span>
                 <span class="text-2xl font-black text-[#14201a] font-mono block mt-1">Rp{{ number_format($data['total_pendapatan_sewa'], 0, ',', '.') }}</span>
@@ -220,10 +220,16 @@
                 <span class="text-[11px] text-stone-400 block mt-0.5">{{ $data['denda_lunas']->count() }} kasus denda terlunasi</span>
             </div>
 
+            <div class="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-xs">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 block">Refund Dikembalikan</span>
+                <span class="text-2xl font-black text-[#14201a] font-mono block mt-1">-Rp{{ number_format($data['total_refund'], 0, ',', '.') }}</span>
+                <span class="text-[11px] text-stone-400 block mt-0.5">{{ $data['refund']->count() }} refund pesanan dibatalkan</span>
+            </div>
+
             <div class="bg-[#0e1b15] text-white p-5 rounded-2xl border border-stone-800 shadow-xs">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-[#5edd5b] block">Total Kas Masuk Bersih</span>
                 <span class="text-2xl font-black text-white font-mono block mt-1">Rp{{ number_format($data['total_pendapatan_bersih'], 0, ',', '.') }}</span>
-                <span class="text-[11px] text-stone-300 block mt-0.5">Sewa murni + Denda lunas di kasir</span>
+                <span class="text-[11px] text-stone-300 block mt-0.5">Sewa + Denda lunas &minus; Refund</span>
             </div>
         </div>
 
@@ -316,6 +322,8 @@
                 </table>
             </div>
         </div>
+
+        @include('laporan.partials.tabel-refund', ['data' => $data, 'linkPesanan' => true])
 
     <!-- ============================================== -->
     <!-- TAB 3: LAPORAN DENDA & GANTI RUGI -->

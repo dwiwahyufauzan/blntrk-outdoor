@@ -80,9 +80,9 @@
                         <input type="datetime-local" id="dikembalikan_pada" name="dikembalikan_pada"
                                x-model="waktuKembali"
                                @change="cekKeterlambatan()"
-                               required
                                class="w-full text-xs font-mono rounded-xl border-stone-300 focus:border-[#0e1b15] focus:ring-[#0e1b15] shadow-xs">
-                        <span class="text-[10px] text-stone-400 mt-1 block">Toleransi pengembalian: 60 menit dari jatuh tempo.</span>
+                        <span class="text-[10px] text-stone-400 mt-1 block">Bawaan: waktu sekarang. Mengubahnya lebih dari {{ \App\Services\PengembalianService::TOLERANSI_WAKTU_MANUAL_MENIT }} menit dari waktu sekarang wajib disertai catatan dan tercatat pada log aktivitas.</span>
+                        @error('dikembalikan_pada') <span class="text-xs text-rose-600 font-semibold block mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="p-3.5 rounded-xl border" :class="dendaTelat > 0 ? 'border-rose-200 bg-rose-50/50' : 'border-stone-200 bg-stone-50/50'">

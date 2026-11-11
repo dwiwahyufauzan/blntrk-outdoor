@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Pengaturan;
 use App\Rules\NomorHpIndonesia;
+use App\Support\PengaturanToko;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -55,7 +55,7 @@ class PesananRequest extends FormRequest
                     $selesai = Carbon::parse($this->input('tanggal_selesai'))->startOfDay();
                     $durasi = $mulai->diffInDays($selesai);
 
-                    $maksDurasi = Pengaturan::maksDurasiHari();
+                    $maksDurasi = PengaturanToko::maksDurasiHari();
 
                     if ($durasi > $maksDurasi) {
                         $v->errors()->add('tanggal_selesai', "Durasi sewa maksimal adalah {$maksDurasi} hari.");

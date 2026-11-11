@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Pengaturan;
 use App\Models\Pesanan;
+use App\Support\PengaturanToko;
 use Carbon\Carbon;
 
 class DendaService
@@ -15,8 +15,8 @@ class DendaService
      */
     public function hitungKeterlambatan(Pesanan $pesanan, Carbon $waktuKembali): array
     {
-        $toleransi = (int) Pengaturan::ambil('toleransi_menit', 60);
-        $persen = (float) Pengaturan::ambil('persen_denda_harian', 100) / 100;
+        $toleransi = PengaturanToko::toleransiMenit();
+        $persen = PengaturanToko::persenDendaHarian() / 100;
 
         $batasToleransi = $pesanan->jatuh_tempo->copy()->addMinutes($toleransi);
 

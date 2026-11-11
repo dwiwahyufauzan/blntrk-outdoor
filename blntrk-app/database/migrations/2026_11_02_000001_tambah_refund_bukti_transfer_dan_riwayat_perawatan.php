@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/*
+ * Catatan: nama berkas ini memuat kata "refund", padahal isinya bukti transfer, nominal jaminan, jenis pembayaran,
+ * dan riwayat perawatan. Pencatatan refund sebenarnya ada di migrasi tambah_batas_bayar_refund_dan_metode_pelunasan_denda.
+ * Berkas tidak diganti namanya karena nama migrasi sudah tercatat di tabel `migrations` pada database yang berjalan.
+ */
 return new class extends Migration
 {
     public function up(): void

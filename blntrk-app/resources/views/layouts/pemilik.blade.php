@@ -22,6 +22,7 @@
     </style>
 </head>
 <body x-data="{ mobileNav: false }" class="bg-[#f4f5f6] text-[#14201a] antialiased min-h-screen flex flex-col">
+    <a href="#konten-utama" class="skip-link">Lewati ke konten utama</a>
 
     <!-- Top Unified Navbar (Menyambungkan Logo Sidebar dengan Navbar) -->
     <header class="h-16 bg-[#0e1b15] text-white border-b border-stone-800 sticky top-0 z-40 flex items-center justify-between shadow-xs">
@@ -256,7 +257,7 @@
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col min-w-0 bg-[#f4f5f6]">
-            <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+            <main id="konten-utama" tabindex="-1" class="flex-1 p-6 md:p-8 overflow-y-auto">
                 <x-alert />
                 {{ $slot }}
             </main>

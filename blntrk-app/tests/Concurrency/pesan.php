@@ -8,6 +8,7 @@
  * Keluaran: satu baris JSON {"status": "ok|validasi|error", ...}
  */
 
+use App\Data\PesananBaru;
 use App\Models\Pelanggan;
 use App\Models\User;
 use App\Services\PesananService;
@@ -38,7 +39,7 @@ try {
     $pesanan = app(PesananService::class)->buat(
         Pelanggan::findOrFail((int) $pelangganId),
         User::findOrFail((int) $pembuatId),
-        ['tanggal_mulai' => $mulai, 'tanggal_selesai' => $selesai, 'items' => $items]
+        PesananBaru::dari(['tanggal_mulai' => $mulai, 'tanggal_selesai' => $selesai, 'items' => $items])
     );
     echo json_encode(['status' => 'ok', 'resi' => $pesanan->no_resi]).PHP_EOL;
 } catch (ValidationException $e) {

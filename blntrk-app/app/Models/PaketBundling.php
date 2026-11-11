@@ -51,16 +51,25 @@ class PaketBundling extends Model
         });
     }
 
+    /**
+     * @return HasMany<PaketBundlingDetail, $this>
+     */
     public function detail(): HasMany
     {
         return $this->hasMany(PaketBundlingDetail::class, 'paket_bundling_id');
     }
 
+    /**
+     * @return HasMany<PaketBundlingDetail, $this>
+     */
     public function items(): HasMany
     {
         return $this->detail();
     }
 
+    /**
+     * @return BelongsToMany<Alat, $this>
+     */
     public function alat(): BelongsToMany
     {
         return $this->belongsToMany(Alat::class, 'paket_bundling_detail', 'paket_bundling_id', 'alat_id')

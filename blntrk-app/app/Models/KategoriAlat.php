@@ -18,6 +18,9 @@ class KategoriAlat extends Model
         'deskripsi',
     ];
 
+    /**
+     * @return HasMany<Alat, $this>
+     */
     public function alat(): HasMany
     {
         return $this->hasMany(Alat::class, 'kategori_id');

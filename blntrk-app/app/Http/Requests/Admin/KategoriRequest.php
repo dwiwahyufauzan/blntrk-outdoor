@@ -14,7 +14,7 @@ class KategoriRequest extends FormRequest
 
     public function rules(): array
     {
-        $kategoriId = $this->route('kategori')?->id ?? $this->route('kategori');
+        $kategoriId = $this->route('kategori')->id ?? $this->route('kategori');
 
         return [
             'nama' => [

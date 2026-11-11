@@ -139,7 +139,7 @@
                         <td style="vertical-align: middle;">
                             <div class="brand-title">{{ $toko }}</div>
                             <div class="brand-subtitle">{{ $alamat }}</div>
-                            <div class="brand-subtitle">WhatsApp Toko: {{ \App\Models\Pengaturan::ambil('no_wa_toko', '0812-3456-7890') }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam</div>
+                            <div class="brand-subtitle">WhatsApp Toko: {{ \App\Support\PengaturanToko::noWa() }} &bull; Email: blntrkoutdoor@gmail.com &bull; Buka 24 Jam</div>
                         </td>
                     </tr>
                 </table>
@@ -160,21 +160,27 @@
     <!-- RINGKASAN KARTU PENDAPATAN -->
     <table class="summary-card">
         <tr>
-            <td style="width: 33.33%; padding-right: 5px;">
+            <td style="width: 25%; padding-right: 5px;">
                 <div class="summary-box">
                     <div class="summary-label">Pendapatan Sewa Riil</div>
                     <div class="summary-value">Rp {{ number_format($data['total_pendapatan_sewa'], 0, ',', '.') }}</div>
                 </div>
             </td>
-            <td style="width: 33.33%; padding-left: 2px; padding-right: 2px;">
+            <td style="width: 25%; padding-left: 2px; padding-right: 2px;">
                 <div class="summary-box">
                     <div class="summary-label">Pendapatan Denda Lunas</div>
                     <div class="summary-value">Rp {{ number_format($data['total_pendapatan_denda'], 0, ',', '.') }}</div>
                 </div>
             </td>
-            <td style="width: 33.33%; padding-left: 5px;">
+            <td style="width: 25%; padding-left: 2px; padding-right: 2px;">
+                <div class="summary-box">
+                    <div class="summary-label">Refund Dikembalikan</div>
+                    <div class="summary-value">-Rp {{ number_format($data['total_refund'], 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 25%; padding-left: 5px;">
                 <div class="summary-box" style="background-color: #e6fffa; border-color: #81e6d9;">
-                    <div class="summary-label" style="color: #234e52;">Total Penerimaan Kas</div>
+                    <div class="summary-label" style="color: #234e52;">Total Penerimaan Kas Bersih</div>
                     <div class="summary-value" style="color: #234e52;">Rp {{ number_format($data['total_pendapatan_bersih'], 0, ',', '.') }}</div>
                 </div>
             </td>
@@ -259,13 +265,53 @@
         </table>
     @endif
 
+    <!-- BAGIAN 3: REFUND -->
+    <div class="section-title" style="margin-top: 20px;">3. Rincian Kas Keluar Refund Pesanan Dibatalkan</div>
+    @if($data['refund']->isEmpty())
+        <div class="empty-state">
+            Tidak ada refund pada periode ini
+        </div>
+    @else
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;" class="text-center">No</th>
+                    <th style="width: 18%;">Waktu Refund</th>
+                    <th style="width: 18%;">No. Resi</th>
+                    <th style="width: 25%;">Pelanggan</th>
+                    <th style="width: 16%;">Metode</th>
+                    <th style="width: 18%;" class="text-right">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($data['refund'] as $index => $refund)
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $refund->direfund_pada?->format('d/m/Y H:i') }}</td>
+                        <td class="font-bold">{{ $refund->pesanan?->no_resi ?? '-' }}</td>
+                        <td>{{ $refund->pesanan?->pelanggan?->nama_lengkap ?? '-' }}</td>
+                        <td>{{ $refund->metode->label() }}</td>
+                        <td class="text-right font-bold">-Rp {{ number_format($refund->jumlah, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr style="background-color: #edf2f7;">
+                    <td colspan="5" class="text-right font-bold">Subtotal Refund:</td>
+                    <td class="text-right font-bold">-Rp {{ number_format($data['total_refund'], 0, ',', '.') }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    @endif
+
     <!-- TANDA TANGAN & PENGESAHAN -->
     <table class="signature-table">
         <tr>
             <td style="width: 60%;">
                 <div style="font-size: 8pt; color: #718096;">
                     * Pendapatan sewa dihitung berdasarkan kas masuk riil (bukan tanggal pesanan).<br>
-                    * Denda yang dihitung sebagai pendapatan hanya denda yang telah lunas.
+                    * Denda yang dihitung sebagai pendapatan hanya denda yang telah lunas.<br>
+                    * Pembayaran pesanan dibatalkan tetap dihitung; dana yang dikembalikan dikurangkan lewat refund, sisanya hangus.
                 </div>
             </td>
             <td style="width: 40%;" align="right">

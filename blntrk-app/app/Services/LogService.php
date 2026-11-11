@@ -20,7 +20,7 @@ class LogService
     {
         try {
             LogAktivitas::create([
-                'user_id' => $u?->id ?? auth()->id(),
+                'user_id' => $u->id ?? auth()->id(),
                 'aksi' => $aksi,
                 'modul' => $modul,
                 'ref_id' => $ref,

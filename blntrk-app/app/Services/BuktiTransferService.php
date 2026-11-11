@@ -7,6 +7,7 @@ use App\Models\Pesanan;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -19,8 +20,18 @@ class BuktiTransferService
         return (string) config('filesystems.bukti_disk', 'local');
     }
 
+    /** Batas unggah ulang per pesanan; mencegah pengunggahan berulang yang hanya membebani penyimpanan dan log. */
+    public const MAKS_UNGGAHAN = 5;
+
     public function simpan(Pesanan $pesanan, UploadedFile $file, User $pengunggah): void
     {
+        $sudahDiunggah = LogAktivitas::where('aksi', 'pesanan.bukti')->where('ref_id', $pesanan->id)->count();
+        if ($sudahDiunggah >= self::MAKS_UNGGAHAN) {
+            throw ValidationException::withMessages([
+                'bukti' => 'Batas unggah bukti transfer untuk pesanan ini ('.self::MAKS_UNGGAHAN.' kali) sudah tercapai. Hubungi admin toko bila bukti masih perlu diganti.',
+            ]);
+        }
+
         $disk = Storage::disk(self::disk());
 
         $lama = $pesanan->bukti_transfer;

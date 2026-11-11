@@ -21,6 +21,7 @@
     </style>
 </head>
 <body class="bg-[#0e1b15] text-[#14201a] antialiased min-h-screen flex flex-col justify-between relative overflow-x-hidden selection:bg-[#f6c453] selection:text-[#0e1b15]">
+    <a href="#konten-utama" class="skip-link">Lewati ke konten utama</a>
     
     <!-- Ambient Glow Background Elements -->
     <div class="fixed inset-0 pointer-events-none opacity-40 -z-10" aria-hidden="true">
@@ -46,7 +47,7 @@
     </header>
 
     <!-- Main Auth Card Container -->
-    <main class="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:px-6">
+    <main id="konten-utama" tabindex="-1" class="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:px-6">
         <div class="w-full sm:max-w-md bg-white p-7 sm:p-8 rounded-3xl shadow-2xl border border-stone-200/90 relative">
             {{ $slot }}
         </div>
