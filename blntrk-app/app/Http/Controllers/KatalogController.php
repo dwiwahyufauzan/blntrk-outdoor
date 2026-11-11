@@ -38,8 +38,9 @@ class KatalogController extends Controller
         // Filter berdasarkan kategori (slug atau id)
         if ($request->filled('kategori')) {
             $katVal = $request->input('kategori');
+            // Kolom id bertipe integer: membandingkannya dengan teks non-numerik ditolak PostgreSQL
             $query->whereHas('kategori', function ($q) use ($katVal) {
-                $q->where('slug', $katVal)->orWhere('id', $katVal);
+                $q->where('slug', $katVal)->when(ctype_digit((string) $katVal), fn ($q) => $q->orWhere('id', (int) $katVal));
             });
         }
 

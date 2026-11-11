@@ -19,6 +19,9 @@ use Illuminate\Validation\ValidationException;
 
 class PesananService
 {
+    /** Jumlah percobaan transaksi pembuatan pesanan bila terkena deadlock database. */
+    private const PERCOBAAN_TRANSAKSI = 5;
+
     public function __construct(
         protected KetersediaanService $ketersediaan,
         protected PaketBundlingService $paketBundling
@@ -37,6 +40,8 @@ class PesananService
         $batasBayarJam = PengaturanToko::batasBayarJam();
         $maksMenunggu = PengaturanToko::maksPesananMenunggu();
 
+        // Percobaan ulang bila transaksi menjadi korban deadlock: di MySQL, beberapa pesanan pertama di hari yang sama
+        // saling menahan gap lock saat mencari resi terakhir. Hasil transaksi yang di-rollback tidak berbekas.
         return DB::transaction(function () use ($pelanggan, $pembuat, $data, $jamKembali, $batasBayarJam, $maksMenunggu) {
             $mulai = $data->tanggalMulai->copy()->startOfDay();
             $selesai = $data->tanggalSelesai->copy()->startOfDay();
@@ -128,7 +133,7 @@ class PesananService
             );
 
             return $pesanan->load(['detail.alat.kategori', 'pelanggan', 'pembuat']);
-        });
+        }, self::PERCOBAAN_TRANSAKSI);
     }
 
     /**

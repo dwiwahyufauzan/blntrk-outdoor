@@ -545,6 +545,14 @@ class KebijakanFinansialTest extends TestCase
         $this->get(route('katalog.index', ['page' => 2]))->assertOk()->assertSee('Alat 14');
     }
 
+    public function test_filter_kategori_katalog_menerima_slug_dan_id_numerik(): void
+    {
+        $this->get(route('katalog.index', ['kategori' => 'umum']))->assertOk()->assertSee('Tenda - D2');
+        $this->get(route('katalog.index', ['kategori' => (string) $this->alat->kategori_id]))->assertOk()->assertSee('Tenda - D2');
+        // Slug yang bukan angka tidak boleh dibandingkan dengan kolom id (ditolak PostgreSQL)
+        $this->get(route('katalog.index', ['kategori' => 'tidak-ada']))->assertOk()->assertDontSee('Tenda - D2');
+    }
+
     // ---------------------------------------------------------------- keamanan
 
     public function test_pendaftaran_dibatasi_throttle(): void
