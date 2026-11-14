@@ -331,6 +331,11 @@
             <!-- Page Body Content -->
             <main id="konten-utama" tabindex="-1" class="flex-1 p-6 md:p-8 overflow-y-auto">
                 <x-alert />
+                @if (isset($header))
+                    <div class="mb-6">
+                        {{ $header }}
+                    </div>
+                @endif
                 {{ $slot }}
             </main>
         </div>

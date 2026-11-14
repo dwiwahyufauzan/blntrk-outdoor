@@ -1,26 +1,20 @@
-<x-admin-layout>
-    <x-slot name="header">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#5edd5b]/20 text-[#0e1b15]">
-                        <svg class="w-4 h-4 text-[#0e1b15]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </span>
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#5edd5b]">Manajemen Inventaris</span>
-                </div>
-                <h2 class="font-extrabold text-2xl text-[#0e1b15] tracking-tight">Perawatan & Servis Alat</h2>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span>Total Dalam Perawatan: <strong>{{ $totalUnitPerawatan }} Unit</strong></span>
-                </span>
-            </div>
+<x-layouts.admin>
+    <x-slot:title>Perawatan & Servis Alat</x-slot:title>
+
+    <div class="mb-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#0e1b15] block mb-1">Manajemen Inventaris</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-[#14201a] tracking-tight">Perawatan &amp; Servis Alat</h1>
+            <p class="text-xs text-stone-500 mt-0.5">Kelola unit perlengkapan toko yang sedang kotor, rusak, atau dalam masa perbaikan teknis</p>
         </div>
-    </x-slot>
+
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-2xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>Total Dalam Perawatan: <strong class="font-black text-amber-950">{{ $totalUnitPerawatan }} Unit</strong></span>
+            </span>
+        </div>
+    </div>
 
     <div class="space-y-6">
         @if (session('status'))
@@ -82,7 +76,11 @@
                                             {{ $alat->kapasitas_fisik }} / {{ $alat->stok_total }} Unit
                                         </td>
                                         <td class="py-3.5 px-4 text-right">
-                                            <form method="POST" action="{{ route('admin.perawatan.selesai', $alat) }}" class="inline-flex items-center gap-1.5 justify-end">
+                                            <form method="POST" action="{{ route('admin.perawatan.selesai', $alat) }}" class="inline-flex items-center gap-1.5 justify-end"
+                                                  data-konfirmasi="Selesai Perawatan Alat"
+                                                  data-pesan="Apakah Anda yakin ingin menandai unit {{ $alat->nama }} ini telah selesai diperbaiki dan siap disewakan kembali?"
+                                                  data-tombol="Ya, Selesai Perbaikan"
+                                                  data-tipe="primary">
                                                 @csrf
                                                 @method('PATCH')
                                                 <input type="number" name="jumlah" value="1" min="1" max="{{ $alat->stok_perawatan }}"
@@ -133,7 +131,12 @@
                         Gunakan form ini jika menemukan alat toko yang kotor, sobek, atau butuh servis sebelum disewakan kembali.
                     </p>
 
-                    <form id="formPindahPerawatan" method="POST" action="" class="space-y-3">
+                    <form id="formPindahPerawatan" method="POST" action="" class="space-y-3"
+                          data-konfirmasi="Pindahkan ke Perawatan"
+                          data-pesan="Apakah Anda yakin ingin memindahkan unit alat ini ke masa perawatan?"
+                          data-tombol="Ya, Pindahkan Unit"
+                          data-tipe="warning"
+                          onsubmit="return validateFormPindah(this, event)">
                         @csrf
                         @method('PATCH')
 
@@ -231,10 +234,27 @@
 
             if (url) {
                 form.action = url;
+            } else {
+                form.action = '';
             }
+
             if (max) {
                 inputJumlah.max = max;
+                if (parseInt(inputJumlah.value, 10) > parseInt(max, 10)) {
+                    inputJumlah.value = max;
+                }
             }
         }
+
+        function validateFormPindah(form, event) {
+            const select = document.getElementById('pilihAlatSelect');
+            if (!select.value || !form.action) {
+                if (event) event.preventDefault();
+                alert('Silakan pilih alat toko yang akan dipindahkan ke perawatan terlebih dahulu.');
+                select.focus();
+                return false;
+            }
+            return true;
+        }
     </script>
-</x-admin-layout>
+</x-layouts.admin>
